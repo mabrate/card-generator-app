@@ -1,0 +1,26 @@
+# Runtime versions verified for milestones 1–4 (Python 3.10+).
+fastapi==0.141.1
+uvicorn==0.54.0
+fonttools==4.65.0
+starlette==1.7.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+click==8.5.0
+exceptiongroup==1.3.1
+h11==0.16.0
+idna==3.20
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+
+Pillow==12.3.0
+qrcode==8.2
+
+
+# Print sheets: canonical SVG to vector PDF and precise Letter imposition.
+CairoSVG==2.9.1
+reportlab==5.0.1
+pypdf==6.19.0
+

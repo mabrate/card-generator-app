@@ -1,0 +1,461 @@
+{
+  "format_version": 1,
+  "project_title": "Campus Food Web",
+  "cards": [
+    {
+      "card_id": "aquatic-milkweed",
+      "card_kind": "organism",
+      "copies": 4,
+      "title": "Aquatic Milkweed",
+      "scientific_name": "Asclepias perennis",
+      "category": "PLANT - FLOWERING",
+      "short_facts": [
+        {
+          "label": "Pollinators",
+          "text": "Monarch Butterfly, Eastern Carpenter Bee"
+        },
+        {
+          "label": "Herbivores",
+          "text": "Monarch Butterfly, Aphids"
+        }
+      ],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Host Plant",
+          "text": "Monarchs may use Caterpillar Feeding only on Milkweed."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "frogfruit",
+      "card_kind": "organism",
+      "copies": 3,
+      "title": "Frogfruit",
+      "scientific_name": "Phyla nodiflora",
+      "category": "PLANT - FLOWERING",
+      "short_facts": [
+        {
+          "label": "Pollinators",
+          "text": "Monarch Butterfly, Eastern Carpenter Bee"
+        }
+      ],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Drought Tolerant",
+          "text": "Sunny weather does not remove stored Water from Frogfruit."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "blue-mistflower",
+      "card_kind": "organism",
+      "copies": 3,
+      "title": "Blue Mistflower",
+      "scientific_name": "Conoclinium coelestinum",
+      "category": "PLANT - FLOWERING",
+      "short_facts": [
+        {
+          "label": "Pollinators",
+          "text": "Monarch Butterfly, Eastern Carpenter Bee"
+        },
+        {
+          "label": "Herbivores",
+          "text": "Aphids"
+        }
+      ],
+      "intro_text": "",
+      "sections": [],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "texas-bluebonnet",
+      "card_kind": "organism",
+      "copies": 3,
+      "title": "Texas Bluebonnet",
+      "scientific_name": "Lupinus texensis",
+      "category": "PLANT - FLOWERING",
+      "short_facts": [
+        {
+          "label": "Pollinator",
+          "text": "Eastern Carpenter Bee"
+        },
+        {
+          "label": "Herbivore",
+          "text": "Aphids"
+        }
+      ],
+      "intro_text": "",
+      "sections": [],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "common-sunflower",
+      "card_kind": "organism",
+      "copies": 3,
+      "title": "Common Sunflower",
+      "scientific_name": "Helianthus annuus",
+      "category": "PLANT - FLOWERING",
+      "short_facts": [
+        {
+          "label": "Pollinators",
+          "text": "Monarch Butterfly, Eastern Carpenter Bee"
+        },
+        {
+          "label": "Herbivore",
+          "text": "Aphids"
+        }
+      ],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Large Plant",
+          "text": "Sunflower may hold up to 4 Population."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "monarch-butterfly",
+      "card_kind": "organism",
+      "copies": 4,
+      "title": "Monarch Butterfly",
+      "scientific_name": "Danaus plexippus",
+      "category": "POLLINATOR - HERBIVORE",
+      "short_facts": [],
+      "intro_text": "Choose one action:",
+      "sections": [
+        {
+          "label": "Pollinate",
+          "text": "Visit Milkweed, Frogfruit, Blue Mistflower, or Sunflower. Monarch +1 Population; plant +1 Population."
+        },
+        {
+          "label": "Caterpillar Feeding",
+          "text": "Feed on Milkweed. Monarch +1 Population; Milkweed -1 Population."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "eastern-carpenter-bee",
+      "card_kind": "organism",
+      "copies": 3,
+      "title": "Eastern Carpenter Bee",
+      "scientific_name": "Xylocopa virginica",
+      "category": "POLLINATOR",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Generalist Pollinator",
+          "text": "May Pollinate any flowering plant in the garden."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "aphids",
+      "card_kind": "organism",
+      "copies": 3,
+      "title": "Aphids",
+      "scientific_name": "Aphis spp.",
+      "category": "HERBIVORE",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Feed",
+          "text": "Milkweed, Blue Mistflower, Bluebonnet, or Sunflower. Aphids +1 Population; plant -1 Population."
+        },
+        {
+          "label": "Honeydew Mutualism",
+          "text": "If Aphids and Red Imported Fire Ants are in the same Garden Plot, whenever these Aphids successfully Feed, the Fire Ants also gain +1 Population. While protected by Fire Ants, these Aphids cannot be hunted by Milkweed Assassin Bugs or Aphid Parasitoid Wasps. Brown Anoles and Carolina Wrens can still hunt them."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "milkweed-assassin-bug",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Milkweed Assassin Bug",
+      "scientific_name": "Zelus longipes",
+      "category": "PREDATOR",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Hunt",
+          "text": "Aphids, Monarch Butterflies, Eastern Carpenter Bees, or Aphid Parasitoid Wasps anywhere in the garden."
+        },
+        {
+          "label": "",
+          "text": "Cannot hunt Aphids protected by Red Imported Fire Ants."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "aphid-parasitoid-wasp",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Aphid Parasitoid Wasp",
+      "scientific_name": "Lysiphlebus testaceipes",
+      "category": "PREDATOR - PARASITOID",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Parasitize",
+          "text": "Hunt Aphids anywhere in the garden."
+        },
+        {
+          "label": "Specialist",
+          "text": "Cannot hunt other organisms. Cannot hunt Aphids protected by Red Imported Fire Ants."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "red-imported-fire-ant",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Red Imported Fire Ant",
+      "scientific_name": "Solenopsis invicta",
+      "category": "PREDATOR - MUTUALIST",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Honeydew Mutualism",
+          "text": "Protect Aphids in your Garden Plot. Whenever those Aphids successfully Feed, Fire Ants gain +1 Population."
+        },
+        {
+          "label": "Hunt",
+          "text": "Monarch Butterfly, Eastern Carpenter Bee, Milkweed Assassin Bug, or Aphid Parasitoid Wasp."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "brown-anole",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Brown Anole",
+      "scientific_name": "Anolis sagrei",
+      "category": "PREDATOR",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Hunt",
+          "text": "Any insect anywhere in the garden."
+        },
+        {
+          "label": "",
+          "text": "Fire Ant protection does not protect Aphids from Brown Anoles."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "carolina-wren",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Carolina Wren",
+      "scientific_name": "Thryothorus ludovicianus",
+      "category": "PREDATOR",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Hunt",
+          "text": "Any insect or Brown Anole anywhere in the garden."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "turkey-tail-fungus",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Turkey Tail Fungus",
+      "scientific_name": "Trametes versicolor",
+      "category": "DECOMPOSER - FUNGUS",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Decompose",
+          "text": "Move 1 Compost counter to the Nutrient position beside one of your plants. Turkey Tail gains +1 Population."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "soil-bacterium",
+      "card_kind": "organism",
+      "copies": 2,
+      "title": "Soil Bacterium",
+      "scientific_name": "Bacillus subtilis",
+      "category": "DECOMPOSER - BACTERIUM",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "Decompose",
+          "text": "Move 1 Compost counter to the Nutrient position beside one of your plants."
+        },
+        {
+          "label": "Rapid Recycling",
+          "text": "At 2+ Population, it may instead move 2 Compost to 2 Nutrients with one activation."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "rainstorm",
+      "card_kind": "effect",
+      "copies": 2,
+      "title": "Rainstorm",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Add 1 Water below every plant in the garden."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "drought",
+      "card_kind": "effect",
+      "copies": 1,
+      "title": "Drought",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Remove 1 Water from every plant in the garden that has Water."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "heat-wave",
+      "card_kind": "effect",
+      "copies": 1,
+      "title": "Heat Wave",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Remove 1 Water from every plant in the garden. Then choose one plant you control; it gains +1 Population if it still has at least 1 Water remaining."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "compost-addition",
+      "card_kind": "effect",
+      "copies": 1,
+      "title": "Compost Addition",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Add 2 counters from the supply directly to the shared Compost area."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "mulch",
+      "card_kind": "effect",
+      "copies": 1,
+      "title": "Mulch",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Choose one plant you control. Place this card under it until the start of your next turn. Sunny-weather evaporation does not remove Water from that plant. Then discard Mulch."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "native-plant-boom",
+      "card_kind": "effect",
+      "copies": 1,
+      "title": "Native Plant Boom",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Choose one native plant you control. It gains +1 Population, up to its maximum."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    },
+    {
+      "card_id": "pesticide-spray",
+      "card_kind": "effect",
+      "copies": 1,
+      "title": "Pesticide Spray",
+      "scientific_name": "Effect card",
+      "category": "EFFECT - play instead of an organism",
+      "short_facts": [],
+      "intro_text": "",
+      "sections": [
+        {
+          "label": "",
+          "text": "Choose one Garden Plot. Every insect in that plot loses 1 Population. Move all lost Population to Compost."
+        }
+      ],
+      "image_filename": "",
+      "theme": ""
+    }
+  ]
+}
