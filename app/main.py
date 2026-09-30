@@ -42,7 +42,7 @@ class BodyLimit:
                 return
             chunk = message.get("body", b"")
             size += len(chunk)
-            limit = 12 * 1024 * 1024 if scope['path'] in ('/api/student/images', '/api/teacher/import/image') else (2 * 1024 * 1024 if scope['path'].startswith('/api/teacher/import') else (65_536 if scope['path'].startswith('/api/teacher/layout') else 32_768))
+            limit = 12 * 1024 * 1024 if (scope['path'] in ('/api/student/images', '/api/teacher/import/image') or (scope['path'].startswith('/api/teacher/cards/') and scope['path'].endswith('/image'))) else (2 * 1024 * 1024 if scope['path'].startswith('/api/teacher/import') else (65_536 if scope['path'].startswith('/api/teacher/layout') else 32_768))
             if size > limit:
                 return await JSONResponse({"detail": "Request is too large."}, status_code=413)(scope, receive, send)
             chunks.append(chunk)
@@ -184,7 +184,12 @@ def create_app(data_dir=None, teacher_pin=None):
     @app.get("/api/teacher/dashboard")
     def dashboard(request: Request):
         require_teacher(request)
-        project = db.project(database)
+        with db.connect(database) as connection:
+            first = connection.execute('SELECT id FROM projects WHERE deleted_at IS NULL ORDER BY created_at,id LIMIT 1').fetchone()
+        if first:
+            project = db.project(database, first['id'])
+        else:
+            project = db.project(database, None)
         with db.connect(database) as connection:
             mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
         return {"project": project, "database": "Ready", "journal_mode": mode, "milestones": [1, 2, 3, 4, 5, 6]}

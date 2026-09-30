@@ -41,13 +41,14 @@ export class CardEditor {
     this.state = {
       values: {...(card.values || {})}, student_name: card.student_name || '', class_name: card.class_name || '',
       theme: card.theme || project.template.themes[0], image_id: card.image_id || null,
-      crop: {...(card.crop || {x: .5, y: .5, zoom: 1, rotation: 0})}
+      crop: {...(card.crop || {x: .5, y: .5, zoom: 1, rotation: 0})},
+      ...(options.teacher ? {copies: card.copies || 1} : {})
     };
     container.innerHTML = `<div class="studio"><section class="panel form-panel">
       <h2>Card content</h2><form class="editor-form"><div class="identity-fields">
       <div><label for="student_name">Student name <span class="hint">(required to submit)</span></label><input id="student_name" maxlength="80" autocomplete="off"></div>
       <div><label for="class_name">Class / period <span class="hint">(required to submit)</span></label><input id="class_name" maxlength="40" autocomplete="off"></div></div>
-      <div class="editor-fields"></div><section class="image-tools"><h3>Organism image</h3>
+      <div class="quantity-field" hidden><label for="card-copies">Print quantity</label><input id="card-copies" type="number" min="1" max="999" step="1"><p class="hint">Number of copies when print-sheet copy expansion is enabled.</p></div><div class="editor-fields"></div><section class="image-tools"><h3>Card image</h3>
       <p class="hint">Use a JPG, PNG, or WebP up to 12 MB and 25 megapixels. The original is kept; cropping does not change it.</p>
       <div class="image-inputs"><label>Choose image<input class="image-file" type="file" accept="image/jpeg,image/png,image/webp"></label>
       <label>Take a photo<input class="camera-file" type="file" accept="image/*" capture="environment"></label></div>
@@ -62,6 +63,10 @@ export class CardEditor {
       <div class="fit-status" role="status" aria-live="polite">Checking text fit…</div><ul class="issues"></ul><p class="image-warning hint"></p><p class="editor-error error" role="alert"></p>
       <p class="hint">Red outlines mark text that needs shortening. Drafts may leave required fields blank; submitted cards must be complete.</p></section></div>`;
     this.inputs = new Map();
+    this.cardId = card.id;
+    this.find('.quantity-field').hidden = !options.teacher;
+    this.find('#card-copies').value = card.copies || 1;
+    this.find('#card-copies').addEventListener('input', event => { this.state.copies = Number(event.target.value); this.changed(); });
     for (const name of ['student_name', 'class_name']) {
       const input = this.find('#' + name); input.value = this.state[name];
       input.addEventListener('input', () => { this.state[name] = input.value; this.changed(); });
@@ -91,12 +96,12 @@ export class CardEditor {
     for (const key of ['x', 'y', 'zoom']) {
       this.find('.crop-' + key).addEventListener('input', event => { this.state.crop[key] = Number(event.target.value); this.syncImage(); this.changed(); });
     }
-    this.find('.rotate').addEventListener('click', () => { this.state.crop.rotation = (this.state.crop.rotation + 90) % 360; this.changed(); });
+    this.find('.rotate').addEventListener('click', () => { this.state.crop.rotation = (this.state.crop.rotation + 90) % 360; this.syncImage(); this.changed(); });
     this.find('.reset-crop').addEventListener('click', () => { this.state.crop = {x: .5, y: .5, zoom: 1, rotation: 0}; this.syncImage(); this.changed(); });
     this.find('.remove-image').addEventListener('click', () => { this.state.image_id = null; this.syncImage(); this.changed(); });
     for (const selector of ['.image-file', '.camera-file']) this.find(selector).addEventListener('change', event => this.upload(event.target.files[0]));
     this.find('.editor-form').addEventListener('submit', event => event.preventDefault());
-    this.find('.image-tools').hidden = !!options.teacher;
+
     this.find('.image-name').textContent = card.image?.filename || (card.image_id ? 'Saved image' : 'No image selected.');
     this.syncImage(); this.schedule();
   }
@@ -114,6 +119,7 @@ export class CardEditor {
   syncImage() {
     this.find('.crop-controls').hidden = !this.state.image_id;
     for (const key of ['x', 'y', 'zoom']) this.find('.crop-' + key).value = this.state.crop[key];
+    this.find('.rotate').textContent = `Rotate 90° (${this.state.crop.rotation}° now)`;
     this.find('.zoom-value').textContent = this.state.crop.zoom.toFixed(2) + '×';
     if (!this.state.image_id) this.find('.image-name').textContent = 'No image selected.';
   }
@@ -123,7 +129,7 @@ export class CardEditor {
     this.busy = true; this.options.onBusy?.(true); this.setLocked(true);
     this.find('.image-name').textContent = 'Uploading image… Keep this page open.';
     try {
-      const image = await api('/api/student/images', {body: file, token: this.options.token, headers: {'X-File-Name': encodeURIComponent(file.name)}});
+      const image = await api(this.options.teacher ? '/api/teacher/cards/' + this.cardId + '/image' : '/api/student/images', {body: file, token: this.options.token, headers: {'X-File-Name': encodeURIComponent(file.name)}});
       if (this.destroyed) return;
       this.state.image_id = image.id; this.state.crop = {x: .5, y: .5, zoom: 1, rotation: 0};
       this.find('.image-name').textContent = `${file.name} · ${image.width} × ${image.height}`;

@@ -246,6 +246,38 @@ def test_upgrade_keeps_existing_project_and_pin(tmp_path):
         assert client.post('/api/teacher/login', headers=WRITE, json={'pin': '654321'}).status_code == 200
         assert save(client, secrets.token_urlsafe(32)).status_code == 200
     with db.connect(path) as connection:
-        assert connection.execute('PRAGMA user_version').fetchone()[0] == 3
+        assert connection.execute('PRAGMA user_version').fetchone()[0] == 4
 
 
+
+
+def test_project_delete_protection_cards_restart_and_empty_state(client):
+    endpoint = '/api/teacher/projects/field-guide/delete'
+    token = secrets.token_urlsafe(32)
+    card = save(client, token).json()
+    assert client.post(endpoint, headers=WRITE, json={'expected_version': 1}).status_code == 401
+    login(client)
+    assert client.post(endpoint, headers=WRITE, json={'expected_version': 2}).status_code == 409
+    assert client.get('/api/projects').json()
+    assert client.post(endpoint, headers=WRITE, json={'expected_version': 1}).status_code == 200
+    assert client.get('/api/projects').json() == []
+    assert client.get('/api/project?project_id=field-guide').status_code == 404
+    assert client.get('/api/teacher/cards').json()['total'] == 0
+    assert client.get('/api/student/card', headers=headers(token)).status_code == 410
+    assert save(client, token, expected_version=card['version']).status_code in (404, 410)
+    assert save(client, secrets.token_urlsafe(32)).status_code == 404
+    assert client.post(endpoint, headers=WRITE, json={'expected_version': 1}).status_code == 404
+    db.initialize(client.app.state.database)
+    assert client.get('/api/projects').json() == []
+    starter = client.get('/api/teacher/dashboard').json()['project']
+    assert starter['id'] is None
+    response = client.post('/api/teacher/projects', headers=WRITE, json={
+        'title': 'Next project', 'instructions': starter['template']['instructions'],
+        'expected_version': 0, 'themes': starter['template']['themes'],
+        'fields': [{k: f[k] for k in ('key', 'label', 'instructions', 'example', 'required', 'max_chars')}
+                   for f in starter['template']['fields']]})
+    assert response.status_code == 200, response.text
+    assert client.get('/api/teacher/dashboard').json()['project']['title'] == 'Next project'
+    with db.connect(client.app.state.database) as connection:
+        assert connection.execute('SELECT count(*) FROM cards').fetchone()[0] == 1
+        assert connection.execute('SELECT action FROM card_history ORDER BY id DESC').fetchone()[0] == 'Project deleted'

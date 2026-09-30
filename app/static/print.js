@@ -5,7 +5,7 @@ const visible = () => cards.filter(card => !byId('print-class').value || card.cl
 function body() {
   return {project_id: project.id, project_version: project.version,
     cards: cards.filter(card => selected.has(card.id)).map(({id, version}) => ({id, version})),
-    expand_copies: byId('expand-copies').checked, include_imported: byId('include-imported').checked};
+    black_and_white: byId('black-and-white').checked, expand_copies: byId('expand-copies').checked, include_imported: byId('include-imported').checked};
 }
 function controls() {
   const picked = cards.filter(card => selected.has(card.id));
@@ -14,7 +14,7 @@ function controls() {
   byId('selection-summary').textContent = `${visible().length} cards shown · ${picked.length} selected · ${copies} printable copies · ${Math.ceil(copies / 6)} sheets`;
   byId('check-print').disabled = busy || !withinLimit;
   byId('download-print').disabled = busy || !checked || !withinLimit;
-  for (const id of ['print-project', 'print-class', 'expand-copies', 'include-imported', 'select-visible', 'clear-selection', 'reload-print']) byId(id).disabled = busy;
+  for (const id of ['print-project', 'print-class', 'black-and-white', 'expand-copies', 'include-imported', 'select-visible', 'clear-selection', 'reload-print']) byId(id).disabled = busy;
   byId('print-cards').querySelectorAll('input').forEach(input => { input.disabled = busy; });
 }
 function invalidate() {
@@ -83,12 +83,14 @@ async function download() {
 }
 async function start() {
   const projects = await api('/api/projects');
+  if (!projects.length) throw new Error('No projects are available. Create a project in Teacher review or Layout & CSV studio.');
   projects.forEach(p => byId('print-project').add(new Option(p.title, p.id)));
   const requested = new URLSearchParams(location.search).get('project');
   if (projects.some(p => p.id === requested)) byId('print-project').value = requested;
   await load();
   for (const id of ['print-project', 'include-imported', 'reload-print']) byId(id).addEventListener(id === 'reload-print' ? 'click' : 'change', () => guard(load));
   byId('print-class').addEventListener('change', draw);
+  byId('black-and-white').addEventListener('change', invalidate);
   byId('expand-copies').addEventListener('change', () => { invalidate(); draw(); });
   byId('select-visible').addEventListener('click', () => { visible().forEach(card => selected.add(card.id)); invalidate(); draw(); });
   byId('clear-selection').addEventListener('click', () => { selected.clear(); invalidate(); draw(); });

@@ -11,9 +11,9 @@ import qrcode
 import qrcode.image.svg
 
 from app import auth, db, images
-from app.cards import CardStore, history
+from app.cards import CardStore, history, update_project_cards
 from app.config import TEMPLATE
-from app.schemas import CardWrite, ProjectWrite, Review
+from app.schemas import CardWrite, ProjectWrite, ProjectDelete, ImportIdentity, Review
 
 
 def owner_hash(request):
@@ -30,7 +30,7 @@ def routes(database, uploads, require_teacher):
     @router.get('/api/projects')
     def projects():
         with db.connect(database) as connection:
-            return [dict(row) for row in connection.execute('SELECT id,title,version FROM projects ORDER BY created_at,id')]
+            return [dict(row) for row in connection.execute('SELECT id,title,version FROM projects WHERE deleted_at IS NULL ORDER BY created_at,id')]
 
     @router.get('/api/student/card')
     def student_card(request: Request):
@@ -74,6 +74,14 @@ def routes(database, uploads, require_teacher):
         require_teacher(request)
         return store.detail(store.by_id(identifier))
 
+    @router.post('/api/teacher/cards/{identifier}/image')
+    async def teacher_image(identifier: str, request: Request):
+        require_teacher(request)
+        card = store.by_id(identifier)
+        content = await request.body()
+        from starlette.concurrency import run_in_threadpool
+        return await run_in_threadpool(images.upload, database, uploads, card['edit_hash'], content, unquote(request.headers.get('x-file-name', 'image')))
+
     @router.post('/api/teacher/cards/{identifier}/save')
     def teacher_save(identifier: str, body: CardWrite, request: Request):
         require_teacher(request)
@@ -90,7 +98,7 @@ def routes(database, uploads, require_teacher):
         with db.connect(database) as connection:
             connection.execute('BEGIN IMMEDIATE')
             if identifier:
-                row = connection.execute('SELECT * FROM projects WHERE id=?', (identifier,)).fetchone()
+                row = connection.execute('SELECT * FROM projects WHERE id=? AND deleted_at IS NULL', (identifier,)).fetchone()
                 if not row:
                     raise HTTPException(404, 'Project not found.')
                 if row['version'] != body.expected_version:
@@ -101,22 +109,24 @@ def routes(database, uploads, require_teacher):
                     raise HTTPException(409, 'A new project must start at version zero.')
                 identifier, template = secrets.token_hex(12), copy.deepcopy(TEMPLATE)
             fields = {field['key']: field for field in template['fields']}
-            if len({field.key for field in body.fields}) != len(fields) or {f.key for f in body.fields} != set(fields):
-                raise HTTPException(422, 'Keep all fields defined in this project layout.')
+            from app.layouts import LayoutField
+            keys = [f.key for f in body.fields]
+            reserved = {'card_id', 'copies', 'card_kind', 'theme', 'image_filename', 'student_name', 'class_name', 'image'}
+            if len(set(keys)) != len(keys) or set(keys) & reserved or any(not re.fullmatch(r'[a-z][a-z0-9_]{0,49}', key) for key in keys):
+                raise HTTPException(422, 'Use unique lowercase field keys, excluding reserved metadata names.')
             themes = {row[0] for row in connection.execute('SELECT id FROM themes')}
             if len(set(body.themes)) != len(body.themes) or not set(body.themes) <= themes or not body.title:
                 raise HTTPException(422, 'Enter a project title and choose approved themes.')
             for field in body.fields:
-                fields[field.key].update(field.model_dump())
+                if field.key not in fields:
+                    fields[field.key] = LayoutField(**field.model_dump(), box=[13, 175, 150, 25], font_size=7, line_height=8).model_dump()
+                else:
+                    fields[field.key].update(field.model_dump())
+            template['fields'] = [fields[field.key] for field in body.fields]
             template['instructions'], template['themes'] = body.instructions, body.themes
             if body.expected_version:
                 connection.execute('UPDATE projects SET title=?,template_json=?,version=version+1 WHERE id=?', (body.title, json.dumps(template), identifier))
-                # A changed template/direction requires a fresh review of previous approvals.
-                approved = connection.execute('SELECT id FROM cards WHERE project_id=? AND status=\'Approved\' AND deleted_at IS NULL', (identifier,)).fetchall()
-                for card in approved:
-                    connection.execute('UPDATE cards SET status=\'Submitted\',version=version+1,last_mutation=NULL,last_payload=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?', (card['id'],))
-                    updated = connection.execute('SELECT * FROM cards WHERE id=?', (card['id'],)).fetchone()
-                    history(connection, updated, 'teacher', 'Project settings changed; approval needs review')
+                update_project_cards(connection, identifier, template, 'Project settings changed; approval needs review')
             else:
                 connection.execute('INSERT INTO projects(id,title,template_json) VALUES(?,?,?)', (identifier, body.title, json.dumps(template)))
         return db.project(database, identifier)
@@ -130,6 +140,44 @@ def routes(database, uploads, require_teacher):
     def update_project(identifier: str, body: ProjectWrite, request: Request):
         require_teacher(request)
         return save_project(body, identifier)
+
+    @router.post('/api/teacher/projects/{identifier}/import-identity')
+    def import_identity(identifier: str, body: ImportIdentity, request: Request):
+        require_teacher(request)
+        if body.student_name is None and body.class_name is None:
+            raise HTTPException(422, 'Choose Student, Class, or both to update.')
+        with db.connect(database) as connection:
+            connection.execute('BEGIN IMMEDIATE')
+            project = connection.execute('SELECT version FROM projects WHERE id=? AND deleted_at IS NULL', (identifier,)).fetchone()
+            if not project or project['version'] != body.expected_version:
+                raise HTTPException(409, 'Project changed. Reload its settings before updating imported cards.')
+            rows = connection.execute('SELECT * FROM cards WHERE project_id=? AND external_id IS NOT NULL AND deleted_at IS NULL', (identifier,)).fetchall()
+            for row in rows:
+                connection.execute("UPDATE cards SET student_name=?,class_name=?,status=?,version=version+1,last_mutation=NULL,last_payload=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                                   (body.student_name if body.student_name is not None else row['student_name'],
+                                    body.class_name if body.class_name is not None else row['class_name'],
+                                    'Submitted' if row['status'] == 'Approved' else row['status'], row['id']))
+                history(connection, connection.execute('SELECT * FROM cards WHERE id=?', (row['id'],)).fetchone(), 'teacher', 'Update imported Student/Class')
+            if rows:
+                connection.execute('UPDATE projects SET version=version+1 WHERE id=?', (identifier,))
+        return {'updated': len(rows)}
+
+    @router.post('/api/teacher/projects/{identifier}/delete')
+    def delete_project(identifier: str, body: ProjectDelete, request: Request):
+        require_teacher(request)
+        with db.connect(database) as connection:
+            connection.execute('BEGIN IMMEDIATE')
+            row = connection.execute('SELECT * FROM projects WHERE id=? AND deleted_at IS NULL', (identifier,)).fetchone()
+            if not row:
+                raise HTTPException(404, 'Project not found.')
+            if row['version'] != body.expected_version:
+                raise HTTPException(409, 'This project changed in another tab. Reload before deleting.')
+            connection.execute('UPDATE projects SET deleted_at=CURRENT_TIMESTAMP,version=version+1 WHERE id=?', (identifier,))
+            cards = connection.execute('SELECT id FROM cards WHERE project_id=? AND deleted_at IS NULL', (identifier,)).fetchall()
+            for card in cards:
+                connection.execute('UPDATE cards SET deleted_at=CURRENT_TIMESTAMP,version=version+1,last_mutation=NULL,last_payload=NULL WHERE id=?', (card['id'],))
+                history(connection, connection.execute('SELECT * FROM cards WHERE id=?', (card['id'],)).fetchone(), 'teacher', 'Project deleted')
+        return {'ok': True}
 
     @router.get('/api/teacher/qr')
     def qr(request: Request, project_id: str = 'field-guide'):

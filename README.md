@@ -127,8 +127,10 @@ The renderer embeds the same cropped image in student and teacher previews and e
 - Open **Projects, directions, and student link** to create/open a project, edit its directions, field labels/instructions/examples/character limits, required fields, and approved themes. Use **Layout & CSV studio** to change card geometry and typography; students cannot edit layouts.
 - Use the student link and locally generated QR code for the selected project. Open the teacher page through the server's LAN IP address before sharing; a QR code generated from `localhost` cannot connect another device.
 - Filter the card list by project, class, and status. Lists are paginated in groups of 30.
-- **Review** opens the same card renderer alongside editable text. **Save text edits** saves teacher corrections; edits to an approved card return it to Submitted.
+- **Review** edits text, Student, Class, print quantity (1–999), image replacement/removal, zoom, horizontal/vertical position, and 90° rotation. **Save card edits** saves corrections; edits to an approved card return it to Submitted. Identity, quantity, and image changes can be saved while unchanged imported text still needs revision.
+- For an imported deck, open **Student and Class for this imported deck** in project settings. Choose Student, Class, or both and apply them to all imported cards in that project. Student-created cards are unaffected.
 - **Approve** accepts a submitted card only after server-side validation. **Needs Revision** requires a note and unlocks the card for the student.
+- **Delete project** in Projects, directions, and student link confirms the project name and removes the project and all its cards from student access, review, and printing. Local records, images, and history remain; there is no restore UI. You can delete the last project and create a new one.
 - **Delete card** names the card/student and confirms the action. It removes the card from review and student access. This is a soft deletion: original files and history remain in local storage, not a permanent erasure. There is no restore/purge UI in this milestone.
 - Recent activity shows saves and review actions. **Load latest version** explicitly replaces unsaved teacher edits after confirmation.
 
@@ -177,12 +179,14 @@ Original roadmap and Campus Food Web source fixtures remain at the repository ro
 
 Open **Teacher → Layout & CSV studio** (`/teacher/studio`).
 
-1. Start with the seven-box organism layout, or open a saved project.
+1. Use **Editing project** to open a saved project immediately. Its name and **Save project & layout** stay together in a bar while you scroll. To create a project, choose one of five original styles (field guide, classic playing, creature trading, spell/strategy, or sports/profile), each with square corners or an exact 3 mm corner radius, then click **Create from template**.
 2. Select a UTF-8 CSV and check the suggested field matches. For other datasets, choose **Suggest a layout from my CSV columns**, select up to 12 text columns, and adjust the generated layout.
 3. Select matching PNG/JPG/WebP files (multiple selection). The CSV's `image_filename` must match the filename exactly, including extension. Images are uploaded separately, not embedded in cells. ZIP and direct XLSX imports are not supported.
-4. Move boxes by dragging, resize with the selected box's corner handle, or type exact point measurements. Set each box's font size, line height, label, required flag, prefix, and text limit. Under **Corners and borders**, adjust card/image corner radii and border thicknesses in points; 0 means square corners or no border. The card remains 180 × 252 pt (2.5 × 3.5 in).
+4. Move boxes by dragging, resize with the selected box's corner handle, or type exact point measurements. Set each box's font size, line height, label, required flag, prefix, and text limit. Text supports left/center/right and top/middle/bottom alignment. **Align box** moves the selected box to a card margin or centers it horizontally/vertically. Under **Corners and borders**, adjust card/image corner radii and border thicknesses in points; 0 means square corners or no border. The card remains 180 × 252 pt (2.5 × 3.5 in).
 5. Save the layout, then validate the CSV. Review every row, unmapped columns, missing assets, and duplicate actions before confirming import.
 6. Use **Preview a saved card** to adjust the layout after importing. Teacher review also has an **Edit this project's layout** link. Saving layout changes invalidates existing approvals.
+
+**Fields:** add or delete fields in project settings or Layout & CSV studio (1–12 fields). Position new fields in the layout editor. Saving a deletion removes that field from existing cards and invalidates stale edits; each affected card's previous content remains in local history. This history has no restore UI.
 
 **Layout first:** save a project and download its **Excel template (.xlsx)** or **CSV template**. The XLSX has a blank Cards sheet plus a Field guide with the correct keys, labels, requirements, limits, and directions. Fill Cards, then save that sheet as UTF-8 CSV to import. Exports contain literal text cells, not formulas or macros; the classroom server needs no spreadsheet software or internet.
 
@@ -194,9 +198,9 @@ Open **Teacher → Layout & CSV studio** (`/teacher/studio`).
 
 ### Illustrated demo
 
-Open **Try examples** (`/demo`) for the redesigned read-only cards. Import the files in [demo/README.md](demo/README.md) to create real records. The consolidated CSV and XLSX contain exactly **22 card records / 48 copies**, with 22 generated PNG illustrations (15 organisms and seven effects) sized through physical metadata to **2.13 × 1.48 inches**. All seven effect cards now have their own event illustration. The previous play-tested card set is preserved under `demo/v1/`; original source files remain under `demo/source/`.
+Open **Try examples** (`/demo`) to browse the play-tested v1 cards. Its download and the teacher studio instructions use the v1 CSV and artwork in `demo/v1/`. The simplified v2 set is no longer shown in the app demo or recommended for classroom use. Its files remain as an archive. Original source files remain under `demo/source/`.
 
-The original renderer sandbox remains at `/preview`; it reads the original source fixture and does not represent the redesigned imported demo.
+The separate `/preview` page is a temporary field-guide editing sandbox.
 
 ### Verification
 
@@ -206,6 +210,7 @@ The original renderer sandbox remains at `/preview`; it reads the original sourc
 .venv/bin/python scripts/workflow_smoke.py
 .venv/bin/python scripts/import_smoke.py
 .venv/bin/python scripts/print_smoke.py
+.venv/bin/python scripts/upgrades_smoke.py
 ```
 
 The import browser check uses a temporary database, imports all real demo images, verifies 22/48 totals, moves a box, changes typography, saves/reopens layouts, downloads both template formats, skips a duplicate batch, approves an imported card, and saves a new student card against that layout. It blocks external network requests. `CARD_APP_TEST_ENGINE=webkit` selects an installed Playwright WebKit runtime; physical iPad and paper-size proof still need real-device testing.
@@ -214,13 +219,15 @@ The import browser check uses a temporary database, imports all real demo images
 
 ## Print sheets (milestone 6)
 
-Open **Print sheets** from Teacher review or Layout & CSV studio (`/teacher/print`). Choose a project and optional class filter, select approved cards, and leave **Expand imported copies** checked to honor each record's `copies`. Select **Include unapproved imported cards** explicitly to print CSV records before approval; this never changes their approval status. Unapproved student drafts/submissions remain unavailable.
+Open **Print sheets** from Teacher review or Layout & CSV studio (`/teacher/print`). Choose a project and optional class filter, select approved cards, and leave **Expand card quantities** checked to honor each record's `copies`. Select **Include unapproved imported cards** explicitly to print CSV records before approval; this never changes their approval status. Unapproved student drafts/submissions remain unavailable.
+
+Enable **Black and white export** for white backgrounds/panels, consistent dark gray borders/text, and grayscale image crops. This changes only the export, leaving saved colors and original images intact.
 
 Click **Check print selection**, review any image-resolution or approval warnings, then **Download Letter PDF**. Text overflow, missing required fields, disabled themes, unsafe text at punched/rounded corners, and missing images block export; nothing is truncated or shrunk. Card/project versions are checked again at download, so changed or deleted cards require reloading the selection. Export is limited to 200 selected records and 600 expanded cards per download. Selection survives class filtering within a project; changing project/import eligibility or reloading clears it.
 
-Sheets are **US Letter landscape (11 × 8.5 in)** with up to six cards, in reading order. Each square trim rectangle is exactly **180 × 252 points (2.5 × 3.5 in)**, surrounded by **9 pt (3.175 mm) bleed**. Short square-aligned crop marks stay outside the bleed; no cut line is printed through the card. Background fills continue through the corners and bleed; the chosen rounded border remains an interior visual style. Cards currently use inset image frames, not edge-to-edge image bleed. Text uses the same bundled-font vector outlines as preview. Print crops use retained originals, up to 600 DPI in the image frame, without upscaling low-resolution uploads. Warnings are shown below 150 effective DPI.
+Sheets are **US Letter landscape (11 × 8.5 in)** with up to six cards, in reading order. Each square trim rectangle is exactly **180 × 252 points (2.5 × 3.5 in)**, surrounded by **9 pt (3.175 mm) bleed**. Short square-aligned crop marks stay outside the bleed; no cut line is printed through the card. Bleed and the area outside rounded corners use the card border color. The card background stays inside the trim shape. Cards currently use inset image frames, not edge-to-edge image bleed. Text uses the same bundled-font vector outlines as preview. Print crops use retained originals, up to 600 DPI in the image frame, without upscaling low-resolution uploads. Warnings are shown below 150 effective DPI.
 
-Print using **Actual Size / 100%**, Letter paper, landscape orientation. Disable Fit, Shrink, and printer borderless enlargement. Print one test sheet first; measure a trimmed card with a ruler (2.5 × 3.5 in), then use your 3 mm corner punch and inspect content. PDF geometry is tested; a real printer and punch still require this physical acceptance check. PDFs are single-sided fronts; card backs/duplex alignment are not included.
+Print using **Actual Size / 100%**, Letter paper, landscape orientation. Disable Fit, Shrink, and printer borderless enlargement. Print one test sheet first; measure a trimmed card with a ruler (2.5 × 3.5 in), then use your 3 mm corner punch for rounded templates (leave square templates unpunched) and inspect content. PDF geometry is tested; a real printer and punch still require this physical acceptance check. PDFs are single-sided fronts; card backs/duplex alignment are not included.
 
 CairoSVG needs the system Cairo library in addition to Python requirements. It is already available in this workspace. On Debian/Ubuntu install `libcairo2`; on macOS install Cairo with Homebrew (`brew install cairo`). On Windows follow [CairoSVG's installation instructions](https://cairosvg.org/documentation/). These are one-time installation needs, not classroom Internet dependencies.
 

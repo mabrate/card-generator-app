@@ -38,6 +38,7 @@ class PrintSelection(Model):
     cards: list[PrintCard] = Field(min_length=1, max_length=200)
     expand_copies: bool = True
     include_imported: bool = False
+    black_and_white: bool = False
 
     @field_validator('cards')
     @classmethod
@@ -57,7 +58,7 @@ def safe_box(box, radius):
     for px, py in ((x, y), (x + w, y), (x, y + h), (x + w, y + h)):
         dx, dy = min(px, 180 - px), min(py, 252 - py)
         # Conservative 3 mm punch corner exclusion, plus actual visual clip.
-        if dx < 9 and dy < 9:
+        if radius > 0 and dx < 9 and dy < 9:
             return False
         if dx < radius and dy < radius and math.hypot(radius - dx, radius - dy) > radius:
             return False
@@ -68,7 +69,7 @@ def prepare(database, uploads, body):
     # One SQLite read snapshot: approval, versions, text and layout agree.
     with db.connect(database) as connection:
         connection.execute('BEGIN')
-        project = connection.execute('SELECT * FROM projects WHERE id=?', (body.project_id,)).fetchone()
+        project = connection.execute('SELECT * FROM projects WHERE id=? AND deleted_at IS NULL', (body.project_id,)).fetchone()
         if not project or project['version'] != body.project_version:
             raise HTTPException(409, 'The project changed. Reload the print selection before exporting.')
         template = json.loads(project['template_json'])
@@ -95,8 +96,8 @@ def prepare(database, uploads, body):
         if theme is None or row['theme'] not in template['themes']:
             issues.append({'card_id': row['id'], 'title': title, 'message': 'Choose an enabled project theme.'})
             continue
-        artwork = images.render_image(image, uploads, Crop(**json.loads(row['crop_json'])), template['image_box'], for_print=True) if image else None
-        rendered = render_card(values, {}, theme, template, artwork, bleed=BLEED)
+        artwork = images.render_image(image, uploads, Crop(**json.loads(row['crop_json'])), template['image_box'], for_print=True, black_and_white=body.black_and_white) if image else None
+        rendered = render_card(values, {}, theme, template, artwork, bleed=BLEED, black_and_white=body.black_and_white)
         for issue in rendered['issues']:
             issues.append({'card_id': row['id'], 'title': title, 'message': issue['message']})
         radius = template.get('card_radius', 5 if template.get('version') == 2 else 0)
@@ -156,7 +157,7 @@ def make_pdf(plan):
             crop_marks(sheet, *slot(index))
         sheet.setFillColor(HexColor('#444444'))
         sheet.setFont('Helvetica', 7)
-        sheet.drawCentredString(396, 12, f"Actual Size / 100% - trim 2.5 x 3.5 in - 3 mm corner punch - {page_number}/{plan['pages']}")
+        sheet.drawCentredString(396, 12, f"Actual Size / 100% - trim 2.5 x 3.5 in - trim at crop marks - {page_number}/{plan['pages']}")
         sheet.showPage()
         sheet.save()
         page = writer.add_page(PdfReader(BytesIO(furniture.getvalue())).pages[0])
@@ -183,7 +184,7 @@ def print_routes(database, uploads, require_teacher):
         require_teacher(request)
         with db.connect(database) as connection:
             connection.execute('BEGIN')
-            project = connection.execute('SELECT id,title,version FROM projects WHERE id=?', (project_id,)).fetchone()
+            project = connection.execute('SELECT id,title,version FROM projects WHERE id=? AND deleted_at IS NULL', (project_id,)).fetchone()
             if not project:
                 raise HTTPException(404, 'Project not found.')
             rows = connection.execute('SELECT id,version,values_json,status,student_name,class_name,copies,external_id FROM cards WHERE project_id=? AND deleted_at IS NULL ORDER BY created_at,id', (project_id,)).fetchall()

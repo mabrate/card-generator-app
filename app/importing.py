@@ -13,9 +13,9 @@ from pydantic import Field
 from starlette.concurrency import run_in_threadpool
 
 from app import db, images
-from app.cards import history
+from app.cards import history, update_project_cards
 from app.config import THEMES
-from app.layouts import Layout, LayoutWrite, default_layout
+from app.layouts import Layout, LayoutWrite, default_layout, layout_presets
 from app.rendering import render_card
 from app.schemas import Model, Crop, safe_text
 from app.spreadsheet import export_template, template_headers
@@ -72,6 +72,11 @@ def import_routes(database, uploads, require_teacher):
         require_teacher(request)
         return default_layout()
 
+    @router.get('/api/teacher/layout/presets')
+    def presets(request: Request):
+        require_teacher(request)
+        return layout_presets()
+
     @router.post('/api/teacher/layout/preview')
     def preview(body: StudioPreview, request: Request):
         require_teacher(request)
@@ -109,18 +114,11 @@ def import_routes(database, uploads, require_teacher):
                 identifier = secrets.token_hex(12)
                 connection.execute('INSERT INTO projects(id,title,template_json) VALUES(?,?,?)', (identifier, body.title, json.dumps(template)))
             else:
-                row = connection.execute('SELECT * FROM projects WHERE id=?', (identifier,)).fetchone()
+                row = connection.execute('SELECT * FROM projects WHERE id=? AND deleted_at IS NULL', (identifier,)).fetchone()
                 if not row or row['version'] != body.expected_version:
                     raise HTTPException(409, 'Project changed. Reopen its saved layout before editing.')
-                old = json.loads(row['template_json'])
-                removed = {f['key'] for f in old['fields']} - {f['key'] for f in template['fields']}
-                if removed and connection.execute('SELECT 1 FROM cards WHERE project_id=? AND deleted_at IS NULL', (identifier,)).fetchone():
-                    raise HTTPException(422, 'Cannot remove or rename field keys while this project has cards. Create a new layout instead.')
                 connection.execute('UPDATE projects SET title=?,template_json=?,version=version+1 WHERE id=?', (body.title, json.dumps(template), identifier))
-                approved = connection.execute("SELECT id FROM cards WHERE project_id=? AND status='Approved' AND deleted_at IS NULL", (identifier,)).fetchall()
-                for card in approved:
-                    connection.execute("UPDATE cards SET status='Submitted',version=version+1,last_mutation=NULL,last_payload=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?", (card['id'],))
-                    history(connection, connection.execute('SELECT * FROM cards WHERE id=?', (card['id'],)).fetchone(), 'teacher', 'Layout changed; approval needs review')
+                update_project_cards(connection, identifier, template, 'Layout changed; approval needs review')
         return db.project(database, identifier)
 
     @router.get('/api/teacher/layout/{identifier}/template.csv')

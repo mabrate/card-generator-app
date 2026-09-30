@@ -11,7 +11,8 @@ from app.layouts import default_layout
 from app.rendering import render_card
 from app.schemas import Crop
 
-DIRECTORY = ROOT / 'demo' / 'v2'
+# Keep the tested v1 card set as the classroom-facing default.
+DIRECTORY = ROOT / 'demo' / 'v1'
 
 
 def rows():

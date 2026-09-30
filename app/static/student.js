@@ -97,6 +97,7 @@ async function start() {
   const storedRegistry = read(REGISTRY, []);
   registry = (Array.isArray(storedRegistry) ? storedRegistry : []).filter(item => item && /^[A-Za-z0-9_-]{43}$/.test(item.token));
   const projects = await api('/api/projects');
+  if (!projects.length) throw new Error('No projects are available. Ask your teacher to create a project.');
   projects.forEach(project => byId('project').add(new Option(project.title, project.id)));
   const requested = new URLSearchParams(location.search).get('project');
   const active = read(ACTIVE, null);

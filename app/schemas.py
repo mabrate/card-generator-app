@@ -44,6 +44,7 @@ class CardWrite(Preview):
     project_version: int = Field(ge=1)
     mutation_id: str = Field(pattern=r'^[a-zA-Z0-9_-]{16,80}$')
     action: Literal['save', 'submit'] = 'save'
+    copies: int | None = Field(default=None, ge=1, le=999)
 
     @field_validator('student_name', 'class_name')
     @classmethod
@@ -74,6 +75,21 @@ class FieldSettings(Model):
     @classmethod
     def text(cls, value):
         return safe_text(value)
+
+
+class ImportIdentity(Model):
+    expected_version: int = Field(ge=1)
+    student_name: str | None = Field(default=None, max_length=80)
+    class_name: str | None = Field(default=None, max_length=40)
+
+    @field_validator('student_name', 'class_name')
+    @classmethod
+    def identity(cls, value):
+        return safe_text(value).strip() if value is not None else None
+
+
+class ProjectDelete(Model):
+    expected_version: int = Field(ge=1)
 
 
 class ProjectWrite(Model):

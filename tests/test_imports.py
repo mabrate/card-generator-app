@@ -175,6 +175,6 @@ def test_public_demo_and_approval_after_layout_fix(client):
     assert changed['status'] == 'Submitted' and changed['version'] > card['version']
     removed = deepcopy(p['template'])
     removed['fields'].pop()
-    assert client.post('/api/teacher/layout/' + p['id'], headers=WRITE, json={'title': 'Remove', 'expected_version': 4, 'template': removed}).status_code == 422
+    assert client.post('/api/teacher/layout/' + p['id'], headers=WRITE, json={'title': 'Remove', 'expected_version': 4, 'template': removed}).status_code == 200
 
 

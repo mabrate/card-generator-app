@@ -24,6 +24,21 @@ def history(connection, row, actor, action):
                        (row['id'], actor, action, json.dumps(record(row))))
 
 
+def update_project_cards(connection, identifier, template, action):
+    keys = {f['key'] for f in template['fields']}
+    rows = connection.execute('SELECT * FROM cards WHERE project_id=? AND deleted_at IS NULL', (identifier,)).fetchall()
+    for row in rows:
+        values = json.loads(row['values_json'])
+        filtered = {k: v for k, v in values.items() if k in keys}
+        removed = filtered != values
+        if removed or row['status'] == 'Approved':
+            if removed:
+                history(connection, row, 'teacher', 'Before field removal (original content retained here)')
+            connection.execute("UPDATE cards SET values_json=?,status=?,version=version+1,last_mutation=NULL,last_payload=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                               (json.dumps(filtered), 'Submitted' if row['status'] == 'Approved' else row['status'], row['id']))
+            history(connection, connection.execute('SELECT * FROM cards WHERE id=?', (row['id'],)).fetchone(), 'teacher', action)
+
+
 class CardStore:
     def __init__(self, database, uploads):
         self.database, self.uploads = database, uploads
@@ -83,7 +98,7 @@ class CardStore:
         result['image_dpi'] = artwork['dpi'] if artwork else None
         return result, project
 
-    def validate_write(self, body, owner, teacher=False):
+    def validate_write(self, body, owner, teacher=False, existing=None):
         if body.labels:
             raise HTTPException(422, 'Card labels are controlled by the project. Reload the project directions.')
         rendered, project = self.preview(body, owner, teacher)
@@ -93,6 +108,8 @@ class CardStore:
                 issues.append({'field': 'student_name', 'message': 'Enter your name before submitting.'})
             if not body.class_name:
                 issues.append({'field': 'class_name', 'message': 'Enter your class or period before submitting.'})
+        if teacher and existing and body.values == json.loads(existing['values_json']) and body.action == 'save':
+            issues = []  # Allow identity, quantity, and image corrections while existing text awaits review.
         if issues:
             raise HTTPException(422, {'message': 'Please fix the marked fields. Your text has not been changed.', 'issues': issues})
         if body.project_version != project['version']:
@@ -101,7 +118,10 @@ class CardStore:
 
     def save(self, body, owner, teacher_id=None):
         # Validation and image processing occur before taking the write lock.
-        project = self.validate_write(body, owner, teacher_id is not None)
+        if not teacher_id and body.copies is not None:
+            raise HTTPException(403, 'Only teachers can change print quantity.')
+        existing = self.by_id(teacher_id) if teacher_id else None
+        project = self.validate_write(body, owner, teacher_id is not None, existing)
         fingerprint = hashlib.sha256(body.model_dump_json().encode()).hexdigest()
         with db.connect(self.database) as connection:
             connection.execute('BEGIN IMMEDIATE')
@@ -123,13 +143,10 @@ class CardStore:
                     raise HTTPException(422, 'An existing card cannot switch projects. Start a new card instead.')
                 if not teacher_id and row['status'] in ('Submitted', 'Approved'):
                     raise HTTPException(409, 'This card is with your teacher. It can be edited again after Needs Revision.')
-                # Teachers edit text/identity/theme, retaining the student's image and crop.
-                if teacher_id and (body.image_id != row['image_id'] or body.crop.model_dump() != json.loads(row['crop_json'])):
-                    raise HTTPException(422, 'Teacher text edits must retain the current image and crop.')
                 status = 'Submitted' if body.action == 'submit' or row['status'] == 'Approved' else row['status']
                 identifier = row['id']
-                connection.execute('UPDATE cards SET student_name=?,class_name=?,values_json=?,theme=?,image_id=?,crop_json=?,status=?,version=version+1,last_mutation=?,last_payload=?,updated_at=CURRENT_TIMESTAMP WHERE id=?',
-                                   (body.student_name, body.class_name, json.dumps(body.values), body.theme, body.image_id, body.crop.model_dump_json(), status, body.mutation_id, fingerprint, identifier))
+                connection.execute('UPDATE cards SET student_name=?,class_name=?,values_json=?,theme=?,image_id=?,crop_json=?,status=?,copies=?,version=version+1,last_mutation=?,last_payload=?,updated_at=CURRENT_TIMESTAMP WHERE id=?',
+                                   (body.student_name, body.class_name, json.dumps(body.values), body.theme, body.image_id, body.crop.model_dump_json(), status, body.copies if teacher_id and body.copies is not None else row['copies'], body.mutation_id, fingerprint, identifier))
             else:
                 if teacher_id or body.expected_version != 0:
                     raise HTTPException(409, 'The saved card was not found. Reload before continuing.')
@@ -137,7 +154,7 @@ class CardStore:
                 connection.execute('INSERT INTO cards(id,project_id,edit_hash,student_name,class_name,values_json,theme,image_id,crop_json,status,last_mutation,last_payload) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
                                    (identifier, body.project_id, owner, body.student_name, body.class_name, json.dumps(body.values), body.theme, body.image_id, body.crop.model_dump_json(), 'Submitted' if body.action == 'submit' else 'Draft', body.mutation_id, fingerprint))
             saved = connection.execute('SELECT * FROM cards WHERE id=?', (identifier,)).fetchone()
-            history(connection, saved, 'teacher' if teacher_id else 'student', 'Edit text' if teacher_id else ('Submit' if body.action == 'submit' else 'Save draft'))
+            history(connection, saved, 'teacher' if teacher_id else 'student', 'Edit card' if teacher_id else ('Submit' if body.action == 'submit' else 'Save draft'))
         return record(saved)
 
     def review(self, identifier, body):

@@ -13,6 +13,8 @@ class LayoutField(FieldSettings):
     line_height: float = Field(ge=5, le=40)
     font: Literal['regular', 'bold', 'italic'] = 'regular'
     prefix: str = Field(default='', max_length=60)
+    text_align: Literal['left', 'center', 'right'] = 'left'
+    vertical_align: Literal['top', 'middle', 'bottom'] = 'top'
 
     @field_validator('prefix')
     @classmethod
@@ -56,7 +58,7 @@ class Layout(Model):
     def geometry(self):
         check_box(self.image_box)
         keys = [f.key for f in self.fields]
-        if len(set(keys)) != len(keys) or set(keys) & {'card_id', 'copies', 'card_kind', 'theme', 'image_filename'}:
+        if len(set(keys)) != len(keys) or set(keys) & {'card_id', 'copies', 'card_kind', 'theme', 'image_filename', 'student_name', 'class_name', 'image'}:
             raise ValueError('Use unique field keys that are not import metadata names.')
         safe_text(self.instructions)
         return self
@@ -89,3 +91,58 @@ def default_layout():
                     for k, l, b, s, h, f, m, p in specs],
                   image_box=[13.32, 63, 153.36, 106.56], themes=['sage', 'sky', 'sand', 'rose', 'lavender']).model_dump()
 
+
+
+def layout_presets():
+    """Original classroom layouts inspired by familiar card categories."""
+    styles = [
+        ('organism', 'Field guide', default_layout()),
+    ]
+
+    def make(specs, image_box):
+        fields = [LayoutField(key=key, label=label, box=box, font_size=size,
+                              line_height=size * 1.15, font=font, max_chars=limit,
+                              required=index == 0, text_align=align,
+                              instructions='Write concise text and check the preview.').model_dump()
+                  for index, (key, label, box, size, font, limit, align) in enumerate(specs)]
+        return Layout(fields=fields, image_box=image_box, themes=default_layout()['themes'],
+                      image_radius=0, image_border_width=1).model_dump()
+
+    styles.extend([
+        ('playing', 'Classic playing card', make([
+            ('rank', 'Rank / value', [14, 12, 40, 27], 20, 'bold', 3, 'left'),
+            ('suit', 'Suit / symbol name', [14, 42, 152, 17], 12, 'regular', 20, 'center'),
+            ('caption', 'Center caption', [14, 191, 152, 20], 12, 'bold', 32, 'center'),
+            ('bottom_rank', 'Bottom rank / value', [126, 215, 40, 27], 20, 'bold', 3, 'right'),
+        ], [37, 66, 106, 116])),
+        ('creature', 'Creature trading card', make([
+            ('name', 'Name', [12, 12, 112, 20], 12, 'bold', 45, 'left'),
+            ('health', 'Health / points', [128, 12, 40, 20], 10, 'bold', 12, 'right'),
+            ('type', 'Type / category', [12, 139, 156, 13], 8, 'italic', 60, 'left'),
+            ('ability', 'Ability', [12, 158, 156, 34], 8, 'regular', 180, 'left'),
+            ('action', 'Action / attack', [12, 198, 156, 29], 8, 'regular', 140, 'left'),
+            ('stats', 'Weakness / cost', [12, 233, 156, 10], 6, 'regular', 75, 'center'),
+        ], [12, 37, 156, 96])),
+        ('spell', 'Spell and strategy card', make([
+            ('name', 'Name', [12, 12, 119, 20], 11, 'bold', 50, 'left'),
+            ('cost', 'Cost', [135, 12, 33, 20], 10, 'bold', 10, 'right'),
+            ('type', 'Type / category', [12, 140, 156, 13], 8, 'bold', 60, 'left'),
+            ('rules', 'Rules / effect', [12, 159, 156, 48], 8, 'regular', 270, 'left'),
+            ('flavor', 'Flavor text', [12, 213, 116, 29], 7, 'italic', 130, 'left'),
+            ('power', 'Power', [134, 222, 34, 20], 10, 'bold', 10, 'right'),
+        ], [12, 37, 156, 97])),
+        ('sports', 'Sports / profile card', make([
+            ('name', 'Name', [12, 12, 156, 22], 13, 'bold', 45, 'center'),
+            ('team', 'Team / group', [12, 169, 156, 14], 9, 'bold', 60, 'center'),
+            ('role', 'Position / role', [12, 188, 156, 13], 8, 'italic', 65, 'center'),
+            ('stats', 'Stats', [12, 207, 156, 15], 8, 'bold', 75, 'center'),
+            ('bio', 'Short profile', [12, 228, 156, 16], 6.5, 'regular', 120, 'left'),
+        ], [12, 40, 156, 123])),
+    ])
+    presets = []
+    for key, title, template in styles:
+        for suffix, label, radius in [('square', 'square corners', 0), ('rounded', '3 mm corners', 3 * 72 / 25.4)]:
+            layout = copy.deepcopy(template)
+            layout['card_radius'] = radius
+            presets.append({'id': key + '-' + suffix, 'title': title + ' · ' + label, 'template': layout})
+    return presets

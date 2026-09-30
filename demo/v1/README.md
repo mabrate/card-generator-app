@@ -3,13 +3,13 @@
 ## Import it
 
 1. Start the app, sign in as teacher, and open **Layout & CSV studio**.
-2. Keep **New organism layout**, then select `campus-food-web-cards.csv` from this folder.
-3. Select all **22 PNG files** inside `graphics/` using the image-assets picker. Do not select `prompts.json`. Each filename matches its CSV cell exactly.
-4. Check the column matches, select different CSV rows to preview, and adjust boxes/fonts if desired. Under **Corners and borders**, set card and image radii and border thicknesses in points. Use 0 for square corners or no border. The image box defaults to **2.13 × 1.48 inches**.
+2. In **Card style and corners**, choose **Field guide · square corners** and click **Create from template**. Give the new project a title, then select `v1/campus-food-web-cards.csv`.
+3. Select all **22 PNG files** inside `v1/graphics/` using the image-assets picker. Do not select `prompts.json`. Each filename matches its CSV cell exactly.
+4. Check the column matches, select different CSV rows to preview, and adjust boxes/fonts if desired. The field guide template provides the v1 card layout and image area.
 5. Save the layout, validate, review the rows, then import. Expected result: **22 created, 48 copies, 0 rejected, 0 needing text/layout review** with the unmodified default layout.
 6. Open Teacher review. To change the layout later, use **Edit this project's layout**, or reopen the saved project in the studio and choose **Preview a saved card**.
 
-If you imported an earlier demo, select the revised CSV and all 22 PNGs, then choose **Update existing cards** to replace its card text and images. This resets those cards' approval and image crops. Existing cards are never silently changed just because files in `demo/` changed.
+If you imported this set before, select the v1 CSV and all 22 PNGs, then choose **Update existing cards** to replace its card text and images. This resets those cards' approval and image crops. Existing cards are never silently changed just because files in `demo/` changed.
 
 Repeated imports with the default **Skip existing cards** option create nothing and skip all 22 matching IDs. Updating replaces the matching card's data and resets its approval and image crop. Creating another copy assigns a new external ID; it does not change the `copies` count on the original card.
 

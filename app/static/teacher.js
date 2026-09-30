@@ -2,7 +2,7 @@ import {api, byId, CardEditor, message, randomKey} from './editor.js';
 
 let editor, current, dirty = false, busy = false, projects = [], settings, page = 1, total = 0, listRevision = 0;
 const settingsFields = new Map();
-const safeLeave = () => !busy && (!dirty || confirm('Discard unsaved teacher text edits and open another view?'));
+const safeLeave = () => !busy && (!dirty || confirm('Discard unsaved teacher edits and open another view?'));
 async function guard(task) {
   message('page-error', '');
   try { await task(); }
@@ -15,7 +15,7 @@ function controls() {
   byId('request-revision').disabled = busy || dirty || !['Submitted', 'Approved'].includes(current.status);
   for (const id of ['delete-card', 'reload-card', 'close-review']) byId(id).disabled = busy;
   editor?.setLocked(busy);
-  byId('review-hint').textContent = dirty ? 'Save text edits before approving or requesting revision. Editing an approved card returns it to Submitted.' : 'Only submitted cards can be approved. Request revision to unlock a student card.';
+  byId('review-hint').textContent = dirty ? 'Save card edits before approving or requesting revision. Editing an approved card returns it to Submitted.' : 'Only submitted cards can be approved. Request revision to unlock a student card.';
 }
 async function loadProjects(selected) {
   projects = await api('/api/projects');
@@ -23,13 +23,15 @@ async function loadProjects(selected) {
   filter.replaceChildren(new Option('All projects', ''));
   const select = byId('settings-project'); select.replaceChildren();
   projects.forEach(project => { select.add(new Option(project.title, project.id)); filter.add(new Option(project.title, project.id)); });
-  filter.value = previous; select.value = selected || projects[0].id;
+  filter.value = previous; select.value = selected || projects[0]?.id || '';
 }
 async function loadSettings(identifier) {
   settings = await api('/api/project?project_id=' + encodeURIComponent(identifier));
   displaySettings();
 }
 function displaySettings() {
+  byId('delete-project').disabled = !settings.id;
+  byId('import-identity').hidden = !settings.id;
   byId('project-title').value = settings.title; byId('directions').value = settings.template.instructions;
   byId('student-url').textContent = settings.id ? location.origin + '/student?project=' + settings.id : 'Save this project to create its student link.';
   byId('student-qr').hidden = !settings.id;
@@ -55,8 +57,33 @@ function displaySettings() {
       if (type === 'number') { input.min = 1; input.max = 2000; input.required = true; }
       details.append(label, input); controls[key] = input;
     }
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button danger'; remove.textContent = 'Delete field';
+    remove.disabled = settings.template.fields.length <= 1;
+    remove.addEventListener('click', () => {
+      if (!confirm(`Remove “${field.label}” from this project? On Save, this field disappears from all its cards. Previously saved content is retained in local history. Unsaved content in this field will be lost.`)) return;
+      captureSettings(); settings.template.fields = settings.template.fields.filter(f => f.key !== field.key); displaySettings();
+    });
+    details.append(remove);
     settingsFields.set(field.key, controls); byId('field-settings').append(details);
   }
+}
+function captureSettings() {
+  settings.title = byId('project-title').value;
+  settings.template.instructions = byId('directions').value;
+  settings.template.themes = [...byId('allowed-themes').querySelectorAll('input:checked')].map(input => input.value);
+  for (const field of settings.template.fields) {
+    const inputs = settingsFields.get(field.key);
+    if (inputs) for (const key of ['label', 'instructions', 'example', 'max_chars', 'required']) field[key] = key === 'required' ? inputs[key].checked : key === 'max_chars' ? Number(inputs[key].value) : inputs[key].value;
+  }
+}
+function addSettingsField() {
+  const key = byId('new-field-key').value.trim();
+  if (!/^[a-z][a-z0-9_]{0,49}$/.test(key) || ['card_id','copies','card_kind','theme','image_filename','student_name','class_name','image'].includes(key) || settings.template.fields.some(f => f.key === key)) throw new Error('Use a unique lowercase field key, excluding metadata names.');
+  if (settings.template.fields.length >= 12) throw new Error('A project supports up to 12 fields.');
+  captureSettings();
+  settings.template.fields.push({key, label: byId('new-field-label').value.trim() || key.replaceAll('_', ' '), instructions: '', example: '', required: false, max_chars: 200});
+  displaySettings(); byId('new-field-key').value = ''; byId('new-field-label').value = '';
+  message('teacher-message', 'Field added. Save project settings, then position it in Layout & CSV studio.');
 }
 async function saveSettings(event) {
   event.preventDefault();
@@ -71,6 +98,38 @@ async function saveSettings(event) {
     if (current?.project_id === result.id) await openCard(current.id, true);
     message('teacher-message', 'Project settings saved. Previously approved cards in this project need a fresh review.');
   } finally { byId('save-project').disabled = false; }
+}
+async function saveImportIdentity() {
+  if (!settings.id || !safeLeave()) return;
+  const body = {expected_version: settings.version};
+  if (byId('apply-student').checked) body.student_name = byId('import-student').value;
+  if (byId('apply-class').checked) body.class_name = byId('import-class').value;
+  if (!('student_name' in body) && !('class_name' in body)) throw new Error('Select Update Student, Update Class, or both.');
+  if (!confirm(`Update all imported cards in “${settings.title}”? ${'student_name' in body ? 'Student: ' + (body.student_name || '(blank)') + '. ' : ''}${'class_name' in body ? 'Class: ' + (body.class_name || '(blank)') + '. ' : ''}Unsaved project and review edits will be discarded. Approved imports will need fresh review.`)) return;
+  byId('save-import-identity').disabled = true;
+  try {
+    const result = await api('/api/teacher/projects/' + settings.id + '/import-identity', {body});
+    await loadSettings(settings.id); await refreshList();
+    if (current?.project_id === settings.id) await openCard(current.id, true);
+    message('teacher-message', `Student/Class updated on ${result.updated} imported cards.`);
+  } finally { byId('save-import-identity').disabled = false; }
+}
+async function deleteProject() {
+  if (!settings.id || !safeLeave()) return;
+  const target = settings;
+  if (!confirm(`Delete project “${target.title}” and ALL its cards? Its student link will stop working and its cards will disappear from review and printing. Unsaved edits will be lost. Local records, original images, and history are retained. There is no restore button.`)) return;
+  byId('delete-project').disabled = true;
+  try {
+    await api('/api/teacher/projects/' + target.id + '/delete', {body: {expected_version: target.version}});
+    if (current?.project_id === target.id) {
+      editor?.destroy(); editor = null; current = null; dirty = false; byId('review-detail').hidden = true;
+    }
+    await loadProjects();
+    if (projects.length) await loadSettings(projects[0].id);
+    else { settings = (await api('/api/teacher/dashboard')).project; displaySettings(); }
+    page = 1; await refreshList();
+    message('teacher-message', `Project “${target.title}” deleted. Local records and images retained.`);
+  } finally { byId('delete-project').disabled = !settings.id; }
 }
 async function refreshList() {
   const revision = ++listRevision;
@@ -101,7 +160,7 @@ async function openCard(identifier, keepPosition = false) {
     const card = await api('/api/teacher/cards/' + identifier);
     const project = await api('/api/project?project_id=' + card.project_id);
     editor?.destroy(); current = card; dirty = false;
-    editor = new CardEditor(byId('editor'), project, card, {teacher: true, onChange: () => { dirty = true; controls(); }});
+    editor = new CardEditor(byId('editor'), project, card, {teacher: true, onBusy: value => { busy = value; controls(); }, onChange: () => { dirty = true; controls(); }});
     byId('review-title').textContent = card.values.common_name || card.values.title || card.values[project.template.fields[0].key] || 'Untitled card'; byId('review-status').textContent = card.status;
     byId('edit-layout-link').href = '/teacher/studio?project=' + project.id;
     byId('review-project').textContent = project.title + (card.external_id ? ' · ' + card.copies + ' copies · ' + card.external_id : '') + ' · Last saved ' + card.updated_at + ' UTC';
@@ -121,7 +180,7 @@ async function saveEdits() {
 }
 async function review(action) {
   if (busy || !current) return;
-  if (dirty && action !== 'delete') throw new Error('Save text edits before changing review status.');
+  if (dirty && action !== 'delete') throw new Error('Save card edits before changing review status.');
   if (action === 'delete' && !confirm(`Delete “${current.values.common_name || current.values.title || 'Untitled card'}” by ${current.student_name || 'unnamed student'}? It will disappear from review and the student can no longer reopen it. ${dirty ? 'Unsaved teacher edits will be lost. ' : ''}Original files and history remain in local storage.`)) return;
   busy = true; controls();
   try {
@@ -135,8 +194,11 @@ async function review(action) {
 async function start() {
   const dashboard = await api('/api/teacher/dashboard');
   byId('database-state').textContent = '✓ Local project database is ready.';
-  await loadProjects(dashboard.project.id); await loadSettings(dashboard.project.id); await refreshList();
+  await loadProjects(dashboard.project.id); settings = dashboard.project; displaySettings(); await refreshList();
   byId('settings-project').addEventListener('change', () => guard(() => loadSettings(byId('settings-project').value)));
+  byId('save-import-identity').addEventListener('click', () => guard(saveImportIdentity));
+  byId('add-project-field').addEventListener('click', () => guard(addSettingsField));
+  byId('delete-project').addEventListener('click', () => guard(deleteProject));
   byId('new-project').addEventListener('click', () => { settings = {...structuredClone(settings), id: null, title: 'New field guide', version: 0}; displaySettings(); byId('project-title').focus(); });
   byId('project-form').addEventListener('submit', event => guard(() => saveSettings(event)));
   for (const id of ['filter-project', 'filter-class', 'filter-status']) byId(id).addEventListener('change', () => { page = 1; guard(refreshList); });

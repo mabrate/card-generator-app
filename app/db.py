@@ -40,8 +40,10 @@ def initialize(path):
 
 def project(path, identifier="field-guide"):
     with connect(path) as db:
-        row = db.execute("SELECT * FROM projects WHERE id=?", (identifier,)).fetchone()
+        row = db.execute("SELECT * FROM projects WHERE id=? AND deleted_at IS NULL", (identifier,)).fetchone()
         themes = [json.loads(r[0]) for r in db.execute("SELECT config_json FROM themes ORDER BY rowid")]
+    if identifier is None:
+        row = {"id": None, "title": "New field guide", "version": 0, "template_json": json.dumps(TEMPLATE)}
     if row is None:
         raise HTTPException(404, "Project not found.")
     template = json.loads(row["template_json"])

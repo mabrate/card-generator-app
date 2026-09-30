@@ -70,13 +70,15 @@ def wrap(text, font, size, width):
     return lines
 
 
-def render_card(values, labels, theme, template, artwork=None, bleed=0):
+def render_card(values, labels, theme, template, artwork=None, bleed=0, black_and_white=False):
+    if black_and_white:
+        theme = {**theme, 'background': '#ffffff', 'panel': '#ffffff', 'heading': '#333333', 'accent': '#444444'}
     issues, fragments, definitions, used = [], [], [], set()
 
     def issue(key, code, message):
         issues.append({"field": key, "code": code, "message": message})
 
-    def text_block(key, text, label, box, size, leading, style="regular", color="#26382f"):
+    def text_block(key, text, label, box, size, leading, style="regular", color="#26382f", align="left", valign="top"):
         if not text:
             return
         x, y, width, height = box
@@ -86,10 +88,15 @@ def render_card(values, labels, theme, template, artwork=None, bleed=0):
             issue(key, "unsupported_glyph", f"{label}: the card font cannot draw {''.join(unsupported)!r}. Use supported characters.")
         lines = wrap(text, font, size, width)
         overflow = False
+        top = min((size * .92 + i * leading - font.measure(line, size)[3] for i, line in enumerate(lines)), default=0)
+        bottom = max((size * .92 + i * leading - font.measure(line, size)[2] for i, line in enumerate(lines)), default=0)
+        vertical_offset = 0
+        if bottom - top <= height and valign != 'top':
+            vertical_offset = (height - (bottom - top)) * (.5 if valign == 'middle' else 1) - top
         drawings = []
         for index, line in enumerate(lines):
             measured, left, low, high = font.measure(line, size)
-            baseline = y + size * 0.92 + index * leading
+            baseline = y + vertical_offset + size * 0.92 + index * leading
             if measured > width + 0.01 or baseline - high < y - 0.01 or baseline - low > y + height + 0.01:
                 overflow = True
             # Keep all source text in the result metadata; only visible lines need paths.
@@ -107,7 +114,8 @@ def render_card(values, labels, theme, template, artwork=None, bleed=0):
                     glyphs.append(f'<use href="#{glyph_id}" transform="translate({cursor} 0)"/>')
                 cursor += advance
             scale = size / font.units
-            drawings.append(f'<g transform="translate({x-left:.4f} {baseline:.4f}) scale({scale:.8f} {-scale:.8f})">{"".join(glyphs)}</g>')
+            horizontal_offset = max(0, width - measured) * {"left": 0, "center": .5, "right": 1}[align]
+            drawings.append(f'<g transform="translate({x-left+horizontal_offset:.4f} {baseline:.4f}) scale({scale:.8f} {-scale:.8f})">{"".join(glyphs)}</g>')
         if overflow:
             issue(key, "overflow", f"{label}: text does not fit at the fixed type size. Shorten it before saving or printing.")
         clip_id = f"clip-{key}"
@@ -126,7 +134,7 @@ def render_card(values, labels, theme, template, artwork=None, bleed=0):
         if field["label_box"] and value:
             text_block(key + "-label", label, label + " label", field["label_box"], 6, 6.7, "bold", theme["heading"])
         text_block(key, (field.get("prefix", "") + value) if value else "", label, field["box"], field["font_size"], field["line_height"], field["font"],
-                   theme["heading"] if field["font"] == "bold" else "#26382f")
+                   theme["heading"] if field["font"] == "bold" else ("#333333" if black_and_white else "#26382f"), field.get("text_align", "left"), field.get("vertical_align", "top"))
 
     x, y, width, height = template["image_box"]
     modern = template.get("version") == 2
@@ -134,8 +142,9 @@ def render_card(values, labels, theme, template, artwork=None, bleed=0):
     image_radius = min(template.get("image_radius", 8.5), width / 2, height / 2)
     card_border_width = template.get("card_border_width", 1)
     image_border_width = min(template.get("image_border_width", 0), width / 2, height / 2)
-    border_color = theme["accent"] if modern else "#596359"
-    background = f'<rect data-role="card-background" x="{-bleed}" y="{-bleed}" width="{180 + 2 * bleed}" height="{252 + 2 * bleed}" rx="{0 if bleed else card_radius}" fill="{theme["background"]}"/>'
+    border_color = "#444444" if black_and_white else (theme["accent"] if modern else "#596359")
+    background = f'<rect data-role="card-bleed" x="{-bleed}" y="{-bleed}" width="{180 + 2 * bleed}" height="{252 + 2 * bleed}" fill="{border_color}"/>' if bleed else ''
+    background += f'<rect data-role="card-background" x="0" y="0" width="180" height="252" rx="{card_radius}" fill="{theme["background"]}"/>'
     if not modern:
         background += (
             f'<rect x="10" y="176" width="160" height="33" rx="3" fill="{theme["panel"]}"/>'

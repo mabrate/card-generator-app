@@ -83,7 +83,7 @@ def crop_box(width, height, crop, ratio):
     return left, top, left + crop_width, top + crop_height
 
 
-def render_image(row, directory, crop, frame, for_print=False):
+def render_image(row, directory, crop, frame, for_print=False, black_and_white=False):
     """Use one crop calculation for preview pixels and effective print resolution."""
     ratio = frame[2] / frame[3]
     source_width, source_height = row['width'], row['height']
@@ -102,6 +102,8 @@ def render_image(row, directory, crop, frame, for_print=False):
             rendered = rotated.crop(box)
             max_width = max(1000, round(frame[2] / 72 * 600)) if for_print else 1000
             rendered.thumbnail((max_width, round(max_width / ratio)), Image.Resampling.LANCZOS)
+            if black_and_white:
+                rendered = ImageOps.grayscale(rendered).convert('RGB')
             buffer = BytesIO()
             rendered.save(buffer, format='JPEG', quality=92)
     except (OSError, ValueError):

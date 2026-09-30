@@ -2,59 +2,57 @@
 
 ## Game at a Glance
 
-**Players:** 2–4  
-**Deck:** 40 organism cards + 8 effect cards  
-**Goal:** First player to reach 20 points at the end of their turn.
+**Players:** 2–4
+**Deck:** 40 organism cards + 8 effect cards
+**Goal:** First player to reach 20 points at the end of a round.
 
-Each player controls a personal **Garden Plot**, but all plots form one connected ecosystem. Organisms may pollinate, feed, hunt, or parasitize across the whole table unless a card says otherwise.
+Each player controls a personal **Garden Plot**, but all plots form one connected ecosystem. Organisms may interact across the whole table unless a card says otherwise.
 
-## Counters and Score
+## Counters
 
 Use **black-eyed peas** as counters if available. Set aside two peas marked on one side for the weather toss. The remaining, unmarked peas form the shared counter supply. Counter location tells you what it represents:
 
-| Counter location | Meaning |
+| Counter Type       _| Location| Caps |
 |---|---|
-| On an organism card | Population |
-| Above a plant card | Light |
-| Below a plant card | Water |
+| Population | On an organism card | Every organism enters play with **1 Population**. The usual maximum is **3 Population** unless a card says otherwise.|
+| Light | Above a plant card| Light counters are determined by the weather and do not carry into the next round.|
+| Water | Below a plant card | A plant may hold **at most 3 Water**, even if an effect would give it more. Return excess or spent counters to the supply.
 
-Every organism enters play with **1 Population**. The usual maximum is **3 Population**; Common Sunflower may have 4. A plant may hold **at most 3 Water**, even if an effect would give it more. Return excess or spent counters to the supply. Light does not carry into the next round.
+## Scoring
 
-At the **end of your turn**, count:
+At the **end of each round**, count:
 
 1. Every Population counter on organisms in your plot; plus
 2. One point for each **different organism type** in your plot (compare printed Common Names). Multiple copies of the same organism add only one diversity point.
 
-Water, Light, cards in your hand, Effect cards, and cards in Compost do not score. Scores are not cumulative. The first player whose current plot reaches **20 or more** points at this check wins.
+The first player whose current plot reaches **20 or more** points at this check wins.
 
-## Setup
+## Setup & Winning
 
 1. Shuffle the organism and Effect cards together into one draw deck. Each player draws until they have 4 cards in hand.
 2. Create a shared counter supply and an empty shared **Compost pile**. There is no separate discard pile and no Nutrient counter type.
 3. Mark one side of each of two black-eyed peas. Put these two **weather peas** aside; they never enter the counter supply.
 4. Choose a starting player.
 
+:::pagebreak
+
 ## Round Guide
 
 ### Weather
 
-Toss the two weather peas once for the whole garden. **Heads** means marked side up; **tails** means unmarked side up.
+Weather determines how much sunlight and water your garden receives.
 
-| Toss | Weather | Light above each plant | Stored Water |
+Toss the two weather peas once for the whole garden. **Heads** means marked side up; **tails** means unmarked side up. Each player adds counters according to the table below.
+
+| Toss | Weather | Light for each plant  |  Water for your whole plot |
 |---|---|---:|---|
-| Both heads | **Hot day** | 2 | Each plant loses 1 Water, if it has any; Frogfruit and a plant protected by Mulch ignore this evaporation. |
-| Both tails | **Clear day** | 1 | No evaporation. |
-| One of each | **Cloudy day** | 0 | No evaporation. |
-
-The toss gives a 1-in-4 chance of Hot, 1-in-4 chance of Clear, and 1-in-2 chance of Cloudy. Return lost Water to the supply. Frogfruit and Mulch prevent only **Hot-day weather evaporation**; Drought and Heat Wave Effect cards still remove their Water.
-
-### Water
-
-Each player takes **3 counters** from the supply and distributes them as Water below plants in their own plot. No plant may hold more than **3 Water**. Return any counters that cannot be placed to the supply. Water not spent this round may stay under a plant, up to that cap.
+| Both heads | **Hot day** | +2 | +0 |
+| Both tails | **Clear day** | +1 | +3 |
+| One of each | **Cloudy day** | +0 | +3 |
 
 ### Plant Growth
 
-Each plant may repeatedly spend **1 Light + 1 Water** to gain **+1 Population** per pair spent. It can grow more than once in the same phase if it has enough of both resources, but never above its Population maximum. Return spent Light and Water to the supply. Unused Light is cleared at Cleanup.
+Each plant may repeatedly spend **1 Light + 1 Water** to gain **+1 Population** per pair spent. It can grow more than once in the same phase if it has enough of both resources, but never above its Population maximum.
 
 ### Player Turns
 
@@ -63,14 +61,14 @@ Beginning with the starting player, each player takes one turn:
 1. **Draw 1 card.**
 2. **Play up to 1 card.** This may be an organism or an Effect card.
 3. **Activate 1 organism you control.** A newly played organism may activate immediately. You may skip this step.
-4. **Check your score.** First to 20 or more wins.
 
-Turn an activated organism sideways. Each organism can activate only once per round. Card-specific rules override the shared action only where they say so.
+### Cleanup & Scoring
 
-### Cleanup
+Return all unused Light to the supply. Water remains below plants, up to 3 per plant.
 
-Return all unused Light to the supply. Straighten activated cards. Water remains below plants, up to 3 per plant. Pass the starting-player marker clockwise and begin the next round.
+Check your score to see if you won.
 
+:::pagebreak
 ## Ecosystem Actions
 
 ### Pollinate — Mutualism

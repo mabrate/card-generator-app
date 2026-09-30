@@ -171,6 +171,17 @@ def main():
                     expect(student.locator('#page-error')).to_contain_text('previously opened card was deleted')
                     expect(student.locator('#save-draft')).to_be_enabled()
                     expect(student.locator('#title')).to_have_value('')
+                    teacher.locator('#delete-project').click()
+                    expect(teacher.locator('#teacher-message')).to_contain_text('deleted')
+                    expect(teacher.locator('#delete-project')).to_be_disabled()
+                    teacher.reload()
+                    teacher.locator('.project-settings summary').first.click()
+                    expect(teacher.locator('#project-title')).to_have_value('New field guide')
+                    teacher.locator('#project-title').fill('Replacement project')
+                    teacher.locator('#save-project').click()
+                    expect(teacher.locator('#teacher-message')).to_contain_text('Project settings saved')
+                    expect(teacher.locator('#delete-project')).to_be_enabled()
+                    expect(teacher.locator('#settings-project option')).to_have_text(['Replacement project'])
                     assert not external, external
                     assert not errors, errors
                     browser.close()
