@@ -12,7 +12,7 @@ The project virtual environment has been prepared in this workspace. From this f
 
 Open **http://localhost:8000**. Stop the server with Ctrl+C.
 
-The first start creates `data/app.sqlite` and `data/uploads/`, seeds a field-guide project and five themes, and prints a randomly generated eight-digit **teacher PIN** in the terminal. Keep the PIN; only a salted hash is saved. The same PIN continues working after a restart.
+The first start creates `data/app.sqlite` and `data/uploads/`, seeds a field-guide project and seven themes, and prints a randomly generated eight-digit **teacher PIN** in the terminal. Keep the PIN; only a salted hash is saved. The same PIN continues working after a restart.
 
 - `/student` — student editor, saved drafts, image upload, and submission.
 - `/preview` — temporary layout experiments and supplied Campus Food Web examples.
@@ -124,11 +124,11 @@ The renderer embeds the same cropped image in student and teacher previews and e
 
 ## Teacher workflow
 
-- Open **Projects, directions, and student link** to create/open a project, edit its directions, field labels/instructions/examples/character limits, required fields, and approved themes. Use **Layout & CSV studio** to change card geometry and typography; students cannot edit layouts.
+- Open **Projects** to create, open, rename, or delete a project. Its **Overview** holds directions, the student link and QR code, and the card list. **Layout & CSV** has a top-level CSV import button, basic layout templates, the card layout editor, and the matching field/theme settings; students cannot edit layouts.
 - Use the student link and locally generated QR code for the selected project. Open the teacher page through the server's LAN IP address before sharing; a QR code generated from `localhost` cannot connect another device.
 - Filter the card list by project, class, and status. Lists are paginated in groups of 30.
 - **Review** edits text, Student, Class, print quantity (1–999), image replacement/removal, zoom, horizontal/vertical position, and 90° rotation. **Save card edits** saves corrections; edits to an approved card return it to Submitted. Identity, quantity, and image changes can be saved while unchanged imported text still needs revision.
-- For an imported deck, open **Student and Class for this imported deck** in project settings. Choose Student, Class, or both and apply them to all imported cards in that project. Student-created cards are unaffected.
+- In **Project cards**, click a Student or Class value to open that card with the matching field focused. Edit it and choose **Save card edits**.
 - **Approve** accepts a submitted card only after server-side validation. **Needs Revision** requires a note and unlocks the card for the student.
 - **Delete project** in Projects, directions, and student link confirms the project name and removes the project and all its cards from student access, review, and printing. Local records, images, and history remain; there is no restore UI. You can delete the last project and create a new one.
 - **Delete card** names the card/student and confirms the action. It removes the card from review and student access. This is a soft deletion: original files and history remain in local storage, not a permanent erasure. There is no restore/purge UI in this milestone.
@@ -178,20 +178,20 @@ Original roadmap and Campus Food Web source fixtures remain at the repository ro
 
 ## Teacher projects and SVG designs
 
-Open **Teacher space** (`/teacher`) to see the Projects list. Create a project from a card style, or open, rename, or delete an existing project. A project page (`/teacher/project?project=…`) has four sections: **Overview & fields**, **Cards**, **Layout & CSV**, and **Print sheets**. The overview contains student directions, field instructions, approved themes, and the student link/QR code. The Cards section reviews and edits saved/student/imported cards. Layout & CSV contains layout editing, spreadsheet templates, image assets, CSV mapping and import. Print sheets checks and downloads the selected project's PDF. The old `/teacher/studio` and `/teacher/print` addresses redirect to those sections.
+Open **Teacher space** (`/teacher`) to see the Projects list. Create a project from a card style, or open, rename, or delete an existing project. A project page (`/teacher/project?project=…`) has three sections: **Overview**, **Layout & CSV**, and **Print sheets**. The overview contains student directions, the student link/QR code, and the saved, student, and imported cards for review. Layout & CSV contains field instructions, approved color themes, layout editing, spreadsheet templates, image assets, CSV mapping, and import. Print sheets checks and downloads the selected project's PDF. The old `/teacher/studio` and `/teacher/print` addresses redirect to those sections.
 
 Each saved project has a portable **design SVG** in SQLite alongside its validated layout JSON. Download it from Layout & CSV. The SVG is a complete 2.5 × 3.5 inch visual card, viewable in Inkscape, with a `card-app-design` JSON `<metadata>` element and `data-editable`, `data-field-type`, `data-field-key`, `data-required`, `data-instructions`, and `data-box` XML attributes on editable elements. **Open a Classroom Cards design SVG** reads that embedded layout metadata into the layout editor; review it and save to apply it. Visual edits made only to SVG paths in Inkscape do not change card geometry in the app. Use the layout editor or edit the SVG's layout metadata for changes the app should adopt.
 
-A **finished card SVG** is downloadable from an opened card in Cards. It contains the rendered card and card-content metadata, including its image. It is an output artifact; the design SVG importer rejects it. CSV and XLSX templates carry card data columns based on the saved project's field keys, while field instructions live in the project design and its matching spreadsheet guide. Images remain separate local assets linked by filename on CSV import. Migration 005 adds stored SVGs for existing projects on startup while retaining their original layout and cards.
+A **finished card SVG** is downloadable from an opened card in the project overview. It contains the rendered card and card-content metadata, including its image. It is an output artifact; the design SVG importer rejects it. CSV and XLSX templates carry card data columns based on the saved project's field keys, while field instructions live in the project design and its matching spreadsheet guide. Images remain separate local assets linked by filename on CSV import. Migration 005 adds stored SVGs for existing projects on startup while retaining their original layout and cards.
 
 ## Milestone 5 — CSV, images, and layout studio
 
 Open a project from **Teacher space**, then choose **Layout & CSV**.
 
-1. Create a project on the Projects page using one of five card styles (field guide, classic playing, creature trading, spell/strategy, or sports/profile), each with square corners or an exact 3 mm corner radius. Open it and use **Save project & layout** for layout changes.
-2. Select a UTF-8 CSV and check the suggested field matches. For other datasets, choose **Suggest a layout from my CSV columns**, select up to 12 text columns, and adjust the generated layout.
+1. Create a project on the Projects page using one of five card styles (field guide, classic playing, creature trading, spell/strategy, or sports/profile), each with square corners or an exact 3 mm corner radius. On **Layout & CSV**, you can apply any basic template to the current project, review it, and use **Save project & layout** to keep the change.
+2. Choose **Import cards from CSV** to reveal the file, mapping, validation, and import controls. Select a UTF-8 CSV and check the suggested field matches. For other datasets, choose **Suggest a layout from my CSV columns**, select up to 12 text columns, and adjust the generated layout.
 3. Select matching PNG/JPG/WebP files (multiple selection). The CSV's `image_filename` must match the filename exactly, including extension. Images are uploaded separately, not embedded in cells. ZIP and direct XLSX imports are not supported.
-4. Move boxes by dragging, resize with the selected box's corner handle, or type exact point measurements. Set each box's font size, line height, label, required flag, prefix, and text limit. Text supports left/center/right and top/middle/bottom alignment. **Align box** moves the selected box to a card margin or centers it horizontally/vertically. Under **Corners and borders**, adjust card/image corner radii and border thicknesses in points; 0 means square corners or no border. The card remains 180 × 252 pt (2.5 × 3.5 in).
+4. Click a box to edit or delete its field. Drag to move it, use its corner handle to resize it, or nudge the selection with Arrow keys (1 pt) and Shift+Arrow (5 pt). Shift-click selects several boxes; exact X, Y, width, and height changes then apply to all selected boxes. Text alignment uses icon buttons for left/center/right and top/middle/bottom. **Align box** moves the primary box to a card margin or centers it. Under **Corners and borders**, adjust card/image corner radii and border thicknesses in points; 0 means square corners or no border. The card remains 180 × 252 pt (2.5 × 3.5 in).
 5. Save the layout, then validate the CSV. Review every row, unmapped columns, missing assets, and duplicate actions before confirming import.
 6. Use **Preview a saved card** to adjust the layout after importing. Teacher review also has an **Edit this project's layout** link. Saving layout changes invalidates existing approvals.
 

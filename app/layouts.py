@@ -90,7 +90,7 @@ def default_layout():
                     instructions='Write complete, concise text. Check the preview; text is never automatically shortened.')
                     for k, l, b, s, h, f, m, p in specs],
                   image_box=[13.32, 63, 153.36, 106.56],
-                  themes=['white', 'light-gray', 'sage', 'sky', 'sand', 'rose', 'lavender']).model_dump()
+                  themes=['sage', 'sky', 'sand', 'rose', 'lavender', 'white', 'light-gray']).model_dump()
 
 
 

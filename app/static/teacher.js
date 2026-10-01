@@ -31,7 +31,6 @@ async function loadSettings(identifier) {
 }
 function displaySettings() {
   byId('delete-project').disabled = !settings.id;
-  byId('import-identity').hidden = !settings.id;
   byId('project-title').value = settings.title; byId('directions').value = settings.template.instructions;
   byId('student-url').textContent = settings.id ? location.origin + '/student?project=' + settings.id : 'Save this project to create its student link.'; byId('student-url').href = settings.id ? '/student?project=' + encodeURIComponent(settings.id) : '#';
   byId('student-qr').hidden = !settings.id;
@@ -100,21 +99,6 @@ async function saveSettings(event) {
     location.assign('/teacher/project?project=' + encodeURIComponent(result.id));
   } finally { byId('save-project').disabled = false; }
 }
-async function saveImportIdentity() {
-  if (!settings.id || !safeLeave()) return;
-  const body = {expected_version: settings.version};
-  if (byId('apply-student').checked) body.student_name = byId('import-student').value;
-  if (byId('apply-class').checked) body.class_name = byId('import-class').value;
-  if (!('student_name' in body) && !('class_name' in body)) throw new Error('Select Update Student, Update Class, or both.');
-  if (!confirm(`Update all imported cards in “${settings.title}”? ${'student_name' in body ? 'Student: ' + (body.student_name || '(blank)') + '. ' : ''}${'class_name' in body ? 'Class: ' + (body.class_name || '(blank)') + '. ' : ''}Unsaved project and review edits will be discarded. Approved imports will need fresh review.`)) return;
-  byId('save-import-identity').disabled = true;
-  try {
-    const result = await api('/api/teacher/projects/' + settings.id + '/import-identity', {body});
-    await loadSettings(settings.id); await refreshList();
-    if (current?.project_id === settings.id) await openCard(current.id, true);
-    message('teacher-message', `Student/Class updated on ${result.updated} imported cards.`);
-  } finally { byId('save-import-identity').disabled = false; }
-}
 async function deleteProject() {
   if (!settings.id || !safeLeave()) return;
   const target = settings;
@@ -145,16 +129,22 @@ async function refreshList() {
   classes.value = selected;
   for (const card of result.cards) {
     const row = document.createElement('tr');
-    for (const text of [card.title || 'Untitled card', card.student_name || 'Not entered', card.class_name || '—', card.project_title, card.status]) {
-      const cell = document.createElement('td'); cell.textContent = text; row.append(cell);
+    const title = card.title || 'Untitled card';
+    const titleCell = document.createElement('td'); titleCell.textContent = title; row.append(titleCell);
+    for (const [key, label, value] of [['student_name', 'Student', card.student_name || 'Not entered'], ['class_name', 'Class', card.class_name || 'Not entered']]) {
+      const cell = document.createElement('td'), edit = document.createElement('button'); edit.type = 'button'; edit.className = 'identity-edit'; edit.textContent = value;
+      edit.setAttribute('aria-label', `Edit ${label} for ${title}`);
+      edit.addEventListener('click', () => { if (safeLeave()) guard(() => openCard(card.id, false, key)); });
+      cell.append(edit); row.append(cell);
     }
-    const cell = document.createElement('td'), button = document.createElement('button'); button.className = 'button secondary'; button.textContent = 'Review'; button.setAttribute('aria-label', `Review ${card.title || 'Untitled card'} by ${card.student_name || 'unnamed student'}`);
+    for (const text of [card.project_title, card.status]) { const cell = document.createElement('td'); cell.textContent = text; row.append(cell); }
+    const cell = document.createElement('td'), button = document.createElement('button'); button.className = 'button secondary'; button.textContent = 'Review'; button.setAttribute('aria-label', `Review ${title} by ${card.student_name || 'unnamed student'}`);
     button.addEventListener('click', () => { if (safeLeave()) guard(() => openCard(card.id)); }); cell.append(button); row.append(cell); byId('card-list').append(row);
   }
   byId('list-summary').textContent = total ? `${total} matching cards · page ${page} of ${Math.ceil(total / 30)}` : 'No cards match these filters. Student drafts will appear here after Save draft.';
   byId('previous-page').disabled = page <= 1; byId('next-page').disabled = page * 30 >= total;
 }
-async function openCard(identifier, keepPosition = false) {
+async function openCard(identifier, keepPosition = false, focusField = null) {
   busy = true; controls();
   try {
     const card = await api('/api/teacher/cards/' + identifier);
@@ -168,6 +158,7 @@ async function openCard(identifier, keepPosition = false) {
     byId('history').replaceChildren();
     for (const item of card.history) { const li = document.createElement('li'); li.textContent = `${item.created_at} UTC · ${item.actor}: ${item.action}`; byId('history').append(li); }
     if (!keepPosition) byId('review-detail').scrollIntoView({behavior: 'smooth'});
+    if (focusField) { const input = byId(focusField); input.focus({preventScroll: true}); input.select(); }
   } finally { busy = false; controls(); }
 }
 async function saveEdits() {
@@ -197,7 +188,6 @@ async function start() {
   const requested = new URLSearchParams(location.search).get('project') || dashboard.project.id;
   await loadProjects(requested); settings = await api('/api/project?project_id=' + encodeURIComponent(requested)); displaySettings(); byId('filter-project').value = requested; await refreshList();
   byId('settings-project').addEventListener('change', () => guard(() => loadSettings(byId('settings-project').value)));
-  byId('save-import-identity').addEventListener('click', () => guard(saveImportIdentity));
   byId('add-project-field').addEventListener('click', () => guard(addSettingsField));
   byId('delete-project').addEventListener('click', () => guard(deleteProject));
   byId('new-project').addEventListener('click', () => location.assign('/teacher'));
@@ -211,6 +201,7 @@ async function start() {
   byId('save-edits').addEventListener('click', () => guard(saveEdits));
   for (const [id, action] of [['approve-card', 'approve'], ['request-revision', 'revision'], ['delete-card', 'delete']]) byId(id).addEventListener('click', () => guard(() => review(action)));
   byId('logout').addEventListener('click', () => { if (safeLeave()) guard(async () => { await api('/api/teacher/logout', {body: {}}); location.assign('/teacher/login'); }); });
+  window.addEventListener('card-app:project-updated', () => { const identifier = new URLSearchParams(location.search).get('project'); if (identifier) guard(async () => { await loadSettings(identifier); await refreshList(); }); });
   window.addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
 }
 start().catch(error => message('page-error', error.message, true));

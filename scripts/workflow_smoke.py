@@ -108,7 +108,6 @@ def main():
                     teacher.locator('#pin').fill('123456')
                     teacher.get_by_role('button', name='Open teacher space').click()
                     teacher.get_by_role('button', name='Open project').first.click()
-                    teacher.locator('[data-tab=cards]').click()
                     expect(teacher.locator('#list-summary')).to_contain_text('1 matching')
                     teacher.locator('#filter-status').select_option('Submitted')
                     teacher.locator('#filter-class').select_option('Period 2')
@@ -165,7 +164,6 @@ def main():
                     with teacher.expect_navigation():
                         teacher.locator('#save-project').click()
                     expect(teacher.locator('#project-heading')).to_have_text('Classroom field guide')
-                    teacher.locator('[data-tab=cards]').click()
                     expect(teacher.locator('#list-summary')).to_contain_text('1 matching')
                     teacher.locator('#card-list button').first.click()
                     expect(teacher.locator('#review-status')).to_have_text('Submitted')

@@ -79,6 +79,28 @@ def test_demo_end_to_end_and_images(client):
     assert commit(client, again).json()['skipped'] == 22
 
 
+def test_import_identity_applies_to_create_and_update(client):
+    p = project(client)
+    staged_response = preview(client, p, student_name='  Ms. Rivera  ', class_name=' Period 3 ')
+    assert staged_response.status_code == 200
+    staged = staged_response.json()
+    assert staged['student_name'] == 'Ms. Rivera' and staged['class_name'] == 'Period 3'
+    result = commit(client, staged).json()
+    card = client.get('/api/teacher/cards/' + result['card_ids'][0]).json()
+    assert card['student_name'] == 'Ms. Rivera' and card['class_name'] == 'Period 3'
+
+    updated = preview(client, p, 'common_name,card_id,copies\nUpdated,test,2\n',
+                      duplicate='update', student_name='Deck owner', class_name='Period 5').json()
+    assert updated['student_name'] == 'Deck owner' and updated['class_name'] == 'Period 5'
+    update_result = commit(client, updated).json()
+    assert update_result['updated'] == 1
+    card = client.get('/api/teacher/cards/' + result['card_ids'][0]).json()
+    assert card['student_name'] == 'Deck owner' and card['class_name'] == 'Period 5'
+
+    invalid = preview(client, p, student_name='Bad\x00name')
+    assert invalid.status_code == 422
+
+
 def test_duplicates_version_checks_and_retry(client):
     p = project(client)
     staged = preview(client, p).json()

@@ -1,5 +1,7 @@
 # Campus Food Web demo
 
+An optional [eight-card food-web expansion](expansion-pack/README.md) adds native ants, consumers of decomposers, ground predators, and a predator above the Carolina Wren.
+
 ## Import it
 
 1. Start the app, sign in as teacher, and open **Layout & CSV studio**.

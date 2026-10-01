@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
-from pydantic import Field
+from pydantic import Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from app import db, images
@@ -33,6 +33,13 @@ class ImportInput(CSVInput):
     mapping: dict[str, str] = Field(max_length=17)
     assets: dict[str, str] = Field(default_factory=dict, max_length=200)
     duplicate: str = Field(pattern='^(skip|update|copy)$')
+    student_name: str = Field(default='Teacher import', max_length=80)
+    class_name: str = Field(default='CSV import', max_length=40)
+
+    @field_validator('student_name', 'class_name')
+    @classmethod
+    def identity(cls, value):
+        return safe_text(value).strip()
 
 
 class StudioPreview(Model):
@@ -233,10 +240,12 @@ def import_routes(database, uploads, require_teacher):
                              'image_id': image_id if filename else None, 'errors': errors, 'issues': issues,
                              'warnings': warnings, 'action': action, 'existing': dict(existing) if existing else None})
             identifier = secrets.token_hex(16)
-            payload = {'rows': rows, 'source_csv': body.csv, 'mapping': body.mapping, 'duplicate': body.duplicate}
+            payload = {'rows': rows, 'source_csv': body.csv, 'mapping': body.mapping, 'duplicate': body.duplicate,
+                       'student_name': body.student_name, 'class_name': body.class_name}
             connection.execute('INSERT INTO import_jobs(id,project_id,project_version,payload_json) VALUES(?,?,?,?)',
                                (identifier, body.project_id, project['version'], json.dumps(payload)))
         return {'id': identifier, 'rows': rows, 'project_version': project['version'],
+                'student_name': body.student_name, 'class_name': body.class_name,
                 'unmapped': [h for h in headers if h not in body.mapping.values()],
                 'ready': sum(not r['errors'] and r['action'] != 'skip' for r in rows),
                 'copies': sum(r['copies'] for r in rows if not r['errors'] and r['action'] != 'skip')}
@@ -255,7 +264,10 @@ def import_routes(database, uploads, require_teacher):
             if version != job['project_version']:
                 raise HTTPException(409, 'Layout changed after preview. Validate the CSV again before importing.')
             result = {'created': 0, 'updated': 0, 'skipped': 0, 'rejected': 0, 'needs_review': 0, 'copies': 0, 'card_ids': []}
-            for row in json.loads(job['payload_json'])['rows']:
+            payload = json.loads(job['payload_json'])
+            student_name = payload.get('student_name', 'Teacher import')
+            class_name = payload.get('class_name', 'CSV import')
+            for row in payload['rows']:
                 if row['errors']:
                     result['rejected'] += 1
                     continue
@@ -271,12 +283,12 @@ def import_routes(database, uploads, require_teacher):
                 params = (json.dumps(row['values']), row['theme'], row['image_id'], status, note, external, row['copies'], row['card_kind'])
                 if row['action'] == 'update':
                     card_id = current['id']
-                    connection.execute("UPDATE cards SET values_json=?,theme=?,image_id=?,status=?,teacher_note=?,external_id=?,copies=?,card_kind=?,crop_json='{\"x\":0.5,\"y\":0.5,\"zoom\":1,\"rotation\":0}',version=version+1,last_mutation=NULL,last_payload=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?", (*params, card_id))
+                    connection.execute("UPDATE cards SET values_json=?,theme=?,image_id=?,status=?,teacher_note=?,external_id=?,copies=?,card_kind=?,student_name=?,class_name=?,crop_json='{\"x\":0.5,\"y\":0.5,\"zoom\":1,\"rotation\":0}',version=version+1,last_mutation=NULL,last_payload=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?", (*params, student_name, class_name, card_id))
                     result['updated'] += 1
                 else:
                     card_id = secrets.token_hex(16)
                     connection.execute('INSERT INTO cards(values_json,theme,image_id,status,teacher_note,external_id,copies,card_kind,id,project_id,edit_hash,student_name,class_name) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                                       (*params, card_id, job['project_id'], secrets.token_hex(32), 'Teacher import', 'CSV import'))
+                                       (*params, card_id, job['project_id'], secrets.token_hex(32), student_name, class_name))
                     result['created'] += 1
                 history(connection, connection.execute('SELECT * FROM cards WHERE id=?', (card_id,)).fetchone(), 'teacher', 'CSV import ' + row['action'])
                 result['needs_review'] += bool(row['issues'])

@@ -5,13 +5,13 @@ ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "app" / "static"
 
 THEMES = [
-    {"id": "white", "name": "White", "background": "#ffffff", "heading": "#222222", "panel": "#f7f7f7", "accent": "#555555"},
-    {"id": "light-gray", "name": "Light Gray", "background": "#f1f2f3", "heading": "#25282b", "panel": "#e1e3e5", "accent": "#6b7075"},
     {"id": "sage", "name": "Sage", "background": "#eef3e8", "heading": "#244734", "panel": "#dfe9d6", "accent": "#668256"},
     {"id": "sky", "name": "Sky", "background": "#edf3f8", "heading": "#25445f", "panel": "#dce8f2", "accent": "#6486a2"},
     {"id": "sand", "name": "Sand", "background": "#f8f2e5", "heading": "#604923", "panel": "#eee2c8", "accent": "#a38b5a"},
     {"id": "rose", "name": "Rose", "background": "#f9eef0", "heading": "#693d48", "panel": "#efdce1", "accent": "#ac7884"},
     {"id": "lavender", "name": "Lavender", "background": "#f2eef8", "heading": "#51436c", "panel": "#e5ddf0", "accent": "#8a79a5"},
+    {"id": "white", "name": "White", "background": "#ffffff", "heading": "#222222", "panel": "#f7f7f7", "accent": "#555555"},
+    {"id": "light-gray", "name": "Light Gray", "background": "#f1f2f3", "heading": "#25282b", "panel": "#e1e3e5", "accent": "#6b7075"},
 ]
 
 

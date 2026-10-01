@@ -1,6 +1,6 @@
 import {api, byId} from './editor.js';
 const id = new URLSearchParams(location.search).get('project');
-const tabs = ['overview', 'cards', 'layout', 'print'];
+const tabs = ['overview', 'layout', 'print'];
 let projectUpdated = false;
 window.addEventListener('card-app:project-updated', () => { projectUpdated = true; });
 function show(name) {
