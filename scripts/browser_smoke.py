@@ -93,6 +93,8 @@ def main():
                     expect(page).to_have_url(origin + "/teacher/login")
                     page.get_by_label("Teacher PIN", exact=True).fill("123456")
                     page.get_by_role("button", name="Open teacher space").click()
+                    expect(page.get_by_role('heading', name='Projects', exact=True)).to_be_visible()
+                    page.get_by_role('button', name='Open project').first.click()
                     expect(page.locator("#database-state")).to_contain_text("ready")
                     page.screenshot(path=str(screenshot_dir / "teacher.png"), full_page=True)
                     page.get_by_role("button", name="Sign out").click()

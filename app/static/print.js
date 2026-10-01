@@ -14,6 +14,7 @@ function controls() {
   byId('selection-summary').textContent = `${visible().length} cards shown · ${picked.length} selected · ${copies} printable copies · ${Math.ceil(copies / 6)} sheets`;
   byId('check-print').disabled = busy || !withinLimit;
   byId('download-print').disabled = busy || !checked || !withinLimit;
+  byId('preview-print').disabled = busy || !checked || !withinLimit;
   for (const id of ['print-project', 'print-class', 'black-and-white', 'expand-copies', 'include-imported', 'select-visible', 'clear-selection', 'reload-print']) byId(id).disabled = busy;
   byId('print-cards').querySelectorAll('input').forEach(input => { input.disabled = busy; });
 }
@@ -68,22 +69,37 @@ async function check() {
   details('print-issues', result.issues); details('print-warnings', result.warnings);
   message('print-status', result.valid ? `${result.records} records · ${result.copies} cards · ${result.pages} Letter sheets. Ready to download${result.warnings.length ? ' — review the warnings below' : ''}.` : 'Fix the listed cards/layout before exporting. Text is never shortened or shrunk.');
 }
-async function download() {
-  message('print-status', 'Building the vector PDF…');
+async function pdfBlob() {
   const response = await fetch('/api/teacher/print/pdf', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Card-App': '1'}, body: JSON.stringify(body())});
   if (!response.ok) {
     const {detail} = await response.json();
     details('print-issues', detail?.issues || []);
     throw new Error(typeof detail === 'string' ? detail : detail?.message || 'Export failed. Reload cards and check again.');
   }
-  const url = URL.createObjectURL(await response.blob()), link = document.createElement('a');
+  return response.blob();
+}
+async function previewSheets() {
+  const windowRef = window.open('', '_blank');
+  if (!windowRef) throw new Error('Allow this site to open a preview tab, then try again.');
+  windowRef.opener = null;
+  try {
+    message('print-status', 'Building sheet preview…');
+    const url = URL.createObjectURL(await pdfBlob());
+    windowRef.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    message('print-status', 'Sheet preview opened. Use Download Letter PDF for a permanent copy.');
+  } catch (error) { windowRef.close(); throw error; }
+}
+async function download() {
+  message('print-status', 'Building the vector PDF…');
+  const url = URL.createObjectURL(await pdfBlob()), link = document.createElement('a');
   link.href = url; link.download = 'card-print-sheets.pdf'; document.body.append(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
   message('print-status', 'PDF downloaded. Print at Actual Size / 100% and measure a test card first.');
 }
 async function start() {
   const projects = await api('/api/projects');
-  if (!projects.length) throw new Error('No projects are available. Create a project in Teacher review or Layout & CSV studio.');
+  if (!projects.length) throw new Error('No projects are available. Create one on the Projects page.');
   projects.forEach(p => byId('print-project').add(new Option(p.title, p.id)));
   const requested = new URLSearchParams(location.search).get('project');
   if (projects.some(p => p.id === requested)) byId('print-project').value = requested;
@@ -96,6 +112,7 @@ async function start() {
   byId('clear-selection').addEventListener('click', () => { selected.clear(); invalidate(); draw(); });
   byId('check-print').addEventListener('click', () => guard(check));
   byId('download-print').addEventListener('click', () => guard(download));
+  byId('preview-print').addEventListener('click', () => guard(previewSheets));
 }
 start().catch(error => message('page-error', error.message, true));
 

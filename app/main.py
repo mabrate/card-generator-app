@@ -42,7 +42,7 @@ class BodyLimit:
                 return
             chunk = message.get("body", b"")
             size += len(chunk)
-            limit = 12 * 1024 * 1024 if (scope['path'] in ('/api/student/images', '/api/teacher/import/image') or (scope['path'].startswith('/api/teacher/cards/') and scope['path'].endswith('/image'))) else (2 * 1024 * 1024 if scope['path'].startswith('/api/teacher/import') else (65_536 if scope['path'].startswith('/api/teacher/layout') else 32_768))
+            limit = 12 * 1024 * 1024 if (scope['path'] in ('/api/student/images', '/api/teacher/import/image') or (scope['path'].startswith('/api/teacher/cards/') and scope['path'].endswith('/image'))) else (2 * 1024 * 1024 if scope['path'].startswith('/api/teacher/import') else (600_000 if scope['path'] == '/api/teacher/layout/svg/inspect' else (65_536 if scope['path'].startswith('/api/teacher/layout') else 32_768)))
             if size > limit:
                 return await JSONResponse({"detail": "Request is too large."}, status_code=413)(scope, receive, send)
             chunks.append(chunk)
@@ -116,19 +116,25 @@ def create_app(data_dir=None, teacher_pin=None):
     def teacher(request: Request):
         if not auth.authenticated(database, request.cookies.get(COOKIE)):
             return RedirectResponse("/teacher/login", status_code=303)
-        return FileResponse(ROOT / "app" / "pages" / "teacher.html")
+        return FileResponse(ROOT / "app" / "pages" / "projects.html")
+
+    @app.get("/teacher/project")
+    def project_page(request: Request):
+        if not auth.authenticated(database, request.cookies.get(COOKIE)):
+            return RedirectResponse("/teacher/login", status_code=303)
+        return FileResponse(ROOT / "app" / "pages" / "project.html")
 
     @app.get("/teacher/studio")
     def studio(request: Request):
         if not auth.authenticated(database, request.cookies.get(COOKIE)):
             return RedirectResponse("/teacher/login", status_code=303)
-        return FileResponse(ROOT / "app" / "pages" / "studio.html")
+        return RedirectResponse('/teacher/project' + ('?project=' + request.query_params['project'] if request.query_params.get('project') else '') + '#layout', status_code=303)
 
     @app.get("/teacher/print")
     def print_page(request: Request):
         if not auth.authenticated(database, request.cookies.get(COOKIE)):
             return RedirectResponse("/teacher/login", status_code=303)
-        return FileResponse(ROOT / "app" / "pages" / "print.html")
+        return RedirectResponse('/teacher/project' + ('?project=' + request.query_params['project'] if request.query_params.get('project') else '') + '#print', status_code=303)
 
     @app.get("/api/health")
     def health():

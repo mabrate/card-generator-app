@@ -51,7 +51,7 @@ class Layout(Model):
     image_radius: float = Field(default=8.5, ge=0, le=90)
     card_border_width: float = Field(default=1, ge=0, le=12)
     image_border_width: float = Field(default=0, ge=0, le=12)
-    themes: list[str] = Field(min_length=1, max_length=5)
+    themes: list[str] = Field(min_length=1, max_length=7)
     instructions: str = Field(default='', max_length=2000)
 
     @model_validator(mode='after')
@@ -89,7 +89,8 @@ def default_layout():
                     max_chars=m, required=k == 'common_name', label_box=None, prefix=p,
                     instructions='Write complete, concise text. Check the preview; text is never automatically shortened.')
                     for k, l, b, s, h, f, m, p in specs],
-                  image_box=[13.32, 63, 153.36, 106.56], themes=['sage', 'sky', 'sand', 'rose', 'lavender']).model_dump()
+                  image_box=[13.32, 63, 153.36, 106.56],
+                  themes=['white', 'light-gray', 'sage', 'sky', 'sand', 'rose', 'lavender']).model_dump()
 
 
 

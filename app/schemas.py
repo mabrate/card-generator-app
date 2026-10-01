@@ -96,7 +96,7 @@ class ProjectWrite(Model):
     title: str = Field(min_length=1, max_length=100)
     instructions: str = Field(default='', max_length=2000)
     fields: list[FieldSettings] = Field(min_length=1, max_length=12)
-    themes: list[str] = Field(min_length=1, max_length=5)
+    themes: list[str] = Field(min_length=1, max_length=7)
     expected_version: int = Field(ge=0)
 
     @field_validator('title', 'instructions')

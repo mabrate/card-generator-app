@@ -146,6 +146,7 @@ Milestone 6 print-sheet export is implemented using the canonical SVG renderer; 
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/browser_smoke.py
+.venv/bin/python scripts/project_smoke.py
 .venv/bin/python scripts/workflow_smoke.py
 ```
 
@@ -153,7 +154,7 @@ Each browser script starts/stops its own server with a disposable database and t
 
 Automated tests cover exact SVG proportions, font-size invariance, measured overflow below nominal limits, configuration labels/limits, theme geometry, XML escaping, source preservation and fixture totals, route protection, login throttling, logout/session expiration, PIN reset, migrations, persistence, concurrent SQLite transactions, and API validation. Browser checks cover real form/theme updates, preserved overflow text, teacher sign-in/out, connection failure/recovery, responsive dimensions, and page operation with non-local requests blocked. The workflow suite additionally covers separate student/teacher sessions, image/crop persistence, browser-local recovery, recovery-code access, revisions, approval, project-setting changes, deletion, and temporary connection loss. Screenshots go to `/tmp/card-app-screenshots` and `/tmp/card-workflow-screenshots`.
 
-Current milestone 6 verification: **35 automated tests passed**, plus the illustrated 22-record / 48-copy / 8-sheet import-to-print workflow in Chromium with external requests blocked. The PDF sample was visually inspected after rendering. Earlier milestone workflows also passed in Chromium and WebKit; milestone 6 still needs a physical iPad/print test. The workflow suite also simulates a committed save whose response is lost, checks that retrying does not duplicate it, verifies failed reloads preserve unsaved work, and checks reopening after teacher deletion.
+Earlier milestone 6 verification included the illustrated 22-record / 48-copy / 8-sheet import-to-print workflow in Chromium with external requests blocked. The PDF sample was visually inspected after rendering. Earlier milestone workflows also passed in Chromium and WebKit; milestone 6 still needs a physical iPad/print test. The workflow suite also simulates a committed save whose response is lost, checks that retrying does not duplicate it, verifies failed reloads preserve unsaved work, and checks reopening after teacher deletion.
 
 The workflow script supports `CARD_APP_TEST_ENGINE=webkit` after installing Playwright's WebKit browser and its platform dependencies. The WebKit runtime and supporting libraries used for this verification were isolated under `/tmp`; they are test tools, not application dependencies.
 
@@ -175,11 +176,19 @@ Original roadmap and Campus Food Web source fixtures remain at the repository ro
 
 
 
+## Teacher projects and SVG designs
+
+Open **Teacher space** (`/teacher`) to see the Projects list. Create a project from a card style, or open, rename, or delete an existing project. A project page (`/teacher/project?project=…`) has four sections: **Overview & fields**, **Cards**, **Layout & CSV**, and **Print sheets**. The overview contains student directions, field instructions, approved themes, and the student link/QR code. The Cards section reviews and edits saved/student/imported cards. Layout & CSV contains layout editing, spreadsheet templates, image assets, CSV mapping and import. Print sheets checks and downloads the selected project's PDF. The old `/teacher/studio` and `/teacher/print` addresses redirect to those sections.
+
+Each saved project has a portable **design SVG** in SQLite alongside its validated layout JSON. Download it from Layout & CSV. The SVG is a complete 2.5 × 3.5 inch visual card, viewable in Inkscape, with a `card-app-design` JSON `<metadata>` element and `data-editable`, `data-field-type`, `data-field-key`, `data-required`, `data-instructions`, and `data-box` XML attributes on editable elements. **Open a Classroom Cards design SVG** reads that embedded layout metadata into the layout editor; review it and save to apply it. Visual edits made only to SVG paths in Inkscape do not change card geometry in the app. Use the layout editor or edit the SVG's layout metadata for changes the app should adopt.
+
+A **finished card SVG** is downloadable from an opened card in Cards. It contains the rendered card and card-content metadata, including its image. It is an output artifact; the design SVG importer rejects it. CSV and XLSX templates carry card data columns based on the saved project's field keys, while field instructions live in the project design and its matching spreadsheet guide. Images remain separate local assets linked by filename on CSV import. Migration 005 adds stored SVGs for existing projects on startup while retaining their original layout and cards.
+
 ## Milestone 5 — CSV, images, and layout studio
 
-Open **Teacher → Layout & CSV studio** (`/teacher/studio`).
+Open a project from **Teacher space**, then choose **Layout & CSV**.
 
-1. Use **Editing project** to open a saved project immediately. Its name and **Save project & layout** stay together in a bar while you scroll. To create a project, choose one of five original styles (field guide, classic playing, creature trading, spell/strategy, or sports/profile), each with square corners or an exact 3 mm corner radius, then click **Create from template**.
+1. Create a project on the Projects page using one of five card styles (field guide, classic playing, creature trading, spell/strategy, or sports/profile), each with square corners or an exact 3 mm corner radius. Open it and use **Save project & layout** for layout changes.
 2. Select a UTF-8 CSV and check the suggested field matches. For other datasets, choose **Suggest a layout from my CSV columns**, select up to 12 text columns, and adjust the generated layout.
 3. Select matching PNG/JPG/WebP files (multiple selection). The CSV's `image_filename` must match the filename exactly, including extension. Images are uploaded separately, not embedded in cells. ZIP and direct XLSX imports are not supported.
 4. Move boxes by dragging, resize with the selected box's corner handle, or type exact point measurements. Set each box's font size, line height, label, required flag, prefix, and text limit. Text supports left/center/right and top/middle/bottom alignment. **Align box** moves the selected box to a card margin or centers it horizontally/vertically. Under **Corners and borders**, adjust card/image corner radii and border thicknesses in points; 0 means square corners or no border. The card remains 180 × 252 pt (2.5 × 3.5 in).
@@ -208,22 +217,21 @@ The separate `/preview` page is a temporary field-guide editing sandbox.
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/browser_smoke.py
 .venv/bin/python scripts/workflow_smoke.py
-.venv/bin/python scripts/import_smoke.py
+.venv/bin/python scripts/project_smoke.py
 .venv/bin/python scripts/print_smoke.py
-.venv/bin/python scripts/upgrades_smoke.py
 ```
 
-The import browser check uses a temporary database, imports all real demo images, verifies 22/48 totals, moves a box, changes typography, saves/reopens layouts, downloads both template formats, skips a duplicate batch, approves an imported card, and saves a new student card against that layout. It blocks external network requests. `CARD_APP_TEST_ENGINE=webkit` selects an installed Playwright WebKit runtime; physical iPad and paper-size proof still need real-device testing.
+The project browser check covers project creation, rename/delete, SVG import, CSV import, print preview and PDF download. The print browser check imports all 22 demo records and images, verifies 48 copies on eight sheets, and checks PDF export. Earlier import and upgrade browser scripts remain as milestone snapshots; they have not been updated for the Projects landing page. `CARD_APP_TEST_ENGINE=webkit` selects an installed Playwright WebKit runtime; physical iPad and paper-size proof still need real-device testing.
 
 
 
 ## Print sheets (milestone 6)
 
-Open **Print sheets** from Teacher review or Layout & CSV studio (`/teacher/print`). Choose a project and optional class filter, select approved cards, and leave **Expand card quantities** checked to honor each record's `copies`. Select **Include unapproved imported cards** explicitly to print CSV records before approval; this never changes their approval status. Unapproved student drafts/submissions remain unavailable.
+Open a project and choose **Print sheets**. Choose an optional class filter, select approved cards, and leave **Expand card quantities** checked to honor each record's `copies`. Select **Include unapproved imported cards** explicitly to print CSV records before approval; this never changes their approval status. Unapproved student drafts/submissions remain unavailable.
 
 Enable **Black and white export** for white backgrounds/panels, consistent dark gray borders/text, and grayscale image crops. This changes only the export, leaving saved colors and original images intact.
 
-Click **Check print selection**, review any image-resolution or approval warnings, then **Download Letter PDF**. Text overflow, missing required fields, disabled themes, unsafe text at punched/rounded corners, and missing images block export; nothing is truncated or shrunk. Card/project versions are checked again at download, so changed or deleted cards require reloading the selection. Export is limited to 200 selected records and 600 expanded cards per download. Selection survives class filtering within a project; changing project/import eligibility or reloading clears it.
+Click **Check print selection**, review any image-resolution or approval warnings, then **Preview sheets** in a browser tab or **Download Letter PDF**. Text overflow, missing required fields, disabled themes, unsafe text at punched/rounded corners, and missing images block export; nothing is truncated or shrunk. Card/project versions are checked again at download, so changed or deleted cards require reloading the selection. Export is limited to 200 selected records and 600 expanded cards per download. Selection survives class filtering within a project; changing project/import eligibility or reloading clears it.
 
 Sheets are **US Letter landscape (11 × 8.5 in)** with up to six cards, in reading order. Each square trim rectangle is exactly **180 × 252 points (2.5 × 3.5 in)**, surrounded by **9 pt (3.175 mm) bleed**. Short square-aligned crop marks stay outside the bleed; no cut line is printed through the card. Bleed and the area outside rounded corners use the card border color. The card background stays inside the trim shape. Cards currently use inset image frames, not edge-to-edge image bleed. Text uses the same bundled-font vector outlines as preview. Print crops use retained originals, up to 600 DPI in the image frame, without upscaling low-resolution uploads. Warnings are shown below 150 effective DPI.
 

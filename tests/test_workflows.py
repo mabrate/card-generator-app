@@ -246,7 +246,7 @@ def test_upgrade_keeps_existing_project_and_pin(tmp_path):
         assert client.post('/api/teacher/login', headers=WRITE, json={'pin': '654321'}).status_code == 200
         assert save(client, secrets.token_urlsafe(32)).status_code == 200
     with db.connect(path) as connection:
-        assert connection.execute('PRAGMA user_version').fetchone()[0] == 4
+        assert connection.execute('PRAGMA user_version').fetchone()[0] == 5
 
 
 

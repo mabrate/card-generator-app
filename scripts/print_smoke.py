@@ -13,7 +13,7 @@ from playwright.sync_api import sync_playwright, expect
 from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parent.parent
-OUTPUT = ROOT / 'output/pdf'
+OUTPUT = Path('/tmp/card-print-smoke')
 
 
 def main():
@@ -53,7 +53,9 @@ def main():
                     page.locator('#pin').fill('123456')
                     page.locator('button[type=submit]').click()
                     page.wait_for_url(origin + '/teacher')
-                    page.get_by_role('link', name='Layout & CSV studio').click()
+                    page.locator('#new-project-title').fill('Print smoke')
+                    page.get_by_role('button', name='Create project').click()
+                    page.locator('[data-tab=layout]').click()
                     expect(page.locator('#selected-box option')).to_have_count(8)
                     page.locator('#csv-file').set_input_files(str(ROOT / 'demo/v2/campus-food-web-cards.csv'))
                     expect(page.locator('#sample-row option')).to_have_count(22)
@@ -66,8 +68,8 @@ def main():
                     page.locator('#commit-import').click()
                     expect(page.locator('#studio-status')).to_contain_text('22 created', timeout=30000)
                     project_id = page.locator('#studio-project').input_value()
-                    page.get_by_role('link', name='Print sheets').click()
-                    page.locator('#print-project').select_option(project_id)
+                    page.locator('[data-tab=print]').click()
+                    expect(page.locator('#tab-print')).to_be_visible()
                     expect(page.locator('#selection-summary')).to_contain_text('0 cards shown')
                     page.locator('#include-imported').check()
                     expect(page.locator('#print-cards tr')).to_have_count(22)

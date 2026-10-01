@@ -13,7 +13,21 @@ import qrcode.image.svg
 from app import auth, db, images
 from app.cards import CardStore, history, update_project_cards
 from app.config import TEMPLATE
-from app.schemas import CardWrite, ProjectWrite, ProjectDelete, ImportIdentity, Review
+from app.schemas import CardWrite, ProjectWrite, ProjectDelete, ImportIdentity, Review, Model, safe_text
+from pydantic import Field, field_validator
+from app.design_svg import design_svg, finished_card_svg
+from app.rendering import render_card
+from app.schemas import Crop
+
+
+class ProjectRename(Model):
+    title: str = Field(min_length=1, max_length=100)
+    expected_version: int = Field(ge=1)
+
+    @field_validator('title')
+    @classmethod
+    def clean_title(cls, value):
+        return safe_text(value).strip()
 
 
 def owner_hash(request):
@@ -74,6 +88,24 @@ def routes(database, uploads, require_teacher):
         require_teacher(request)
         return store.detail(store.by_id(identifier))
 
+    @router.get('/api/teacher/cards/{identifier}/card.svg')
+    def download_card_svg(identifier: str, request: Request):
+        require_teacher(request)
+        row = store.by_id(identifier)
+        card = store.detail(row)
+        project = db.project(database, row['project_id'])
+        theme = next(item for item in project['themes'] if item['id'] == card['theme'])
+        artwork = None
+        if row['image_id']:
+            with db.connect(database) as connection:
+                image = connection.execute('SELECT * FROM images WHERE id=?', (row['image_id'],)).fetchone()
+            if not image:
+                raise HTTPException(503, 'Card image is missing.')
+            artwork = images.render_image(image, uploads, Crop(**card['crop']), project['template']['image_box'])
+        rendered = render_card(card['values'], {}, theme, project['template'], artwork)['svg']
+        return Response(finished_card_svg(rendered, card, project), media_type='image/svg+xml',
+                        headers={'Content-Disposition': 'attachment; filename="finished-card.svg"'})
+
     @router.post('/api/teacher/cards/{identifier}/image')
     async def teacher_image(identifier: str, request: Request):
         require_teacher(request)
@@ -124,11 +156,12 @@ def routes(database, uploads, require_teacher):
                     fields[field.key].update(field.model_dump())
             template['fields'] = [fields[field.key] for field in body.fields]
             template['instructions'], template['themes'] = body.instructions, body.themes
+            svg = design_svg(body.title, template)
             if body.expected_version:
-                connection.execute('UPDATE projects SET title=?,template_json=?,version=version+1 WHERE id=?', (body.title, json.dumps(template), identifier))
+                connection.execute('UPDATE projects SET title=?,template_json=?,design_svg=?,version=version+1 WHERE id=?', (body.title, json.dumps(template), svg, identifier))
                 update_project_cards(connection, identifier, template, 'Project settings changed; approval needs review')
             else:
-                connection.execute('INSERT INTO projects(id,title,template_json) VALUES(?,?,?)', (identifier, body.title, json.dumps(template)))
+                connection.execute('INSERT INTO projects(id,title,template_json,design_svg) VALUES(?,?,?,?)', (identifier, body.title, json.dumps(template), svg))
         return db.project(database, identifier)
 
     @router.post('/api/teacher/projects')
@@ -140,6 +173,23 @@ def routes(database, uploads, require_teacher):
     def update_project(identifier: str, body: ProjectWrite, request: Request):
         require_teacher(request)
         return save_project(body, identifier)
+
+    @router.post('/api/teacher/projects/{identifier}/rename')
+    def rename_project(identifier: str, body: ProjectRename, request: Request):
+        require_teacher(request)
+        if not body.title:
+            raise HTTPException(422, 'Enter a project name.')
+        with db.connect(database) as connection:
+            connection.execute('BEGIN IMMEDIATE')
+            row = connection.execute('SELECT version,template_json FROM projects WHERE id=? AND deleted_at IS NULL', (identifier,)).fetchone()
+            if not row:
+                raise HTTPException(404, 'Project not found.')
+            if row['version'] != body.expected_version:
+                raise HTTPException(409, 'Project changed. Reload before renaming it.')
+            template = json.loads(row['template_json'])
+            connection.execute('UPDATE projects SET title=?,design_svg=?,version=version+1 WHERE id=?',
+                               (body.title, design_svg(body.title, template), identifier))
+        return db.project(database, identifier)
 
     @router.post('/api/teacher/projects/{identifier}/import-identity')
     def import_identity(identifier: str, body: ImportIdentity, request: Request):

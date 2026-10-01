@@ -33,7 +33,7 @@ function displaySettings() {
   byId('delete-project').disabled = !settings.id;
   byId('import-identity').hidden = !settings.id;
   byId('project-title').value = settings.title; byId('directions').value = settings.template.instructions;
-  byId('student-url').textContent = settings.id ? location.origin + '/student?project=' + settings.id : 'Save this project to create its student link.';
+  byId('student-url').textContent = settings.id ? location.origin + '/student?project=' + settings.id : 'Save this project to create its student link.'; byId('student-url').href = settings.id ? '/student?project=' + encodeURIComponent(settings.id) : '#';
   byId('student-qr').hidden = !settings.id;
   if (settings.id) byId('student-qr').src = '/api/teacher/qr?project_id=' + settings.id;
   byId('local-url-note').textContent = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) ? 'This address and QR code point to this computer only. Open the teacher page using its LAN IP address to get an iPad-ready link and QR code.' : 'Use this link and QR code while connected to the classroom Wi-Fi.';
@@ -97,6 +97,7 @@ async function saveSettings(event) {
     await loadProjects(result.id); settings = result; displaySettings(); await refreshList();
     if (current?.project_id === result.id) await openCard(current.id, true);
     message('teacher-message', 'Project settings saved. Previously approved cards in this project need a fresh review.');
+    location.assign('/teacher/project?project=' + encodeURIComponent(result.id));
   } finally { byId('save-project').disabled = false; }
 }
 async function saveImportIdentity() {
@@ -125,8 +126,7 @@ async function deleteProject() {
       editor?.destroy(); editor = null; current = null; dirty = false; byId('review-detail').hidden = true;
     }
     await loadProjects();
-    if (projects.length) await loadSettings(projects[0].id);
-    else { settings = (await api('/api/teacher/dashboard')).project; displaySettings(); }
+    location.assign('/teacher');
     page = 1; await refreshList();
     message('teacher-message', `Project “${target.title}” deleted. Local records and images retained.`);
   } finally { byId('delete-project').disabled = !settings.id; }
@@ -162,7 +162,7 @@ async function openCard(identifier, keepPosition = false) {
     editor?.destroy(); current = card; dirty = false;
     editor = new CardEditor(byId('editor'), project, card, {teacher: true, onBusy: value => { busy = value; controls(); }, onChange: () => { dirty = true; controls(); }});
     byId('review-title').textContent = card.values.common_name || card.values.title || card.values[project.template.fields[0].key] || 'Untitled card'; byId('review-status').textContent = card.status;
-    byId('edit-layout-link').href = '/teacher/studio?project=' + project.id;
+    byId('edit-layout-link').href = '#layout'; byId('edit-layout-link').onclick = event => { event.preventDefault(); document.querySelector('[data-tab=layout]').click(); }; byId('download-card-svg').href = '/api/teacher/cards/' + card.id + '/card.svg';
     byId('review-project').textContent = project.title + (card.external_id ? ' · ' + card.copies + ' copies · ' + card.external_id : '') + ' · Last saved ' + card.updated_at + ' UTC';
     byId('revision-note').value = card.teacher_note; byId('review-detail').hidden = false;
     byId('history').replaceChildren();
@@ -194,12 +194,13 @@ async function review(action) {
 async function start() {
   const dashboard = await api('/api/teacher/dashboard');
   byId('database-state').textContent = '✓ Local project database is ready.';
-  await loadProjects(dashboard.project.id); settings = dashboard.project; displaySettings(); await refreshList();
+  const requested = new URLSearchParams(location.search).get('project') || dashboard.project.id;
+  await loadProjects(requested); settings = await api('/api/project?project_id=' + encodeURIComponent(requested)); displaySettings(); byId('filter-project').value = requested; await refreshList();
   byId('settings-project').addEventListener('change', () => guard(() => loadSettings(byId('settings-project').value)));
   byId('save-import-identity').addEventListener('click', () => guard(saveImportIdentity));
   byId('add-project-field').addEventListener('click', () => guard(addSettingsField));
   byId('delete-project').addEventListener('click', () => guard(deleteProject));
-  byId('new-project').addEventListener('click', () => { settings = {...structuredClone(settings), id: null, title: 'New field guide', version: 0}; displaySettings(); byId('project-title').focus(); });
+  byId('new-project').addEventListener('click', () => location.assign('/teacher'));
   byId('project-form').addEventListener('submit', event => guard(() => saveSettings(event)));
   for (const id of ['filter-project', 'filter-class', 'filter-status']) byId(id).addEventListener('change', () => { page = 1; guard(refreshList); });
   byId('refresh-list').addEventListener('click', () => guard(refreshList));

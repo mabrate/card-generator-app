@@ -156,7 +156,7 @@ def test_database_restart_migration_and_pin_reset(tmp_path):
         connection.execute("UPDATE projects SET title='My persisted project'")
         stored = connection.execute("SELECT value FROM settings WHERE key='teacher_pin'").fetchone()[0]
         assert generated not in stored
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
     db.initialize(path)
     assert db.project(path)["title"] == "My persisted project"
     assert auth.authenticated(path, token)

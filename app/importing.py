@@ -17,6 +17,7 @@ from app.cards import history, update_project_cards
 from app.config import THEMES
 from app.layouts import Layout, LayoutWrite, default_layout, layout_presets
 from app.rendering import render_card
+from app.design_svg import design_svg, read_design_svg
 from app.schemas import Model, Crop, safe_text
 from app.spreadsheet import export_template, template_headers
 
@@ -40,6 +41,10 @@ class StudioPreview(Model):
     theme: str = 'sage'
     image_id: str | None = None
     crop: Crop = Field(default_factory=Crop)
+
+
+class SVGInput(Model):
+    svg: str = Field(max_length=500_000)
 
 
 def read_csv(text):
@@ -106,20 +111,36 @@ def import_routes(database, uploads, require_teacher):
         template = body.template.model_dump()
         if not body.title or not set(template['themes']) <= {t['id'] for t in THEMES}:
             raise HTTPException(422, 'Enter a title and valid themes.')
+        svg = design_svg(body.title, template)
         with db.connect(database) as connection:
             connection.execute('BEGIN IMMEDIATE')
             if identifier == 'new':
                 if body.expected_version != 0:
                     raise HTTPException(409, 'A new layout starts at version zero.')
                 identifier = secrets.token_hex(12)
-                connection.execute('INSERT INTO projects(id,title,template_json) VALUES(?,?,?)', (identifier, body.title, json.dumps(template)))
+                connection.execute('INSERT INTO projects(id,title,template_json,design_svg) VALUES(?,?,?,?)', (identifier, body.title, json.dumps(template), svg))
             else:
                 row = connection.execute('SELECT * FROM projects WHERE id=? AND deleted_at IS NULL', (identifier,)).fetchone()
                 if not row or row['version'] != body.expected_version:
                     raise HTTPException(409, 'Project changed. Reopen its saved layout before editing.')
-                connection.execute('UPDATE projects SET title=?,template_json=?,version=version+1 WHERE id=?', (body.title, json.dumps(template), identifier))
+                connection.execute('UPDATE projects SET title=?,template_json=?,design_svg=?,version=version+1 WHERE id=?', (body.title, json.dumps(template), svg, identifier))
                 update_project_cards(connection, identifier, template, 'Layout changed; approval needs review')
         return db.project(database, identifier)
+
+    @router.get('/api/teacher/layout/{identifier}/design.svg')
+    def download_design(identifier: str, request: Request):
+        require_teacher(request)
+        project = db.project(database, identifier)
+        with db.connect(database) as connection:
+            row = connection.execute('SELECT design_svg FROM projects WHERE id=?', (identifier,)).fetchone()
+        svg = row['design_svg'] or design_svg(project['title'], project['template'])
+        return Response(svg, media_type='image/svg+xml', headers={
+            'Content-Disposition': 'attachment; filename="card-design.svg"'})
+
+    @router.post('/api/teacher/layout/svg/inspect')
+    def inspect_svg(body: SVGInput, request: Request):
+        require_teacher(request)
+        return read_design_svg(body.svg)
 
     @router.get('/api/teacher/layout/{identifier}/template.csv')
     def template_csv(identifier: str, request: Request):
