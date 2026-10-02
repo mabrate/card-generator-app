@@ -211,6 +211,12 @@ Open **Try examples** (`/demo`) to browse the play-tested v1 cards. Its download
 
 The separate `/preview` page is a temporary field-guide editing sandbox.
 
+### Static-first student app experiment
+
+The browser app in [`static-app/`](static-app/) uses built-in, editable SVG templates as its layout source. It imports CSV cards and images, provides template SVG/CSV downloads, and recovers drafts from browser storage after a reload. Run it with `python3 -m http.server 8765 --bind 127.0.0.1 --directory static-app`, then open http://localhost:8765. Serve the folder directly on a static host for student access. See its [template editing guide](static-app/TEMPLATES.md) for Inkscape conventions and adding templates.
+
+The Python app above continues to provide the classroom server, teacher review, and shared persistence. The static app shares downloaded files with a teacher and keeps its own workspace on the student's device.
+
 ### Verification
 
 ```bash

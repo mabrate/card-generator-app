@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
+  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js"></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><span>STUDENT STUDIO</span></header>
+<main>
+  <section class="intro"><h1>Make a card.</h1><p>Choose a template. Add your words and artwork.</p></section>
+  <p id="page-error" class="error" role="alert"></p>
+  <div class="layout">
+    <section class="workbench">
+      <section class="panel source-panel">
+        <div class="student-heading"><h2>1. Choose a template</h2><button id="new-card" type="button" class="button secondary">New card</button></div>
+        <label class="template-select">Card template<select id="template-select" disabled></select></label>
+        <p id="template-title" class="hint" hidden></p>
+        <div id="card-switcher" class="row-picker" hidden><label for="card-select">Your cards</label><select id="card-select"></select></div>
+      </section>
+      <section class="panel form-panel">
+        <h2>2. Add your words</h2><div id="fields" class="fields"></div>
+        <div class="draw-heading"><h2>3. Add your artwork</h2></div>
+        <div class="image-inputs"><label class="button secondary open-project">Choose an image<input id="image-files" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><label class="button secondary open-project">Take a photo<input id="camera-file" type="file" accept="image/*" capture="environment"></label></div>
+        <p class="hint">Use a picture or a photo of your drawing.</p><p id="image-status" class="hint" role="status"></p>
+        <details id="image-adjustments" class="student-options" hidden><summary>Adjust or switch your image</summary><label class="template-select">Image for this card<select id="asset-select"><option value="">No image</option></select></label><div class="crop-tools"><label>Zoom<input id="crop-zoom" type="range" min="1" max="4" step=".05" value="1"></label><label>Horizontal position<input id="crop-x" type="range" min="0" max="1" step=".01" value=".5"></label><label>Vertical position<input id="crop-y" type="range" min="0" max="1" step=".01" value=".5"></label></div></details>
+        <details id="drawing-tools" class="student-options"><summary>Draw here instead</summary><div class="draw-tools"><label>Ink<input id="ink-color" type="color" value="#244734"></label><label>Brush<input id="brush-size" type="range" min="2" max="24" value="7"></label><button id="clear-drawing" class="button secondary" type="button">Clear drawing</button><button id="use-drawing" class="button secondary" type="button">Use drawing</button></div><canvas id="drawing" width="900" height="540" aria-label="Drawing area"></canvas><p class="hint">Draw with a finger, stylus, or mouse.</p></details>
+        <details id="appearance-tools" class="student-options"><summary>Change colors</summary><div id="color-schemes" class="color-schemes" aria-label="Default color schemes"></div><p class="hint">Colors apply to your cards. Template restores the original colors.</p><details class="custom-colors"><summary>Choose individual colors</summary><div id="colors" class="color-grid"></div></details></details>
+      </section>
+    </section>
+    <aside class="panel preview-panel">
+      <div class="preview-head"><h2>Your card</h2><span class="size-tag">2.5 × 3.5 in</span></div>
+      <div class="card-wrap"><div id="card-preview" class="card-preview"></div></div>
+      <ul id="fit-issues" class="error" aria-live="polite"></ul>
+      <p id="save-state" class="save-state" role="status">Opening your card…</p>
+      <div class="actions main-actions"><button id="download-svg" class="button" type="button" disabled>Download card</button><button id="print-card" class="button secondary" type="button">Print this card</button></div>
+      <div class="backup-actions"><button id="save-json" class="button secondary" type="button">Save editable copy</button><label class="button secondary open-project">Open saved work<input id="open-json" type="file" accept="application/json,.json"></label></div>
+      <p class="hint">Save an editable copy to keep working later or on another device.</p><p id="single-print-status" class="hint" role="status"></p>
+    </aside>
+  </div>
+  <details id="more-tools" class="panel more-tools"><summary>More tools</summary><p class="hint">Starter links, spreadsheets, template files, printing multiple cards, and workspace reset.</p>
+    <div class="more-tools-grid">
+      <details id="starter-link-tools" class="tool-section"><summary>Send a starter link</summary><p class="hint">Share the current card’s template, colors, and field values. Students can edit their own copy. Uploaded images and drawings are not included. Edited SVG templates are included in the link and can make it longer.</p><button id="copy-starter-link" type="button" class="button secondary">Copy current card link</button><label class="starter-link-label" for="starter-link">Student link</label><textarea id="starter-link" rows="3" readonly placeholder="Choose Copy current card link to generate a link."></textarea><p id="starter-link-status" class="hint" role="status"></p></details>
+      <details id="csv-tools" class="tool-section"><summary>Cards from a spreadsheet</summary><label class="file-card csv-upload"><strong>Open CSV spreadsheet</strong><span>Import one or more card rows</span><input id="csv-file" type="file" accept=".csv,text/csv"></label><p id="csv-status" class="hint" role="status">Download a template CSV, fill in its rows, then open it here.</p><div id="csv-mapping" class="mapping-grid" hidden></div><p id="unmapped" class="hint"></p><p class="hint">Image filenames in your CSV match the names of uploaded images.</p><div class="download-links"><button id="template-csv" class="button secondary" type="button">Download template CSV</button><button id="cards-csv" class="button secondary" type="button">Download card data CSV</button><button id="remove-imports" type="button" class="button secondary" disabled>Remove CSV imports</button></div></details>
+      <details id="template-tools" class="tool-section"><summary>Edit template files</summary><p class="hint">Download an SVG template to fine-tune it in Inkscape.</p><button id="template-svg" class="button secondary" type="button">Download template SVG</button><details class="template-help"><summary>Open an edited SVG template</summary><p>Edit the downloaded SVG in Inkscape, save as SVG, then open it here.</p><label class="button secondary open-project">Open template SVG<input id="svg-file" type="file" accept=".svg,image/svg+xml"></label></details></details>
+      <details id="batch-print-tools" class="tool-section"><summary>Print multiple cards</summary><label class="template-select">Cards to print<select id="print-scope"><option value="all">All cards</option><option value="current">Current card</option></select></label><label class="copies-label">Copies of each card<input id="print-copies" type="number" min="1" max="30" step="1" value="1"></label><button id="print-sheets" type="button" class="button secondary">Open print sheets</button><p class="hint">Six cards per Letter landscape sheet, with crop marks. Open the sheets in a browser tab to print or save as PDF.</p><p id="print-status" class="hint" role="status"></p></details>
+      <details id="workspace-tools" class="tool-section"><summary>Start fresh</summary><p class="hint">Download an editable copy first if you want to keep your work.</p><button id="start-over" type="button" class="button secondary danger">Start over</button></details>
+    </div>
+  </details>
+</main><footer>Your work is recovered in this browser. Download an editable copy to keep it.</footer>
+</body></html>
