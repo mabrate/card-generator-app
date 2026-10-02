@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="2.5in" height="3.5in" viewBox="0 0 180 252" data-title="Field guide" data-template-version="1" font-family="Liberation Sans, sans-serif">
+  <title>Field guide</title>
+  <desc>Editable card template. Text placeholders use data-field. Color placeholders use data-color-fill or data-color-stroke. Move and restyle the original text in Inkscape; keep its data attributes.</desc>
+  <rect id="background" width="180" height="252" rx="8.5" fill="#eef3e8" data-color-fill="background"/>
+  <rect id="border" x="4" y="4" width="172" height="244" rx="6" fill="none" stroke="#668256" data-color-stroke="accent" stroke-width="0.8"/>
+  <path d="M11 60 H169" stroke="#668256" data-color-stroke="accent" stroke-width="0.6"/>
+  <rect id="artwork" data-image="artwork" x="13" y="64" width="154" height="66" rx="4" fill="#ffffff" data-color-fill="picture" stroke="#668256" data-color-stroke="accent" stroke-width="0.5"/>
+  <text data-placeholder="true" x="90" y="99" text-anchor="middle" font-size="8" fill="#668256">{{image}}</text>
+
+  <text id="common_name" data-field="common_name" data-label="Common name" data-width="154" data-lines="2" data-max-chars="48" data-line-height="13.2" data-required="true" x="13" y="22" font-size="11" font-weight="bold" font-style="normal" fill="#244734" data-color-fill="text">{{common_name}}</text>
+  <text id="scientific_name" data-field="scientific_name" data-label="Scientific name" data-width="154" data-lines="1" data-max-chars="60" data-line-height="9" data-required="false" x="13" y="44" font-size="7.5" font-weight="normal" font-style="italic" fill="#244734" data-color-fill="text">{{scientific_name}}</text>
+  <text id="category" data-field="category" data-label="Category" data-width="154" data-lines="1" data-max-chars="48" data-line-height="7.8" data-required="false" x="13" y="57" font-size="6.5" font-weight="bold" font-style="normal" fill="#244734" data-color-fill="text">{{category}}</text>
+  <rect x="10" y="135" width="160" height="45" rx="3" fill="#dfe9d6" data-color-fill="panel"/>
+  <rect x="10" y="183" width="160" height="59" rx="3" fill="#dfe9d6" data-color-fill="panel"/>
+  <text x="14" y="146" font-size="5.6" font-weight="bold" fill="#244734" data-color-fill="heading">FAMILY</text>
+  <text id="family" data-field="family" data-label="Family" data-width="106" data-lines="1" data-max-chars="65" data-line-height="7.44" data-required="false" x="59" y="146" font-size="6.2" font-weight="normal" font-style="normal" fill="#244734" data-color-fill="text">{{family}}</text>
+  <text x="14" y="159" font-size="5.6" font-weight="bold" fill="#244734" data-color-fill="heading">ROLE</text>
+  <text id="role" data-field="role" data-label="Ecosystem role" data-width="106" data-lines="1" data-max-chars="65" data-line-height="7.44" data-required="false" x="59" y="159" font-size="6.2" font-weight="normal" font-style="normal" fill="#244734" data-color-fill="text">{{role}}</text>
+  <text x="14" y="172" font-size="5.6" font-weight="bold" fill="#244734" data-color-fill="heading">ADULT SIZE</text>
+  <text id="size" data-field="size" data-label="Adult size" data-width="106" data-lines="1" data-max-chars="65" data-line-height="7.44" data-required="false" x="59" y="172" font-size="6.2" font-weight="normal" font-style="normal" fill="#244734" data-color-fill="text">{{size}}</text>
+  <text x="14" y="192" font-size="5.6" font-weight="bold" fill="#244734" data-color-fill="heading">ADAPTATIONS</text>
+  <text id="adaptations" data-field="adaptations" data-label="Adaptations" data-width="152" data-lines="2" data-max-chars="150" data-line-height="7.8" data-required="false" x="14" y="200" font-size="6.5" font-weight="normal" font-style="normal" fill="#244734" data-color-fill="text">{{adaptations}}</text>
+  <text x="14" y="219" font-size="5.6" font-weight="bold" fill="#244734" data-color-fill="heading">ECOSYSTEM SERVICES</text>
+  <text id="services" data-field="services" data-label="Ecosystem services" data-width="152" data-lines="2" data-max-chars="150" data-line-height="7.8" data-required="false" x="14" y="227" font-size="6.5" font-weight="normal" font-style="normal" fill="#244734" data-color-fill="text">{{services}}</text>
+</svg>
