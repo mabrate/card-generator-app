@@ -19,12 +19,22 @@ function isolateIds(root, prefix) {
     else if(attr.localName!=='id')attr.value=value;
   }
 }
+const BLEED = 9; // 1/8 inch at 72 points per inch.
+function frontBleed(svg,x,y){
+  const border=svg.querySelector('[id$="border"]'),background=svg.querySelector('[data-color-fill="background"]');
+  const paint=(node,property)=>node?.style.getPropertyValue(property) || node?.getAttribute(property);
+  const stroke=paint(border,'stroke');
+  const fill=stroke && stroke!=='none'?stroke:paint(background,'fill') || '#ffffff';
+  const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  for(const [key,value] of Object.entries({x:x-BLEED,y:y-BLEED,width:180+2*BLEED,height:252+2*BLEED,fill,'data-print-bleed':'true'}))rect.setAttribute(key,String(value));
+  return new XMLSerializer().serializeToString(rect);
+}
 function cropMarks(x,y) {
   const paths=[];
   for(const [cx,dx] of [[x,-1],[x+180,1]])for(const [cy,dy] of [[y,-1],[y+252,1]]){
     paths.push(`M${cx+dx*2},${cy}h${dx*6}`,`M${cx},${cy+dy*2}v${dy*6}`);
   }
-  return `<path d="${paths.join(' ')}" fill="none" stroke="#444" stroke-width="0.4"/>`;
+  return `<path d="${paths.join(' ')}" fill="none" stroke="#fff" stroke-width="1.4"/><path d="${paths.join(' ')}" fill="none" stroke="#444" stroke-width="0.4"/>`;
 }
 export async function loadCardBack(cardBack) {
   if(!cardBack)return null;
@@ -40,7 +50,8 @@ export async function loadCardBack(cardBack) {
 }
 export async function printDocument(template, snapshot, getAsset, scope, copies, cardBack=null) {
   const selected=scope==='current'?[[snapshot.active,snapshot.cards[snapshot.active]]]:snapshot.cards.map((card,i)=>[i,card]);
-  const count=selected.length*copies;
+  for(const [,card] of selected)if(!Number.isInteger(card.copies ?? 1)||(card.copies ?? 1)<1||(card.copies ?? 1)>600)throw Error('Each card needs a whole-number copy count from 1 to 600.');
+  const count=selected.reduce((sum,[,card])=>sum+(card.copies ?? 1)*copies,0);
   if(!Number.isInteger(copies)||copies<1||copies>30)throw Error('Choose 1–30 copies per card.');
   if(count>600)throw Error('Print at most 600 card copies at a time.');
   const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:180px;visibility:hidden';document.body.append(host);
@@ -51,10 +62,10 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
       const image=await getAsset(key);
       const name=card.values.common_name||'Untitled card';
       const missing=(card.drawingActive||card.imageName)&&!image;
-      const result=renderTemplate(template,card.values,snapshot.colors,image,card.crop,host);
+      const result=renderTemplate(template,card.values,card.colors || snapshot.colors,image,card.crop,host);
       if(missing)result.issues.push(card.drawingActive?'The drawing is missing.':`Choose the image file “${card.imageName}”.`);
       if(result.issues.length)throw Error(`Card ${index+1} (“${name}”): ${result.issues.join(' ')}`);
-      for(let n=0;n<copies;n++)svgs.push(result.root.cloneNode(true));
+      for(let n=0;n<(card.copies ?? 1)*copies;n++)svgs.push(result.root.cloneNode(true));
     }
   } finally { host.remove(); }
   const backImage=await loadCardBack(cardBack);
@@ -63,9 +74,10 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
     const cells=svgs.slice(offset,offset+6).map((svg,i)=>{
       const x=108+(i%3)*198,y=45+Math.floor(i/3)*270;
       isolateIds(svg,`print-${offset+i}-`);svg.setAttribute('x',String(x));svg.setAttribute('y',String(y));svg.setAttribute('width','180');svg.setAttribute('height','252');
-      return new XMLSerializer().serializeToString(svg)+cropMarks(x,y);
+      return frontBleed(svg,x,y)+new XMLSerializer().serializeToString(svg);
     });
-    sheets.push(`<section class="sheet fronts"><svg xmlns="http://www.w3.org/2000/svg" width="11in" height="8.5in" viewBox="0 0 792 612" aria-label="Card print sheet ${sheets.length+1}">${cells.join('')}</svg></section>`);
+    const frontMarks=cells.map((_,i)=>cropMarks(108+(i%3)*198,45+Math.floor(i/3)*270)).join('');
+    sheets.push(`<section class="sheet fronts"><svg xmlns="http://www.w3.org/2000/svg" width="11in" height="8.5in" viewBox="0 0 792 612" aria-label="Card print sheet ${sheets.length+1}">${cells.join('')}${frontMarks}</svg></section>`);
     if(backImage){
       const backs=svgs.slice(offset,offset+6).map((_,i)=>{
         // Mirror columns around the page center for landscape short-edge duplex.
@@ -79,5 +91,5 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Classroom Cards · Print sheets</title><style>
 ${fonts}
 @page{size:Letter landscape;margin:0}*{box-sizing:border-box}body{margin:0;background:#e8ece8;font-family:Arial,sans-serif;color:#203d31}.toolbar{padding:20px;max-width:900px;margin:auto}.toolbar h1{font-size:24px;margin:0 0 8px}.toolbar p{line-height:1.5}.toolbar button{padding:12px 18px;background:#1d503b;border:0;border-radius:6px;color:white;font-size:16px;cursor:pointer}.sheet{width:11in;height:8.5in;background:white;margin:20px auto;box-shadow:0 2px 12px #0002}.sheet>svg{display:block;width:11in;height:8.5in;overflow:hidden}@media screen{.sheet{width:min(11in,calc(100% - 24px));height:auto;aspect-ratio:22/17}.sheet>svg{width:100%;height:auto}}@media print{body{background:white}.toolbar{display:none}.sheet{margin:0;box-shadow:none;break-after:page;page-break-after:always}.sheet:last-child{break-after:auto;page-break-after:auto}svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head><body><div class="toolbar"><h1>Card print sheets</h1><p>${count} card${count===1?'':'s'} on ${sheets.length} Letter landscape page${sheets.length===1?'':'s'}. Each card is 2.5 × 3.5 inches. Cut on the square crop marks.</p><p>Choose Letter paper, landscape, 100% / actual size, no margins, and disable headers and footers. Select Save as PDF in the print dialog to keep a PDF. Print one test sheet and check the size with a ruler.</p>${backImage?'<p><strong>Double-sided printing:</strong> pages alternate fronts and backs. Choose duplex / print on both sides and <strong>flip on the short edge</strong>. Blank slots on the last sheet stay blank. Test the first pair of pages before printing the full deck. For manual duplex, print one front/back pair first to check your printer’s feed direction.</p>':''}<button id="print" disabled onclick="window.print()">Preparing fonts…</button><p>Close this tab to return to your editor.</p></div>${sheets.join('')}<script>(()=>{const cardBack=${JSON.stringify(backImage)};for(const image of document.querySelectorAll('[data-card-back]'))image.setAttribute('href',cardBack);Promise.all([document.fonts.ready,...Array.from(document.querySelectorAll('svg image'),node=>{const image=new Image();image.src=node.getAttribute('href');return image.decode();})]).then(()=>{const button=document.getElementById('print');button.disabled=false;button.textContent='Print / Save as PDF';}).catch(()=>{document.getElementById('print').textContent='Images could not load. Reopen print sheets.';});})();</script></body></html>`;
+</style></head><body><div class="toolbar"><h1>Card print sheets</h1><p>${count} card${count===1?'':'s'} on ${sheets.length} Letter landscape page${sheets.length===1?'':'s'}. Each card is 2.5 × 3.5 inches. Front border colors extend ⅛ inch beyond the cut lines. Cut on the square crop marks for the finished card size.</p><p>Choose Letter paper, landscape, 100% / actual size, no margins, and disable headers and footers. Select Save as PDF in the print dialog to keep a PDF. Print one test sheet and check the size with a ruler.</p>${backImage?'<p><strong>Double-sided printing:</strong> pages alternate fronts and backs. Choose duplex / print on both sides and <strong>flip on the short edge</strong>. Blank slots on the last sheet stay blank. Test the first pair of pages before printing the full deck. For manual duplex, print one front/back pair first to check your printer’s feed direction.</p>':''}<button id="print" disabled onclick="window.print()">Preparing fonts…</button><p>Close this tab to return to your editor.</p></div>${sheets.join('')}<script>(()=>{const cardBack=${JSON.stringify(backImage)};for(const image of document.querySelectorAll('[data-card-back]'))image.setAttribute('href',cardBack);Promise.all([document.fonts.ready,...Array.from(document.querySelectorAll('svg image'),node=>{const image=new Image();image.src=node.getAttribute('href');return image.decode();})]).then(()=>{const button=document.getElementById('print');button.disabled=false;button.textContent='Print / Save as PDF';}).catch(()=>{document.getElementById('print').textContent='Images could not load. Reopen print sheets.';});})();</script></body></html>`;
 }

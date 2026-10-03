@@ -29,13 +29,11 @@ Choose a default color scheme (Sage, Sky, Sand, Rose, Lavender, or Ink), then ad
 
 **Start over** clears all cards, CSV imports, images, drawings, and the browser recovery checkpoint. It leaves one blank card using your current SVG template and its original colors. Both actions ask for confirmation and describe what will be removed. Download a project file first if you want to reopen the cleared work later.
 
-## Student starter links
+## More tools
 
-Choose a template, colors, and field values on the current card, then open **More tools → Send a starter link → Copy current card link**. Send the generated link to students. If clipboard access is unavailable, the link is selected for manual copying.
+The bottom **More tools** section presents print settings, template SVG download/open buttons, and **Start fresh** directly. **Cards from a spreadsheet** always shows CSV import and download controls; column matching appears after import. Start fresh asks before clearing your workspace; save an editable copy first to keep your work.
 
-The link uses a `#card=` URL parameter with the starter defaults. Built-in templates are referenced by their catalog ID; opened SVG templates are embedded so students receive the edited layout. Colors include individual color adjustments as well as the selected scheme. Only the current template's text fields are included; uploaded images, drawings, CSV imports, and other cards are excluded. Links over 64,000 characters are rejected; use a built-in template or shorter text for a smaller link. Share a link from the deployed site, since a localhost address is only usable on your own device.
-
-Opening a starter link asks before replacing existing browser recovery. Cancel keeps the saved workspace. Once opened, the defaults are saved in browser recovery and the starter parameter is removed from the address, so reloading keeps student edits. Reopening the original shared link starts the same defaults again. Starter values are visible to anyone with the link.
+Share project URLs with students to provide templates, starting values, and resources. Previously shared starter links still open, but the editor no longer creates them.
 
 ## Card print sheets
 
@@ -62,3 +60,7 @@ This branch's static app is independent of the existing FastAPI classroom workfl
 ## Project URLs
 
 Open `?project=houston-food-web` for **Houston Food Web Game**, including rules, original card data/artwork, and the expansion pack. Publish more project folders using [PROJECTS.md](PROJECTS.md). Without a project parameter, the normal editor and its existing browser recovery behave as before.
+
+CSV imports match `copies` (also `card_count`, `count`, or `quantity`) and `theme` (also `color_theme` or `color_scheme`). Theme names match available schemes without regard to case. Blank counts default to 1; blank themes use workspace colors. Counts must be whole numbers from 1 to 600, and unknown themes show an error before importing. Use the column controls to match other headers. Each card shows an editable copy count; print sheets repeat each card that many times, multiplied by the print quantity control (default 1), with a maximum of 600 total copies. Imported themes appear in the preview and print sheets. Counts and themes survive browser recovery and editable-copy saves and are included in card-data CSV exports.
+
+Print-sheet fronts include ⅛-inch bleed in each card’s border color (or background color for templates without a border). Crop marks still define the finished 2.5 × 3.5 inch card; cut away the extra color outside those marks.
