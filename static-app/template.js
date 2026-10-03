@@ -125,7 +125,7 @@ export function renderTemplate(template, values, colors, imageData, crop, host) 
     const image = document.createElementNS(NS,'image');
     const zoom = Math.max(1, Math.min(4,Number(crop?.zoom) || 1));
     image.setAttribute('x',String(x - (w * zoom - w) * (crop?.x ?? .5))); image.setAttribute('y',String(y - (h * zoom - h) * (crop?.y ?? .5)));
-    image.setAttribute('width',String(w * zoom)); image.setAttribute('height',String(h * zoom)); image.setAttribute('preserveAspectRatio','xMidYMid meet'); image.setAttribute('href',imageData);
+    image.setAttribute('width',String(w * zoom)); image.setAttribute('height',String(h * zoom)); image.setAttribute('preserveAspectRatio','xMidYMid slice'); image.setAttribute('href',imageData);
     clipped.append(image); group.append(clipped); frame.after(group);
   }
   root.querySelectorAll('[data-placeholder]').forEach(el => el.remove());
