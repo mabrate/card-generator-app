@@ -1,4 +1,4 @@
-const CACHE = 'classroom-cards-static-first-v6';
+const CACHE = 'classroom-cards-static-first-v10';
 const base = new URL('./', self.location.href);
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
@@ -6,7 +6,7 @@ self.addEventListener('install', event => event.waitUntil((async () => {
   const response = await fetch(catalogURL, {cache:'reload'});
   if (!response.ok) throw Error('Template catalog unavailable.');
   const catalog = await response.json();
-  await cache.addAll(['./','index.html','style.css','studio.js','template.js','palettes.js','print.js','links.js','templates/catalog.json',
+  await cache.addAll(['./','index.html','style.css','studio.js','studio.js?v=10','template.js','palettes.js','print.js','links.js','projects.js','markdown.js','templates/catalog.json',
     'fonts/LiberationSans-Regular.ttf','fonts/LiberationSans-Bold.ttf','fonts/LiberationSans-Italic.ttf',
     ...catalog.flatMap(t=>['templates/'+t.svg,'templates/'+t.svg.replace(/\.svg$/,'.csv')])].map(p=>new URL(p,base)));
   await self.skipWaiting();
@@ -20,7 +20,7 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET'||url.origin!==base.origin||!url.pathname.startsWith(base.pathname))return;
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
-    try{const response=await fetch(event.request);if(response.ok)await cache.put(event.request,response.clone());return response;}
+    try{const response=await fetch(event.request,{cache:'no-cache'});if(response.ok)await cache.put(event.request,response.clone());return response;}
     catch{const cached=await cache.match(event.request);if(cached)return cached;throw Error('This file has not been saved for offline use.');}
   })());
 });

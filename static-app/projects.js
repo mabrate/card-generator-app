@@ -1,0 +1,45 @@
+import {PALETTES} from './palettes.js';
+export function projectId(search) {
+  const params = new URLSearchParams(search);
+  if (!params.has('project')) return null;
+  const id = params.get('project');
+  if (!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(id)) throw Error('Invalid project name in the URL.');
+  return id;
+}
+export function localFile(path, base) {
+  if (typeof path !== 'string' || !path || path.split('/').some(p => !p || p === '.' || p === '..') || /[\\:%?#]/.test(path)) throw Error('Project files must use relative paths inside their folder.');
+  return new URL(path, base).href;
+}
+export function readManifest(value, base, catalog) {
+  if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim()) throw Error('Unsupported project manifest. Use version 1 and a project name.');
+  if ((value.templates !== undefined && !Array.isArray(value.templates)) || (value.colorSchemes !== undefined && !Array.isArray(value.colorSchemes)) || (value.files !== undefined && !Array.isArray(value.files)) || (value.description !== undefined && typeof value.description !== 'string')) throw Error('Invalid project manifest lists or description.');
+  const templates = value.templates === undefined ? catalog.map(t => ({...t, url:new URL('templates/'+t.svg, new URL('../../',base)).href})) : value.templates.map(t => {
+    if (typeof t === 'string') { const item = catalog.find(c => c.id === t); if (!item) throw Error('Unknown project template: '+t); return {...item, url:new URL('templates/'+item.svg,new URL('../../',base)).href}; }
+    if (!t || !/^[a-z0-9_-]+$/.test(t.id) || typeof t.title !== 'string') throw Error('Invalid project template.');
+    return {...t, url:localFile(t.svg,base)};
+  });
+  if (!templates.length || new Set(templates.map(t=>t.id)).size !== templates.length) throw Error('Choose at least one template with unique IDs.');
+  const schemes = value.colorSchemes === undefined ? [{name:'Template',colors:null},...PALETTES] : value.colorSchemes.map(s => {
+    if (typeof s === 'string') { const scheme = s === 'Template' ? {name:s,colors:null} : PALETTES.find(p=>p.name===s); if (!scheme) throw Error('Unknown color scheme: '+s); return scheme; }
+    if (!s || typeof s.name !== 'string' || s.name === 'Template' || !s.colors || !Object.keys(s.colors).length || Object.values(s.colors).some(c=>typeof c !== 'string' || !/^#[0-9a-f]{6}$/i.test(c))) throw Error('Invalid custom color scheme.');
+    return s;
+  });
+  if (!schemes.length || new Set(schemes.map(s=>s.name)).size !== schemes.length) throw Error('Choose color schemes with unique names.');
+  const starter = value.starter || {};
+  if (typeof starter !== 'object' || Array.isArray(starter)) throw Error('Invalid project starter.');
+  if ((starter.template && !templates.some(t=>t.id===starter.template)) || (starter.scheme && !schemes.some(s=>s.name===starter.scheme))) throw Error('Starter template or scheme is not allowed.');
+  for (const values of [starter.values || {},value.placeholders || {}]) if (typeof values !== 'object' || Array.isArray(values) || Object.values(values).some(v=>typeof v !== 'string')) throw Error('Starter values and placeholders must contain text.');
+  const files = (value.files || []).map(f=>{if (!f || typeof f.title !== 'string' || (f.type === 'markdown' && !/\.md$/i.test(f.path))) throw Error('Invalid project file.'); return {...f,url:localFile(f.path,base)};});
+  let cardBack;
+  if(value.cardBack !== undefined){
+    if(!value.cardBack || typeof value.cardBack !== 'object' || !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image || '') || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string'))throw Error('Card back needs a PNG, JPG, or WebP image path.');
+    cardBack={...value.cardBack,url:localFile(value.cardBack.image,base)};
+  }
+  return {...value,templates,schemes,starter,files,base,cardBack};
+}
+export async function loadProject(id, catalog) {
+  const base = new URL('projects/'+id+'/',location.href);
+  const response = await fetch(new URL('manifest.json',base));
+  if (!response.ok) throw Error('Cannot load project “'+id+'”. Check its manifest.json and URL.');
+  return readManifest(await response.json(),base,catalog);
+}

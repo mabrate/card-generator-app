@@ -1,0 +1,49 @@
+{
+  "mode": "Built-in image generator; one call per organism card",
+  "physical_size_inches": [
+    2.13,
+    1.48
+  ],
+  "assets": [
+    {
+      "slug": "coopers-hawk",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: an adult Cooper's Hawk, Astur cooperii, standing in three-quarter view on a simple branch, blue-gray back, rusty barred chest, long banded tail, fierce red eye, and hooked bill. Save as coopers-hawk.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-0356e154-517e-4d10-a45f-cb3dcc0e2cec.png"
+    },
+    {
+      "slug": "texas-leafcutting-ant",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: several Texas leafcutting ants, Atta texana, with accurate elbowed antennae and waists, one worker carrying a fresh green leaf fragment, on pale earth. Save as texas-leafcutting-ant.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-e881b069-7c10-4277-b9cd-530cd630d4b6.png"
+    },
+    {
+      "slug": "pyramid-ant",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: a pyramid ant, Dorymyrmex species, in clear macro side view with six legs, elbowed antennae, a single waist node, and the characteristic cone-shaped propodeum. Save as pyramid-ant.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-eefc75e7-05a6-4fd3-85bc-ad3b76f31555.png"
+    },
+    {
+      "slug": "red-harvester-ant",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: a red harvester ant, Pogonomyrmex barbatus, in macro view beside a few gathered grass and sunflower seeds, with six legs and accurate ant anatomy. Save as red-harvester-ant.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-8ca1d7fc-3643-4279-ba3e-3b4829e17615.png"
+    },
+    {
+      "slug": "springtails",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: a small group of springtails, Collembola, enlarged in a moist leaf-litter microhabitat with fungal threads and decomposing plant fragments; show their tiny elongated bodies and antennae. Save as springtails.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-a9c2510c-67f7-4ca6-a0f3-de466a060fc4.png"
+    },
+    {
+      "slug": "convergent-lady-beetle",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: a convergent lady beetle, Hippodamia convergens, on a green leaf near a few aphids; orange-red wing covers with black spots and the two converging white marks on the dark pronotum. Save as convergent-lady-beetle.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-77b03d0c-99d6-4de1-a904-7d2a6ca492b2.png"
+    },
+    {
+      "slug": "rabid-wolf-spider",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: a rabid wolf spider, Rabidosa rabida, on leaf litter, with eight legs, brown body, pale median stripe, and forward-facing eyes; natural and detailed rather than frightening. Save as rabid-wolf-spider.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-a3590af7-8da9-4461-a390-6cd0859a5c23.png"
+    },
+    {
+      "slug": "texas-horned-lizard",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Clean, polished natural-history gouache illustration matching a botanical classroom deck, with realistic identifying anatomy, a warm ivory background, subtle sage ground shadow, and rich but restrained natural colors. Use one uncluttered landscape composition at aspect ratio 213:148. Keep the complete organism inside the frame with generous 8 percent safety margins. No text, labels, numbers, border, logo, grid, or watermark. Subject: a Texas Horned Lizard, Phrynosoma cornutum, standing on sandy ground in three-quarter view, with a broad flattened body, crown of head horns, side fringe scales, and mottled tan coloring. Save as texas-horned-lizard.png.",
+      "source": "/home/marc/.codex/generated_images/01a0f4e7-93fc-7af2-92b4-d71cd5bf8a57/exec-9af88a80-128d-4037-8adc-fa969d6f9cf8.png"
+    }
+  ]
+}

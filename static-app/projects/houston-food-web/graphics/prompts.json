@@ -1,0 +1,120 @@
+{
+  "mode": "Built-in image generator; one call per organism or effect card",
+  "physical_size_inches": [
+    2.13,
+    1.48
+  ],
+  "assets": [
+    {
+      "slug": "aquatic-milkweed",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Aquatic milkweed, Asclepias perennis: slender stems, opposite narrow lanceolate green leaves, small umbels of white five-petaled milkweed flowers. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as aquatic-milkweed.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-d1fc11ed-63ef-42a1-96ab-095770063f9f.png"
+    },
+    {
+      "slug": "frogfruit",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Frogfruit, Phyla nodiflora: low creeping plant with toothed oval leaves and tiny white flowers arranged around purple cone-shaped heads. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as frogfruit.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-2c294c7e-b163-4fa0-ac61-838224b3efab.png"
+    },
+    {
+      "slug": "blue-mistflower",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Blue mistflower, Conoclinium coelestinum: clusters of fluffy lavender-blue flowers and opposite toothed triangular leaves. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as blue-mistflower.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-6e1664f1-e61f-4d3f-9aad-204e8222495b.png"
+    },
+    {
+      "slug": "texas-bluebonnet",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Texas bluebonnet, Lupinus texensis: upright blue pea-flower spike tipped with white, green palmate leaves. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as texas-bluebonnet.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-d16596bb-2617-4f01-bc35-0603d3dc0e40.png"
+    },
+    {
+      "slug": "common-sunflower",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Common sunflower, Helianthus annuus: golden ray petals, dark seed disk, broad rough green leaves. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as common-sunflower.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-d346e5a8-63b9-4602-8c29-23e04e165257.png"
+    },
+    {
+      "slug": "monarch-butterfly",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Monarch butterfly, Danaus plexippus: adult orange butterfly with strong black veins and white-dotted black wing margins, wings fully open. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as monarch-butterfly.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-ec90f043-9dad-47f5-a5e8-37e90282c0c6.png"
+    },
+    {
+      "slug": "eastern-carpenter-bee",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Eastern carpenter bee, Xylocopa virginica: robust bee, fuzzy yellow thorax with central black patch, smooth shiny black abdomen, translucent wings. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as eastern-carpenter-bee.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-60a011d4-03bb-482a-ae9a-392b857c8664.png"
+    },
+    {
+      "slug": "aphids",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Aphids, Aphis species: small cluster of pear-shaped green aphids with delicate legs, antennae, and paired rear cornicles on a green stem. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as aphids.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-0ecef435-7a2e-4cb5-8d03-374654a55892.png"
+    },
+    {
+      "slug": "milkweed-assassin-bug",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Milkweed assassin bug, Zelus longipes: slender orange-red and black true bug, long thin black legs and antennae, narrow head with piercing beak, six legs. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as milkweed-assassin-bug.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-88a5f4e8-7e5a-4aa4-97fc-01ca43185728.png"
+    },
+    {
+      "slug": "aphid-parasitoid-wasp",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Aphid parasitoid wasp, Lysiphlebus testaceipes: tiny slender dark wasp, narrow waist, clear wings, long antennae, six yellow-brown legs, on a leaf near one aphid. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as aphid-parasitoid-wasp.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-b9b70da2-40dd-41bb-b599-ae8bb5755c71.png"
+    },
+    {
+      "slug": "red-imported-fire-ant",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Red imported fire ant, Solenopsis invicta: red-brown ant, darker shiny abdomen, elbowed antennae, two waist nodes, six legs, macro view. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as red-imported-fire-ant.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-d49e4d39-9927-452c-90cf-0d3089885c76.png"
+    },
+    {
+      "slug": "brown-anole",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Brown anole, Anolis sagrei: small brown lizard with long tail, subtle diamond back markings, orange-red throat dewlap expanded, perched on a twig. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as brown-anole.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-38087841-b9e2-4bdc-8338-607666b95c21.png"
+    },
+    {
+      "slug": "carolina-wren",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Carolina wren, Thryothorus ludovicianus: small warm reddish-brown bird, distinct white eyebrow stripe, buff breast, upturned barred tail, on twig. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as carolina-wren.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-6fa23feb-b3dc-4580-b021-ae0025a3cab4.png"
+    },
+    {
+      "slug": "turkey-tail-fungus",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Turkey tail fungus, Trametes versicolor: overlapping thin fan-shaped bracket mushrooms with concentric cream, brown, rust and gray bands on a fallen log. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as turkey-tail-fungus.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-1a986085-31f4-4f52-b30b-ccc90a141a36.png"
+    },
+    {
+      "slug": "soil-bacterium",
+      "prompt": "Create one finished raster illustration for a middle-school ecology game card. Subject: Soil bacterium, Bacillus subtilis: educational conceptual microscope view of several rod-shaped bacterial cells, some in short chains, subtle translucent blue-green bodies and fine flagella, NOT a real microscopy photo. Clean attractive natural-history gouache illustration with realistic identifying anatomy, soft ivory background, subtle sage ground shadow, rich but restrained natural colors. A single uncluttered composition, organism large, fully inside frame with generous 8 percent safety margins; no lettering, no labels, no border, no watermark. Landscape composition for a 2.13 inch wide by 1.48 inch high image box (aspect ratio 213:148). This is one asset, not a grid or collection. Save as soil-bacterium.png.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-fa7af60c-e8dd-4ee2-a27d-dea26610f07a.png"
+    },
+    {
+      "slug": "rainstorm",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Rainstorm: a small flowering garden beneath soft gray rain clouds, clearly visible falling raindrops, wet green leaves and tiny puddles in rich soil. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-9a47e627-dc34-4a2f-905c-6c93d75b2a16.png"
+    },
+    {
+      "slug": "drought",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Drought: a garden plant with slightly wilted green leaves in dry cracked brown earth, pale hot sky, no rain. Convey lack of stored water. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-02812b5a-641a-4865-9f18-eeab33c93b5e.png"
+    },
+    {
+      "slug": "heat-wave",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Heat Wave: bright blazing summer sun above a garden plant, warm golden light, subtle heat shimmer above the soil. Convey extreme heat, not fire. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-fec13269-8303-4390-a01e-60935fad070b.png"
+    },
+    {
+      "slug": "compost-addition",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Compost Addition: a small mound of dark crumbly compost with recognisable dry leaves and a few vegetable peelings being added beside a garden bed. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-96aba9cb-f409-46a3-b655-e2b85c8bfbc8.png"
+    },
+    {
+      "slug": "mulch",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Mulch: a healthy young garden plant with a protective ring of tan wood chips and dry leaves over moist soil around its base. Clear contrast between mulch layer and soil. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-f4ef8551-9802-46a1-93fc-ce6cb4ea462e.png"
+    },
+    {
+      "slug": "native-plant-boom",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Native Plant Boom: a thriving small native Texas flower garden with bluebonnets, golden sunflowers and white milkweed flowers, fresh green growth and healthy leaves. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-a49bbda4-ee34-4966-be05-be4c30ddb2ea.png"
+    },
+    {
+      "slug": "pesticide-spray",
+      "prompt": "Use case: scientific-educational. Asset: illustrated event card for a middle-school ecology game. Subject: Pesticide Spray: a plain unlabelled hand-pump garden spray bottle beside a leaf, emitting a fine mist toward a small group of insects on foliage. A neutral ecology-game event illustration, no people, no instructions, no dead animals or dramatic toxicity. Style: polished natural-history gouache illustration, realistic garden details, softly textured ivory backdrop, restrained sage greens, earthy browns, natural colors, harmonious with a botanical illustrated card deck. Composition: one uncluttered landscape vignette, no grid; main subject fully visible with 8 percent clear margins, designed for a 2.13 inch wide by 1.48 inch high image box (213:148 aspect ratio). No text, labels, numbers, border, logos or watermark. Finished raster PNG.",
+      "source": "/home/marc/.codex/generated_images/01a0defe-360d-70f0-9477-6e06441e9488/exec-3a526a34-6c35-4d21-943f-30b54577bfd2.png"
+    }
+  ]
+}
+

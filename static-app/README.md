@@ -43,7 +43,7 @@ Use **Print this card** for a single card, or open **More tools → Print multip
 
 Sheets are Letter landscape (11 × 8.5 inches), with six 2.5 × 3.5 inch cards per page and square crop marks. Card order follows the workspace list; repeated copies follow each card. Export is limited to 600 card copies. Every selected card must have required text, fit the template's text limits, and have its referenced image available before export succeeds.
 
-Choose Letter, landscape, actual size / 100%, no margins, and turn off headers and footers in the print dialog. Save as PDF there if you need a PDF file. Test your printer's physical dimensions before printing the full set. This export contains fronts only.
+Choose Letter, landscape, actual size / 100%, no margins, and turn off headers and footers in the print dialog. Save as PDF there if you need a PDF file. Test your printer's physical dimensions before printing the full set. Normal editor exports contain fronts only. Projects with a `cardBack` image in their manifest include alternating fronts and backs; use double-sided printing with **flip on the short edge** and test the first pair of pages.
 
 The app preserves complete text and reports when it exceeds the template's character or line limits. It blocks finished-card export until text fits and referenced images are available. Image files are resized to a maximum of 1600 pixels on the longest side for browser storage. The original files stay on your device; the app's saved project contains the resized versions. The drawing canvas is saved as PNG.
 
@@ -51,10 +51,14 @@ The card SVG declares 2.5 × 3.5 inches and embeds its image and bundled Liberat
 
 ## Browser recovery
 
-Text, template, colors, CSV column mapping, selected card, and image positions are checkpointed in localStorage. Uploaded images and drawings live in IndexedDB. Recovery works on the same browser and site address, including after a reload. Clearing site data removes this workspace. Storage errors appear in the app; download a project backup to carry your work to another device or keep it permanently. Images are saved before their references are checkpointed.
+Text, template, colors, CSV column mapping, selected card, and image positions are checkpointed in localStorage. Uploaded images and drawings live in IndexedDB. Recovery works on the same browser and site address, including after a reload. Clearing site data removes this workspace. Storage errors appear in the app; download a project backup to carry your work to another device or keep it permanently. Images are saved before their references are checkpointed. If saved work is incompatible with the current project or damaged, use the recovery panel to **Download saved work** or **Start fresh**. Starting fresh uses the current workspace defaults and leaves other workspaces alone.
 
 ## Templates
 
 The SVG is the complete layout, including text positions, fonts, shapes, color roles, and image geometry. There is no JavaScript field-guide layout overlay. Download a template, edit its existing elements in Inkscape, then reopen it in the editor. See [TEMPLATES.md](TEMPLATES.md) for the placeholder conventions and how to publish additional built-in templates.
 
 This branch's static app is independent of the existing FastAPI classroom workflow. Share downloaded files with your teacher; it has no server submissions or shared review queue. Nothing is uploaded to a service when students choose CSVs or images.
+
+## Project URLs
+
+Open `?project=houston-food-web` for **Houston Food Web Game**, including rules, original card data/artwork, and the expansion pack. Publish more project folders using [PROJECTS.md](PROJECTS.md). Without a project parameter, the normal editor and its existing browser recovery behave as before.
