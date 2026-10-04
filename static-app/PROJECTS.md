@@ -41,6 +41,24 @@ Projects use separate localStorage checkpoints and IndexedDB image databases. No
 
 The service worker caches project manifests, templates, and resources as they are fetched. Open needed documents and download resources while connected before expecting them offline; copying a folder to the host does not pre-cache every file in it.
 
+## Private folder and ZIP imports
+
+In **More tools → Import a local project**, use **Choose project folder** or **Open project ZIP**. Files are read on your device and stored in IndexedDB in this browser. They are never uploaded or added to Git. The app opens a separate local workspace for each import and leaves your previous cards intact. Local workspace URLs work only in the browser where you imported the project.
+
+Select a folder containing exactly one `manifest.json`, or ZIP that folder with standard ZIP compression. A ZIP may contain the files at its root or inside one enclosing folder. Paths in the manifest and image filenames may start with `./` (for example `./templates/card.svg` or `./graphics/leaf.png`). Parent-directory paths (`../`) remain unsupported. Keep the manifest's relative directory structure, including custom templates, documents, CSV files, images, and any card back. Built-in template IDs remain supported. ZIP import supports stored and deflated entries, verifies checksums, and rejects encrypted, multipart, ZIP64, damaged, or unsafe archives. It requires browser support for `DecompressionStream('deflate-raw')`; folder import is the fallback.
+
+A single CSV is imported automatically. If you include several CSV files, add a root manifest property such as `"csv": "data/cards.csv"` to select the card data. A CSV does not have to appear in the manifest's resource list. Existing field-name/label column matching, quantities, and allowed color themes apply; you can adjust column matches after importing. Images in `image_filename` match a full path relative to the manifest (for example `graphics/leaf.png`), or a basename such as `leaf.png` when that basename is unique. Missing or ambiguous image names stop the import. PNG, JPG, and WebP assets are included automatically. Markdown resources and their relative file links use the imported files.
+
+Validation completes before the new workspace is saved or opened. Limits: 2,000 files, 100 MB total unpacked files, CSV under 2 MB with at most 500 card rows, and each image under 12 MB / 25 megapixels. Browser storage must have room for the project; failure leaves your current workspace unchanged. Once the app's service worker has installed, local projects can recover offline, including documents and card backs.
+
+**Save editable copy** includes your edited cards, image data, manifest, and original project files in one JSON backup. **Open saved work** can restore that backup in another browser or on another device without hosting the project. Keep a downloaded backup because clearing browser storage removes local recovery. Folder-picker availability varies by device; ZIP import provides a single-file option for tablets.
+
+Run the import browser checks with:
+
+```bash
+.venv/bin/python scripts/local_projects_smoke.py
+```
+
 ## Houston Food Web Game
 
 Open `?project=houston-food-web`. The project uses `templates/food-web.svg` and contains unchanged copies of the v1 turn guide, card CSV, graphics folder, and complete expansion pack from `demo/v1/`. The editor offers rendered rules and expansion instructions, CSV downloads, and ZIP downloads of the original graphics and expansion pack. The expansion guide is the original demo guide and describes the older teacher app; in this static editor, import CSV using **More tools → Cards from a spreadsheet**, then upload matching PNGs using **Choose an image**. Match `binomial_name` to Scientific name and `categories` to Category in the CSV column controls.

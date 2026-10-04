@@ -6,9 +6,13 @@ export function projectId(search) {
   if (!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(id)) throw Error('Invalid project name in the URL.');
   return id;
 }
+export function normalizeProjectPath(path) {
+  if(typeof path==='string')while(path.startsWith('./'))path=path.slice(2);
+  if (typeof path !== 'string' || !path || path.split('/').some(p => !p || p === '.' || p === '..') || /[\\:%?#\u0000-\u001f]/.test(path)) throw Error('Project files must use relative paths inside their folder: '+String(path));
+  return path;
+}
 export function localFile(path, base) {
-  if (typeof path !== 'string' || !path || path.split('/').some(p => !p || p === '.' || p === '..') || /[\\:%?#]/.test(path)) throw Error('Project files must use relative paths inside their folder.');
-  return new URL(path, base).href;
+  return new URL(normalizeProjectPath(path), base).href;
 }
 export function readManifest(value, base, catalog) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim()) throw Error('Unsupported project manifest. Use version 1 and a project name.');
@@ -16,7 +20,7 @@ export function readManifest(value, base, catalog) {
   const templates = value.templates === undefined ? catalog.map(t => ({...t, url:new URL('templates/'+t.svg, new URL('../../',base)).href})) : value.templates.map(t => {
     if (typeof t === 'string') { const item = catalog.find(c => c.id === t); if (!item) throw Error('Unknown project template: '+t); return {...item, url:new URL('templates/'+item.svg,new URL('../../',base)).href}; }
     if (!t || !/^[a-z0-9_-]+$/.test(t.id) || typeof t.title !== 'string') throw Error('Invalid project template.');
-    return {...t, url:localFile(t.svg,base)};
+    return {...t, svg:normalizeProjectPath(t.svg), url:localFile(t.svg,base)};
   });
   if (!templates.length || new Set(templates.map(t=>t.id)).size !== templates.length) throw Error('Choose at least one template with unique IDs.');
   const schemes = value.colorSchemes === undefined ? [{name:'Template',colors:null},...PALETTES] : value.colorSchemes.map(s => {
@@ -29,13 +33,13 @@ export function readManifest(value, base, catalog) {
   if (typeof starter !== 'object' || Array.isArray(starter)) throw Error('Invalid project starter.');
   if ((starter.template && !templates.some(t=>t.id===starter.template)) || (starter.scheme && !schemes.some(s=>s.name===starter.scheme))) throw Error('Starter template or scheme is not allowed.');
   for (const values of [starter.values || {},value.placeholders || {}]) if (typeof values !== 'object' || Array.isArray(values) || Object.values(values).some(v=>typeof v !== 'string')) throw Error('Starter values and placeholders must contain text.');
-  const files = (value.files || []).map(f=>{if (!f || typeof f.title !== 'string' || (f.type === 'markdown' && !/\.md$/i.test(f.path))) throw Error('Invalid project file.'); return {...f,url:localFile(f.path,base)};});
+  const files = (value.files || []).map(f=>{if (!f || typeof f.title !== 'string' || (f.type === 'markdown' && !/\.md$/i.test(f.path))) throw Error('Invalid project file.'); return {...f,path:normalizeProjectPath(f.path),url:localFile(f.path,base)};});
   let cardBack;
   if(value.cardBack !== undefined){
     if(!value.cardBack || typeof value.cardBack !== 'object' || !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image || '') || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string'))throw Error('Card back needs a PNG, JPG, or WebP image path.');
-    cardBack={...value.cardBack,url:localFile(value.cardBack.image,base)};
+    cardBack={...value.cardBack,image:normalizeProjectPath(value.cardBack.image),url:localFile(value.cardBack.image,base)};
   }
-  return {...value,templates,schemes,starter,files,base,cardBack};
+  return {...value,...(value.csv!==undefined?{csv:normalizeProjectPath(value.csv)}:{}),templates,schemes,starter,files,base,cardBack};
 }
 export async function loadProject(id, catalog) {
   const base = new URL('projects/'+id+'/',location.href);

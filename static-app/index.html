@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
-  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=14"></script>
+  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=16"></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><span>STUDENT STUDIO</span></header>
@@ -42,6 +42,7 @@
     </aside>
   </div>
   <section id="more-tools" class="panel more-tools" aria-labelledby="more-tools-title"><h2 id="more-tools-title">More tools</h2>
+    <section id="local-project-tools" class="tool-section" aria-labelledby="local-project-title"><h3 id="local-project-title">Import a local project</h3><div class="download-links"><label class="button secondary open-project">Choose project folder<input id="project-folder" type="file" webkitdirectory multiple></label><label class="button secondary open-project">Open project ZIP<input id="project-zip" type="file" accept=".zip,application/zip"></label></div><p class="hint">Choose a folder or ZIP containing manifest.json, CSV, images, and any templates or documents. Files stay in this browser. Each import opens a separate workspace.</p><p id="local-project-status" class="hint" role="status"></p></section>
     <div class="more-tools-grid">
       <section id="csv-tools" class="tool-section" aria-labelledby="csv-tools-title"><h3 id="csv-tools-title">Cards from a spreadsheet</h3><label class="file-card csv-upload"><strong>Open CSV spreadsheet</strong><span>Import one or more card rows</span><input id="csv-file" type="file" accept=".csv,text/csv"></label><p id="csv-status" class="hint" role="status">Download a template CSV, fill in its rows, then open it here.</p><div id="csv-mapping" class="mapping-grid" hidden></div><p id="unmapped" class="hint"></p><p class="hint">Image filenames in your CSV match the names of uploaded images.</p><div class="download-links"><button id="template-csv" class="button secondary" type="button">Download template CSV</button><button id="cards-csv" class="button secondary" type="button">Download card data CSV</button><button id="remove-imports" type="button" class="button secondary" disabled>Remove CSV imports</button></div></section>
       <section id="batch-print-tools" class="tool-section" aria-labelledby="batch-print-title"><h3 id="batch-print-title">Print multiple cards</h3><label class="template-select">Cards to print<select id="print-scope"><option value="all">All cards</option><option value="current">Current card</option></select></label><label class="copies-label">Multiply card quantities by<input id="print-copies" type="number" min="1" max="30" step="1" value="1"></label><button id="print-sheets" type="button" class="button secondary">Open print sheets</button><p class="hint">Each card’s visible copy count is multiplied by the number above. Six cards per Letter landscape sheet, with crop marks. Open the sheets in a browser tab to print or save as PDF.</p><p id="print-status" class="hint" role="status"></p></section>
