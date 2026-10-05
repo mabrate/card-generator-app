@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
-  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=26"></script>
+  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=29"></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><span>STUDENT STUDIO</span></header>
-<main>
+<main aria-busy="true">
   <section class="intro"><h1>Make a card.</h1><p>Choose a template. Add your words and artwork.</p></section>
+  <div id="app-loading" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span id="loading-message">Opening your workspace…</span></div>
   <p id="page-error" class="error" role="alert"></p>
   <section id="recovery-error" class="panel" hidden aria-labelledby="recovery-error-title"><h2 id="recovery-error-title">Saved work could not be opened</h2><p id="recovery-error-message"></p><p>Your saved work is still in this browser. Download a recovery ZIP before starting fresh if you want to keep its original data. Start fresh replaces only this workspace with its starting template, colors, and card text.</p><div class="download-links"><button id="download-recovery" type="button" class="button secondary">Download saved work</button><button id="fresh-recovery" type="button" class="button">Start fresh</button></div><p id="recovery-error-status" role="status"></p></section>
   <section id="project-resources" class="panel" hidden><h2>Project documents and files</h2><div id="project-files" class="download-links"></div><p id="document-status" role="status"></p><details id="project-document"><summary id="document-title">Project document</summary><article id="document-content" class="markdown-document"></article></details></section>

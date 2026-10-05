@@ -1,6 +1,6 @@
 // All project files stay in this browser. ZIP extraction uses the browser's inflater.
 import {readManifest} from './projects.js';
-const LIMIT = 100_000_000, MAX_FILES = 2000;
+const LIMIT = 250_000_000, MAX_FILES = 2000;
 function safePath(path) {
   if (!path || /[\\:%?#\u0000-\u001f]/.test(path) || path.split('/').some(p=>!p || p==='.' || p==='..')) throw Error('Project files must use relative paths inside their folder.');
   return path;
@@ -12,7 +12,7 @@ function crc32(bytes) {
   return (crc^0xffffffff)>>>0;
 }
 export async function unzip(file) {
-  if(file.size>LIMIT)throw Error('Choose a ZIP under 100 MB.');
+  if(file.size>LIMIT)throw Error('Choose a ZIP under 250 MB.');
   const bytes=new Uint8Array(await file.arrayBuffer()),view=new DataView(bytes.buffer);
   if(bytes.length<22)throw Error('This is not a valid ZIP file.');
   let end=bytes.length-22;
@@ -29,7 +29,7 @@ export async function unzip(file) {
     const path=new TextDecoder('utf-8',{fatal:true}).decode(bytes.subarray(pos+46,pos+46+nameSize));pos+=46+nameSize+extra+comment;
     if(flags&1 || ![0,8].includes(method))throw Error('Use an unencrypted ZIP with standard compression.');
     if(path.endsWith('/')){safePath(path.slice(0,-1));continue;}
-    safePath(path);total+=length;if(total>LIMIT)throw Error('Unpacked project must be under 100 MB.');
+    safePath(path);total+=length;if(total>LIMIT)throw Error('Unpacked project must be under 250 MB.');
     entries.push({path,method,packed,length,local,crc});
   }
   if(pos!==offset+size)throw Error('Invalid ZIP directory size.');
@@ -57,7 +57,7 @@ export function projectFiles(entries) {
   let total=0;const paths=new Set();
   entries=entries.filter(e=>!e.path.startsWith('__MACOSX/') && !e.path.split('/').some(p=>p==='.DS_Store'));
   for(const entry of entries){safePath(entry.path);total+=entry.file.size;if(paths.has(entry.path))throw Error('Duplicate project path: '+entry.path);paths.add(entry.path);}
-  if(total>LIMIT)throw Error('Project files must total under 100 MB.');
+  if(total>LIMIT)throw Error('Project files must total under 250 MB.');
   const manifests=entries.filter(e=>/(^|\/)manifest\.json$/.test(e.path));
   if(manifests.length!==1)throw Error('Choose a folder or ZIP containing exactly one manifest.json.');
   const root=manifests[0].path.slice(0,-'manifest.json'.length);
@@ -98,6 +98,6 @@ export async function zipProject(entries) {
   const size=directory.reduce((n,c)=>n+c.length,0),end=new Uint8Array(22),v=new DataView(end.buffer);
   v.setUint32(0,0x06054b50,true);v.setUint16(8,entries.length,true);v.setUint16(10,entries.length,true);v.setUint32(12,size,true);v.setUint32(16,offset,true);
   const result=new Blob([...chunks,...directory,end],{type:'application/zip'});
-  if(result.size>LIMIT)throw Error('Saved project ZIP must be under 100 MB.');
+  if(result.size>LIMIT)throw Error('Saved project ZIP must be under 250 MB.');
   return result;
 }

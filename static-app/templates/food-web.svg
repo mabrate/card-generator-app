@@ -132,9 +132,9 @@
      font-style="normal"
      fill="#244734"
      data-color-fill="text">{{common_name}}</text><text
-     id="binomial_name"
-     data-field="binomial_name"
-     data-label="Binomial Name"
+     id="scientific_name"
+     data-field="scientific_name"
+     data-label="Scientific name"
      data-width="154"
      data-lines="1"
      data-max-chars="60"

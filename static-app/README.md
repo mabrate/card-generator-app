@@ -46,7 +46,7 @@ Classroom Cards is browser-only. Share downloaded project ZIPs with your teacher
 
 ## Project URLs
 
-Open `?project=houston-food-web` for **Houston Food Web Game**, including rules, original card data/artwork, and the expansion pack. Publish more project folders using [PROJECTS.md](PROJECTS.md). Without a project parameter, the normal editor and its existing browser recovery behave as before.
+Open `?project=houston-food-web` for **Houston Food Web Game**. On first opening it automatically loads the base deck’s 22 card types, 48 copies, and artwork, alongside rules and the game back. Previously edited workspaces are recovered instead; untouched blank checkpoints from the earlier editor load the deck once. Expansion cards remain optional resources. Publish more project folders using [PROJECTS.md](PROJECTS.md). Without a project parameter, the normal editor and its existing browser recovery behave as before.
 
 Project CSVs match `copies` (also `card_count`, `count`, or `quantity`) and `theme` (also `color_theme` or `color_scheme`). Blank counts default to 1, and counts must be whole numbers from 1 to 600. Invalid quantities or themes stop project import before changing the workspace. Save project preserves current quantities and colors in the CSV.
 

@@ -39,11 +39,19 @@ export function readManifest(value, base, catalog) {
     if(!value.cardBack || typeof value.cardBack !== 'object' || !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image || '') || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string'))throw Error('Card back needs a PNG, JPG, or WebP image path.');
     cardBack={...value.cardBack,image:normalizeProjectPath(value.cardBack.image),url:localFile(value.cardBack.image,base)};
   }
-  return {...value,...(value.csv!==undefined?{csv:normalizeProjectPath(value.csv)}:{}),templates,schemes,starter,files,base,cardBack};
+  return {...value,...(value.csv!==undefined?{csv:normalizeProjectPath(value.csv)}:{}),...(value.imageDirectory!==undefined?{imageDirectory:normalizeProjectPath(value.imageDirectory)}:{}),templates,schemes,starter,files,base,cardBack};
+}
+// Public starter files are cached even on a first visit before the worker controls the page.
+export async function fetchProjectFile(url){
+  const response=await fetch(url);
+  if(response.ok && globalThis.isSecureContext && 'caches' in globalThis){
+    try{const cache=await caches.open('classroom-cards-published-projects-v1');await cache.put(new Request(url),response.clone());}catch{}
+  }
+  return response;
 }
 export async function loadProject(id, catalog) {
   const base = new URL('projects/'+id+'/',location.href);
-  const response = await fetch(new URL('manifest.json',base));
+  const response = await fetchProjectFile(new URL('manifest.json',base));
   if (!response.ok) throw Error('Cannot load project “'+id+'”. Check its manifest.json and URL.');
   return readManifest(await response.json(),base,catalog);
 }

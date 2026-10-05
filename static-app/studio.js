@@ -3,7 +3,7 @@ import {PALETTES} from './palettes.js';
 import {fontStyles, printDocument} from './print.js';
 import {readStarter, consumeStarter} from './links.js';
 const $ = selector => document.querySelector(selector);
-import {projectId, loadProject, normalizeProjectPath} from './projects.js';
+import {projectId, loadProject, normalizeProjectPath, fetchProjectFile} from './projects.js';
 import {renderMarkdown} from './markdown.js';
 import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject} from './local-projects.js';
 import {loadCardBack} from './print.js';
@@ -269,9 +269,23 @@ async function exportProject(){
   files.set('manifest.json',new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}));
   download(slug(manifest.name)+'-project.zip','application/zip',await zipProject([...files].map(([path,file])=>({path,file}))));
 }
+function alignSavedScientificName(value,allowed){
+  if(value?.templateId!=='food-web' || typeof value.templateSVG!=='string')return;
+  const old=readTemplate(value.templateSVG),field=old.root.querySelector('[data-field="binomial_name"]');
+  if(!field)return;
+  field.setAttribute('data-field','scientific_name');field.setAttribute('data-label','Scientific name');
+  if(field.id==='binomial_name')field.id='scientific_name';
+  const source=readTemplate(new XMLSerializer().serializeToString(old.root)).source;
+  // Only upgrade the known field rename when the complete template still matches.
+  if(!allowed.some(t=>t.id==='food-web' && t.source===source))return;
+  value.templateSVG=source;
+  for(const c of value.cards || [])if(c.values && Object.hasOwn(c.values,'binomial_name')){c.values.scientific_name ??= c.values.binomial_name;delete c.values.binomial_name;}
+  if(value.imported?.mapping?.binomial_name){value.imported.mapping.scientific_name=value.imported.mapping.binomial_name;delete value.imported.mapping.binomial_name;}
+}
 function validateState(value,context){
   const constraintProject=context?.project || project, constraintCatalog=context?.project.templates || catalog;
   if(!value||value.version!==2||!Array.isArray(value.cards)||!value.cards.length||value.cards.length>500||!Number.isInteger(value.active)||value.active<0||value.active>=value.cards.length)throw Error('This is not a supported Classroom Cards project file.');
+  alignSavedScientificName(value,constraintCatalog);
   const checkedTemplate=readTemplate(value.templateSVG);
   if(constraintProject && !constraintCatalog.some(t=>t.id===value.templateId && t.source===checkedTemplate.source))throw projectConstraint('This saved template is not allowed in the project.');
 
@@ -417,7 +431,48 @@ function offerRecoveryReset(saved,err){
 }
 function localMapping(headers,layout){
   const aliases={copies:['copies','card count','count','quantity'],theme:['theme','color theme','color scheme','colour theme','colour scheme'],image_filename:['image filename','image','image file'],scientific_name:['scientific name','binomial name']};
-  return Object.fromEntries([...layout.fields,{key:'image_filename'},{key:'copies'},{key:'theme'}].map(f=>[f.key,headers.find(h=>(aliases[f.key] || [f.key,f.label].filter(Boolean)).some(alias=>norm(h)===norm(alias))) || '']));
+  return Object.fromEntries([...layout.fields,{key:'image_filename'},{key:'copies'},{key:'theme'}].map(f=>[f.key,headers.find(h=>norm(h)===norm(f.key)) || headers.find(h=>(aliases[f.key] || [f.key,f.label].filter(Boolean)).some(alias=>norm(h)===norm(alias))) || '']));
+}
+function csvCards(p,layout,text,assets){
+  const {headers,rows}=parseCsv(text);if(rows.length>500)throw Error('Keep up to 500 cards in a project.');
+  const mapping=localMapping(headers,layout),importId=crypto.randomUUID();
+  const cards=rows.map((row,i)=>{
+    const settings=csvSettings(row,mapping,i,p.schemes,layout),rawImageName=(row[mapping.image_filename] || '').trim(),imageName=rawImageName?normalizeProjectPath(rawImageName):'';
+    if(imageName && !Object.hasOwn(assets,imageName))throw Error(`CSV row ${i+2}: missing or ambiguous image “${imageName}”. Use its full relative path.`);
+    const values={...p.starter.values,...row};for(const field of layout.fields)if(mapping[field.key])values[field.key]=row[mapping[field.key]] || '';
+    return {id:row.card_id || crypto.randomUUID(),csvImportId:importId,values,...settings,imageName,drawingKey:null,drawingActive:false,crop:{x:.5,y:.5,zoom:1}};
+  });
+  if(cards.some(c=>!c.id || c.id.length>200 || /[\\/:\u0000-\u001f]/.test(c.id)) || new Set(cards.map(c=>c.id)).size!==cards.length)throw Error('Card IDs must be unique.');
+  return {cards,imported:{headers,rows,mapping,indices:rows.map((_,i)=>i)}};
+}
+function loadingStatus(message){$('#loading-message').textContent=message;}
+async function loadHostedCards(){
+  loadingStatus('Loading project cards and artwork…');
+  const item=catalog.find(t=>t.id===project.starter.template) || catalog[0],layout=readTemplate(item.source),scheme=schemes.find(s=>s.name===project.starter.scheme) || schemes[0];
+  const response=await fetchProjectFile(new URL(project.csv,project.base));if(!response.ok)throw Error('Cannot load project CSV: '+project.csv);
+  const blob=await response.blob();if(blob.size>2_000_000)throw Error('Choose a CSV under 2 MB.');
+  const text=await blob.text(),parsed=parseCsv(text),mapping=localMapping(parsed.headers,layout),assets=Object.create(null),images=new Map();
+  // Validate rows before fetching assets; references are populated during image loading.
+  const names=[...new Set(parsed.rows.map(row=>(row[mapping.image_filename] || '').trim()).filter(Boolean).map(normalizeProjectPath))];
+  const provisional=Object.fromEntries(names.map(name=>[name,'pending']));
+  csvCards(project,layout,text,provisional);
+  let total=blob.size;
+  for(const name of names){
+    const path=name.includes('/')?name:normalizeProjectPath((project.imageDirectory || 'graphics')+'/'+name);
+    let key=assets[path];
+    if(!key){
+      loadingStatus(`Loading artwork ${names.indexOf(name)+1} of ${names.length}…`);
+      const response=await fetchProjectFile(new URL(path,project.base));if(!response.ok)throw Error('Cannot load project image: '+path);
+      const blob=await response.blob();total+=blob.size;if(total>100_000_000)throw Error('Project card data and images must total under 100 MB.');
+      key='image-'+crypto.randomUUID();images.set(key,await normalizeImage(new File([blob],path.split('/').pop(),{type:blob.type})));assets[path]=key;
+    }
+    assets[name]=key;
+  }
+  const data=csvCards(project,layout,text,assets);
+  const next={version:2,templateId:item.id,templateSVG:item.source,colors:{...layout.colors,...scheme.colors},colorScheme:scheme.name,cards:data.cards.length?data.cards:[blankCard()],active:0,assets,imported:data.cards.length?data.imported:null,projectDataInitialized:true};
+  for(const [key,image] of images)await putAsset(key,image);
+  state=next;
+  $('#local-project-status').textContent=`Loaded ${data.cards.length} project cards and their artwork.`;
 }
 async function importLocalFiles(entries){
   const status=$('#local-project-status');status.textContent='Checking project files…';
@@ -442,15 +497,7 @@ async function importLocalFiles(entries){
     if(p.csv && !csv)throw Error('Missing project CSV: '+p.csv);
     if(csv){
       if(csv.file.size>2_000_000)throw Error('Choose a CSV under 2 MB.');
-      const {headers,rows}=parseCsv(await csv.file.text());if(rows.length>500)throw Error('Keep up to 500 cards in a project.');
-      const mapping=localMapping(headers,layout),importId=crypto.randomUUID();
-      next.cards=rows.map((row,i)=>{
-        const settings=csvSettings(row,mapping,i,p.schemes,layout),rawImageName=(row[mapping.image_filename] || '').trim(),imageName=rawImageName?normalizeProjectPath(rawImageName):'';
-        if(imageName && !Object.hasOwn(next.assets,imageName))throw Error(`CSV row ${i+2}: missing or ambiguous image “${imageName}”. Use its full relative path.`);
-        const values={...p.starter.values,...row};for(const field of layout.fields)if(mapping[field.key])values[field.key]=row[mapping[field.key]] || '';
-        return {id:row.card_id || crypto.randomUUID(),csvImportId:importId,values,...settings,imageName,drawingKey:null,drawingActive:false,crop:{x:.5,y:.5,zoom:1}};
-      });
-      next.imported={headers,rows,mapping,indices:rows.map((_,i)=>i)};
+      Object.assign(next,csvCards(p,layout,await csv.file.text(),next.assets));
     }
     if(!next.cards.length)next.cards=[{id:crypto.randomUUID(),values:{...p.starter.values},copies:1,imageName:'',drawingKey:null,drawingActive:false,crop:{x:.5,y:.5,zoom:1}}];
     if(next.cards.some(c=>!c.id || c.id.length>200 || /[\\/:\u0000-\u001f]/.test(c.id)) || new Set(next.cards.map(c=>c.id)).size!==next.cards.length)throw Error('Card IDs must be unique.');
@@ -482,13 +529,15 @@ async function start(){
   if(localId && !/^[a-f0-9-]{36}$/.test(localId))throw Error('Invalid local project link.');
   activeProjectId=localId?'local-'+localId:projectId(location.search);
   if(activeProjectId)KEY+=':project:'+activeProjectId;
+  loadingStatus('Opening your workspace…');
   await openAssets();
   const r=await fetch('templates/catalog.json');if(!r.ok)throw Error('Cannot load the template list. Serve the static-app folder with a static web server.');catalog=await r.json();
   if(activeProjectId){
+    loadingStatus('Opening project and templates…');
     if(localId){localBundle=await getLocalProject(localId);if(!localBundle)throw Error('This local project is not in this browser. Import its folder, ZIP, or editable backup on this device.');project=(await resolveLocalProject(localBundle.files,catalog)).project;}
     else project=await loadProject(activeProjectId,catalog);
     catalog=project.templates;schemes=project.schemes;
-    for(const item of catalog){const response=await fetch(item.url);if(!response.ok)throw Error('Cannot load project template '+item.title);item.source=readTemplate(await response.text()).source;}
+    for(const item of catalog){const response=await (localId?fetch(item.url):fetchProjectFile(item.url));if(!response.ok)throw Error('Cannot load project template '+item.title);item.source=readTemplate(await response.text()).source;}
     state.cards=[blankCard()];
     setupProject();
     if(localBundle)$('#local-project-status').textContent='Local project saved in this browser. Save your project to move it to another device; its URL works only here.';
@@ -496,6 +545,12 @@ async function start(){
   let saved;try{saved=localStorage.getItem(KEY);}catch{storageError='Browser recovery is unavailable. Save a project file while you work.';}
   if(!saved && localBundle){state=validateState(structuredClone(localBundle.state));for(const [key,data] of Object.entries(localBundle.images))await putAsset(key,data);}
   if(saved){try{state=validateState(JSON.parse(saved));}catch(err){offerRecoveryReset(saved,err);return;}}
+  if(!localId && project?.csv){
+    const untouched=state.cards.length===1 && (state.cards[0].copies ?? 1)===1 && !state.cards[0].colors && !Object.hasOwn(state,'cardBack') && (!state.colorScheme || state.colorScheme===(project.starter.scheme || schemes[0].name)) && !state.imported && !Object.keys(state.assets).length && !Object.values(state.cards[0].values).some(Boolean) && !state.cards[0].imageName && !state.cards[0].drawingKey;
+    if(!saved || (!state.projectDataInitialized && untouched))await loadHostedCards();
+    state.projectDataInitialized=true;
+  }
+  loadingStatus('Preparing your cards…');
   await finishStart(Boolean(saved));
 }
 async function finishStart(recovered){
@@ -507,4 +562,4 @@ async function finishStart(recovered){
   await showCard();showCardBack();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
-start().catch(error);
+run(async()=>{try{await start();}finally{$('#app-loading').hidden=true;$('main').setAttribute('aria-busy','false');}});

@@ -29,7 +29,8 @@ Publish each project in `projects/<slug>/manifest.json` under the static site's 
 }
 ```
 
-- `csv`: canonical card-data path. Local folder/ZIP import detects a single CSV when omitted; several CSVs require an explicit path. Save project preserves the selected CSV filename/path and writes it into the exported manifest. A new workspace uses `cards.csv`. Hosted project URLs list resources but do not automatically import their card CSV.
+- `csv`: canonical card-data path. Local folder/ZIP import detects a single CSV when omitted; several CSVs require an explicit path. Save project preserves the selected CSV filename/path and writes it into the exported manifest. A new workspace uses `cards.csv`. Hosted project URLs automatically load this CSV and its referenced artwork when no edited workspace is recovered. Untouched blank checkpoints from older versions are seeded once. Saved edits and explicit Start fresh resets are preserved.
+- `imageDirectory`: artwork directory for bare CSV filenames on hosted project URLs; defaults to `graphics`. Full relative image paths are used as written. Local folder/ZIP imports resolve unique basenames against included images.
 - `workspace`: optional relative path to version-1 editor settings, normally `workspace.json`. Starter projects can omit it.
 - `templates`: allowed built-in catalog IDs or project-local SVG descriptors with unique IDs. Local SVGs use the same conventions as [TEMPLATES.md](TEMPLATES.md). Omit to allow all built-in templates.
 - `colorSchemes`: allowed built-in names (`Template`, Sage, Sky, Sand, Rose, Lavender, Ink) or custom objects with unique names and six-digit hex colors keyed by SVG color role. Unspecified roles retain the template's colors. Omit to allow all standard schemes. Individual color editing is available for the current card. CSV `theme` values may also specify validated custom colors; see the saved-workspace section below.
@@ -52,7 +53,7 @@ Select a folder containing exactly one `manifest.json`, or ZIP that folder with 
 
 A single CSV is imported automatically. If you include several CSV files, add a root manifest property such as `"csv": "data/cards.csv"` to select the card data. A CSV does not have to appear in the manifest's resource list. Automatic field-name/label column matching, quantities, and allowed color themes apply. Images in `image_filename` match a full path relative to the manifest (for example `graphics/leaf.png`), or a basename such as `leaf.png` when that basename is unique. Missing or ambiguous image names stop the import. PNG, JPG, and WebP assets are included automatically. Markdown resources and their relative file links use the imported files.
 
-Validation completes before the new workspace is saved or opened. Limits: 2,000 files, 100 MB total unpacked files, CSV under 2 MB with at most 500 card rows, and each image under 12 MB / 25 megapixels. Browser storage must have room for the project; failure leaves your current workspace unchanged. Once the app's service worker has installed, local projects can recover offline, including documents and card backs.
+Validation completes before the new workspace is saved or opened. Limits: 2,000 files, 250 MB total unpacked files, CSV under 2 MB with at most 500 card rows, and each image under 12 MB / 25 megapixels. Browser storage must have room for the project; failure leaves your current workspace unchanged. Once the app's service worker has installed, local projects can recover offline, including documents and card backs.
 
 **Save project** includes your current CSV card data, images, template SVGs, manifest, workspace settings, and original project resources in one ZIP. **Open project folder** can restore that ZIP in another browser or on another device without hosting the project. Keep a downloaded backup because clearing browser storage removes local recovery. Folder-picker availability varies by device; ZIP import provides a single-file option for tablets.
 
@@ -64,7 +65,7 @@ Run the import browser checks with:
 
 ## Houston Food Web Game
 
-Open `?project=houston-food-web` for a blank Food web game card, the rules, original deck resources, and expansion resources. Opening that URL does not populate the whole deck. See the project's [README](projects/houston-food-web/README.md) for preparing a folder that imports the full deck. The folder contains both base and expansion CSVs, so set `csv` explicitly before importing it. The expansion guide now describes combining data inside a project folder rather than using the removed teacher/CSV-import controls.
+Open `?project=houston-food-web` to load the base deck automatically: 22 card types, 48 copies, artwork, rules, and the game back. Its manifest selects `cards.csv` and `graphics/`. Existing saved edits take precedence. The expansion remains an optional resource; it is not added automatically. See the project's [README](projects/houston-food-web/README.md) for the complete workflow.
 
 ## Validation
 
@@ -72,9 +73,10 @@ From the repository root, with development dependencies and Chrome installed:
 
 ```bash
 .venv/bin/python scripts/static_projects_smoke.py
+.venv/bin/python scripts/published_projects_smoke.py
 ```
 
-The layout check covers template selection/download and recovery, the project-open dialog, card-back control placement, bottom reset confirmation, and desktop/mobile layout. The local-project check above covers folder/ZIP imports, updated CSV data and original filenames, graphics paths without root aliases, documents, quantities, custom themes, crops/drawings, card backs, fresh-browser reopening, offline recovery/printing, and invalid import preservation.
+The published-project check covers automatic CSV/artwork loading, 22 cards/48 copies, upgrading untouched blank checkpoints, retaining edits, ZIP export paths, first-visit offline recovery, and reset preservation. The layout check covers template selection/download and recovery, the project-open dialog, card-back control placement, bottom reset confirmation, and desktop/mobile layout. The local-project check above covers folder/ZIP imports, updated CSV data and original filenames, graphics paths without root aliases, documents, quantities, custom themes, crops/drawings, card backs, fresh-browser reopening, offline recovery/printing, and invalid import preservation.
 
 ## Saved-workspace structure
 
@@ -96,3 +98,5 @@ The CSV is canonical for text, stable unique `card_id` values, copies, artwork f
 The manifest sets `workspace` to `workspace.json`. Its `version` is 1, with `activeCardId`, `workspaceColors`, `workspaceScheme`, and `cards` keyed by CSV card ID. Per-card settings hold `crop` (`x`/`y` from 0 to 1 and `zoom` from 1 to 4), optional `drawingFile`, `drawingActive`, and `csvImportId`. It contains no embedded image data, SVG XML, or duplicate card text/quantities/themes. Without settings, the importer uses defaults.
 
 Define card back in the preview selects/replaces an image; Remove card back switches to front-only printing. Save project includes the selected image and writes `cardBack.image` into the manifest, or removes the setting when the back was removed. Old single-file JSON backup import/export has been removed. A recovery-error ZIP is a troubleshooting checkpoint, not a guaranteed reopenable project.
+
+CSV columns match SVG `data-field` keys; `data-label` controls the editor label. Scientific names use `scientific_name` in the built-in food-web project. Imports also recognize `binomial_name`; an exact field-key match takes priority. A loading banner appears while the workspace, project cards, and artwork open.

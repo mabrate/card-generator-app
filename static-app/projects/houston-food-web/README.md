@@ -4,22 +4,19 @@ An optional [eight-card food-web expansion](expansion-pack/README.md) adds nativ
 
 ## Open it in the static app
 
-Opening `?project=houston-food-web` gives you a blank card and project resources, not a populated deck. There is no teacher sign-in, approval queue, or standalone CSV import screen in this app.
+Open `?project=houston-food-web` to load the base deck automatically: 22 card types with 48 physical copies, artwork, project resources, and the game back. No separate CSV or graphics import is needed. Existing saved edits are recovered instead of being overwritten; an untouched blank workspace from the earlier version is populated once. There is no teacher sign-in or approval queue.
 
-To edit the full base deck:
-
-1. Copy this project folder to a working folder on your device.
-2. In its `manifest.json`, add `"csv": "campus-food-web-cards.csv"`. This folder also contains the expansion CSV, so the importer needs an explicit choice.
-3. Ensure the base CSV's `image_filename` values reference the included `graphics/` images. Unique basenames are accepted on import; export writes the actual saved relative paths.
-4. Choose **Open project folder** beside the preview, then **Choose folder** or **Choose ZIP**. Include the manifest, selected CSV, images, and project documents together. A folder containing a CSV alone or the artwork ZIP alone is not a complete project.
-5. Edit cards, quantities, artwork, and colors. **Save project** downloads a complete editable ZIP and updates `campus-food-web-cards.csv` inside it. It does not change your source folder. Reopen the saved ZIP using the same project-open button.
-6. Use **Print all cards** to print each card's saved quantity. The manifest supplies the game back; **Define card back** beside printing can replace it, and **Remove card back** switches to front-only printing. Print double-sided, landscape, flip on the short edge.
+1. Use **Your cards** to select a card and edit text, quantities, artwork, or colors.
+2. **Save project** downloads a complete editable ZIP with the current `cards.csv`, graphics, template, documents, and workspace settings. It does not change the hosted source files.
+3. **Open project folder** beside the preview reopens the saved ZIP or an unpacked working folder. The manifest’s `csv` setting selects `cards.csv` rather than the separate expansion CSV.
+4. **Print all cards** prints each card's saved quantity. The project supplies the game back; **Define card back** beside printing can replace it, and **Remove card back** switches to front-only printing. Print double-sided, landscape, flip on the short edge.
+5. **Start fresh** clears this browser workspace to a blank card and stays blank on reload. To start a new copy of the original deck after a reset, open the published project folder/ZIP in a separate local workspace or use a fresh browser profile.
 
 Each import opens a separate browser workspace. Reopening edited CSV data supplies the card values; saved settings retain image crops and drawings by stable card ID. To add the expansion, follow its [folder-based instructions](expansion-pack/README.md).
 
 ## Files and content
 
-- `campus-food-web-cards.csv`: the ready-to-import, UTF-8 data file.
+- `cards.csv`: the canonical UTF-8 base-deck data file selected by the manifest.
 - `graphics/*.png`: generated natural-history illustrations for all 15 organisms and seven effect cards; no SVG substitutes. PNG physical-size metadata is 2.13 × 1.48 inches (rounding tolerance below 0.001 inch). Original generated pixels are retained at roughly 706 DPI; the app uses the physical image-box size when rendering.
 - `graphics/prompts.json`: built-in image-generator prompt set and generation provenance, one call per card.
 - `campus-food-web-turn-guide.md`: current play-tested shared game rules. Earlier prototype sources are retained in the repository’s demo archives.

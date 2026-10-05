@@ -65,10 +65,9 @@ The template defines the role names; the app discovers them from these attribute
 {"id":"pond-guide","title":"Pond guide","svg":"pond-guide.svg"}
 ```
 
-3. Create `templates/pond-guide.csv` with the SVG field keys plus `image_filename`, `copies`, and `theme` as headers and one blank starting row (`copies` = 1). The offline cache expects this companion CSV. There is no template-CSV download control in the editor.
-4. Publish the updated static-app folder. Keep the versioned `studio.js` URL in `index.html` and the service-worker precache list aligned. Increment the cache name in `sw.js` when publishing template or application changes so existing browsers install the revised offline files.
+3. Publish the updated static-app folder. Keep the versioned `studio.js` URL in `index.html` and the service-worker precache list aligned. Increment the cache name in `sw.js` when publishing template or application changes so existing browsers install the revised offline files.
 
-Students select built-in templates without uploading a layout. You can also open an edited template SVG locally before publishing it. The provided companion CSV files contain headers and a blank row. To use one as project data, fill in rows and include it in a project folder with a manifest and its referenced artwork, then open the complete folder or ZIP.
+Students select built-in templates without uploading a layout. You can also open an edited template SVG locally before publishing it. Each template needs only its SVG and catalog entry. The editor reads fields from the SVG and generates the card-data CSV when you save a project. To open existing card data, include its CSV in a project folder with a manifest and referenced artwork, then open the complete folder or ZIP.
 
 ## Template SVG versus finished card SVG
 

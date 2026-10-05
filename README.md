@@ -30,6 +30,8 @@ Open `http://<the server computer's LAN IP>:8765/` on each device. The app does 
 
 The project CSV is canonical for card data. Saves preserve its imported filename/path; a new workspace uses `cards.csv`. The manifest identifies the CSV, templates, documents, and card back. `workspace.json` stores crop/drawing settings and the active card. New artwork goes under `graphics/`; imported folder paths are retained without duplicate files from short-name aliases. No images or SVG XML are embedded in the settings JSON.
 
+Open `http://127.0.0.1:8765/?project=houston-food-web` to automatically load the base deck and artwork (22 card types, 48 copies). Published projects opt into loading with a manifest `csv` path and optional `imageDirectory`. Existing browser edits are preserved.
+
 ## Reference guides
 
 The app footer opens readable Markdown references in new tabs:
@@ -58,6 +60,7 @@ python3 -m venv .venv
 .venv/bin/python -m playwright install chromium
 .venv/bin/python scripts/static_projects_smoke.py
 .venv/bin/python scripts/local_projects_smoke.py
+.venv/bin/python scripts/published_projects_smoke.py
 ```
 
 The scripts use installed Google Chrome when available, otherwise Playwright's Chromium. They start the main `run.py` server on temporary localhost ports and check layout, reference pages, static serving, template controls, project import/export, filenames, artwork, colors, drawings, quantities, card backs, printing, offline recovery, and invalid-input preservation. They do not verify physical iPad or printer behavior.
