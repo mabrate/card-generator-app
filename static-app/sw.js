@@ -1,4 +1,4 @@
-const CACHE = 'classroom-cards-static-first-v29';
+const CACHE = 'classroom-cards-static-first-v30';
 const base = new URL('./', self.location.href);
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
