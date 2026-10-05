@@ -81,10 +81,23 @@ export async function resolveLocalProject(entries,catalog) {
 function database(){return new Promise((resolve,reject)=>{const r=indexedDB.open('classroom-cards-local-projects',1);r.onupgradeneeded=()=>r.result.createObjectStore('projects');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 export async function storeLocalProject(bundle){const db=await database(),id=crypto.randomUUID();try{await new Promise((resolve,reject)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').put(bundle,id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});return id;}finally{db.close();}}
 export async function getLocalProject(id){const db=await database();try{return await new Promise((resolve,reject)=>{const r=db.transaction('projects').objectStore('projects').get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}finally{db.close();}}
-export async function encodeBundle(bundle){return {files:await Promise.all(bundle.files.map(async({path,file})=>({path,data:await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(r.error);r.readAsDataURL(file);})})))};}
-export async function decodeBundle(bundle){
-  if(!bundle || !Array.isArray(bundle.files) || bundle.files.length>MAX_FILES)throw Error('Invalid local project backup.');
-  const files=[];let total=0;
-  for(const entry of bundle.files){if(typeof entry.data!=='string'||!/^data:[a-z0-9/+.-]+;base64,[A-Za-z0-9+/=]*$/i.test(entry.data))throw Error('Invalid local project backup file.');total+=entry.data.length;if(total>140_000_000)throw Error('Local project backup is too large.');files.push({path:entry.path,file:await (await fetch(entry.data)).blob()});}
-  return {...bundle,files:projectFiles(files)};
+// Store entries without compression: portable, offline, and readable by unzip().
+export async function zipProject(entries) {
+  entries=projectFiles(entries);
+  const chunks=[],directory=[];let offset=0;
+  for(const {path,file} of entries){
+    const name=new TextEncoder().encode(path),data=new Uint8Array(await file.arrayBuffer()),crc=crc32(data);
+    const local=new Uint8Array(30+name.length),v=new DataView(local.buffer);
+    v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);
+    v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);local.set(name,30);
+    const central=new Uint8Array(46+name.length),c=new DataView(central.buffer);
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x800,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,offset,true);central.set(name,46);
+    chunks.push(local,data);directory.push(central);offset+=local.length+data.length;
+  }
+  const size=directory.reduce((n,c)=>n+c.length,0),end=new Uint8Array(22),v=new DataView(end.buffer);
+  v.setUint32(0,0x06054b50,true);v.setUint16(8,entries.length,true);v.setUint16(10,entries.length,true);v.setUint32(12,size,true);v.setUint32(16,offset,true);
+  const result=new Blob([...chunks,...directory,end],{type:'application/zip'});
+  if(result.size>LIMIT)throw Error('Saved project ZIP must be under 100 MB.');
+  return result;
 }

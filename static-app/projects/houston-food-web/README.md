@@ -2,32 +2,31 @@
 
 An optional [eight-card food-web expansion](expansion-pack/README.md) adds native ants, consumers of decomposers, ground predators, and a predator above the Carolina Wren.
 
-## Import it
+## Open it in the static app
 
-1. Start the app, sign in as teacher, and open **Layout & CSV studio**.
-2. In **Card style and corners**, choose **Field guide · square corners** and click **Create from template**. Give the new project a title, then select `v1/campus-food-web-cards.csv`.
-3. Select all **22 PNG files** inside `v1/graphics/` using the image-assets picker. Do not select `prompts.json`. Each filename matches its CSV cell exactly.
-4. Check the column matches, select different CSV rows to preview, and adjust boxes/fonts if desired. The field guide template provides the v1 card layout and image area.
-5. Save the layout, validate, review the rows, then import. Expected result: **22 created, 48 copies, 0 rejected, 0 needing text/layout review** with the unmodified default layout.
-6. Open Teacher review. To change the layout later, use **Edit this project's layout**, or reopen the saved project in the studio and choose **Preview a saved card**.
+Opening `?project=houston-food-web` gives you a blank card and project resources, not a populated deck. There is no teacher sign-in, approval queue, or standalone CSV import screen in this app.
 
-If you imported this set before, select the v1 CSV and all 22 PNGs, then choose **Update existing cards** to replace its card text and images. This resets those cards' approval and image crops. Existing cards are never silently changed just because files in `demo/` changed.
+To edit the full base deck:
 
-Repeated imports with the default **Skip existing cards** option create nothing and skip all 22 matching IDs. Updating replaces the matching card's data and resets its approval and image crop. Creating another copy assigns a new external ID; it does not change the `copies` count on the original card.
+1. Copy this project folder to a working folder on your device.
+2. In its `manifest.json`, add `"csv": "campus-food-web-cards.csv"`. This folder also contains the expansion CSV, so the importer needs an explicit choice.
+3. Ensure the base CSV's `image_filename` values reference the included `graphics/` images. Unique basenames are accepted on import; export writes the actual saved relative paths.
+4. Choose **Open project folder** beside the preview, then **Choose folder** or **Choose ZIP**. Include the manifest, selected CSV, images, and project documents together. A folder containing a CSV alone or the artwork ZIP alone is not a complete project.
+5. Edit cards, quantities, artwork, and colors. **Save project** downloads a complete editable ZIP and updates `campus-food-web-cards.csv` inside it. It does not change your source folder. Reopen the saved ZIP using the same project-open button.
+6. Use **Print all cards** to print each card's saved quantity. The manifest supplies the game back; **Define card back** beside printing can replace it, and **Remove card back** switches to front-only printing. Print double-sided, landscape, flip on the short edge.
+
+Each import opens a separate browser workspace. Reopening edited CSV data supplies the card values; saved settings retain image crops and drawings by stable card ID. To add the expansion, follow its [folder-based instructions](expansion-pack/README.md).
 
 ## Files and content
 
 - `campus-food-web-cards.csv`: the ready-to-import, UTF-8 data file.
-- `campus-food-web-cards.xlsx`: editable workbook containing the same cards plus field instructions. Save the **Cards** sheet as UTF-8 CSV before importing.
-- `campus-food-web-cards.json`: the same consolidated data in a readable structured form.
 - `graphics/*.png`: generated natural-history illustrations for all 15 organisms and seven effect cards; no SVG substitutes. PNG physical-size metadata is 2.13 × 1.48 inches (rounding tolerance below 0.001 inch). Original generated pixels are retained at roughly 706 DPI; the app uses the physical image-box size when rendering.
 - `graphics/prompts.json`: built-in image-generator prompt set and generation provenance, one call per card.
-- `campus-food-web-turn-guide.md`: current play-tested shared game rules. The unedited prototype source remains under `../source/`.
-- `../source/`: the **unedited original CSV, JSON, and prototype PDF**, moved here for reference. The PDF has not been regenerated to show the new card design.
+- `campus-food-web-turn-guide.md`: current play-tested shared game rules. Earlier prototype sources are retained in the repository’s demo archives.
 
 Printed content is Common Name → Binomial Name → Family → Categories → Image → Mechanic 1 → Mechanic 2 → Fun facts / extra gameplay. `card_id`, `card_kind`, `copies`, and `theme` are metadata, not additional printed content boxes. The renderer supplies the `Family: ` prefix, so enter only the family name in that column.
 
-The consolidated demo deliberately shortens prose and folds labels into complete mechanics sentences. **This is an editorial change to the demo, not automatic import behavior.** Source wording remains in `../source/`. Cards with fewer than two original abilities use an existing shared rule (plant growth, population cap, or play eligibility) for their second box. Short names such as Mistflower, Bluebonnet, Carpenter Bee, and Fire Ants refer to the corresponding cards in this deck. Mulch retains its delayed-discard exception. The seven effect cards have blank scientific-name/family cells and their own event illustrations. Compost Addition and the decomposers' text changed materially to fit the new card-based Compost rule.
+The consolidated demo deliberately shortens prose and folds labels into complete mechanics sentences. **This is an editorial change to the demo, not automatic import behavior.** Earlier source wording remains in the repository’s demo archives. Cards with fewer than two original abilities use an existing shared rule (plant growth, population cap, or play eligibility) for their second box. Short names such as Mistflower, Bluebonnet, Carpenter Bee, and Fire Ants refer to the corresponding cards in this deck. Mulch retains its delayed-discard exception. The seven effect cards have blank scientific-name/family cells and their own event illustrations. Compost Addition and the decomposers' text changed materially to fit the new card-based Compost rule.
 
 No new biological fun facts were invented to fill space: most final boxes contain supplemental gameplay information. Artwork is AI-generated teaching material, not a diagnostic identification guide. The bacterium is a conceptual microscope illustration.
 
@@ -37,9 +36,13 @@ The guide now uses two marked black-eyed peas for Hot / Clear / Cloudy weather, 
 
 Two card abilities needed substantial redesign: **Compost Addition** now discards one organism card from hand face up onto Compost instead of adding two counters, and **Soil Bacterium's Rapid Recycling** now uses two face-up organism cards in one activation without a 2-Population prerequisite. Each card consumed gives one of your plants +1 Population, subject to its cap. Decomposers no longer gain Population by decomposing. This may affect their power and the pace of the game; play-test again before treating the new balance as final. The two-pea toss makes Cloudy occur half the time, which may also slow the race to 20.
 
-## Layout-first workflow
+## Layout and file organization
 
-Save a layout in the studio and download **Excel template (.xlsx)** or **spreadsheet template (.csv)**. Fill one row per card. The Excel template includes a Field guide explaining each box, required fields, character limits, and image matching. CSV imports preserve full source values and flag layout overflow instead of shrinking or truncating text.
+Choose the template under **Your cards**. The adjacent download icon saves its SVG (hover for **Download template SVG**). Edit the SVG in Inkscape and open it through **Open template SVG** in the unrestricted editor; project-specific template restrictions still apply. Save project packages the layout separately from card data.
+
+New artwork, drawings, and chosen backs use `graphics/`. Imported images retain their existing folder paths, without duplicate root files created from short-name aliases. Named or custom colors live in the CSV `theme` column. `workspace.json` stores image positioning, drawings, and the active card. Keep stable `card_id` values when editing the CSV outside the app.
+
+The turn guide describes gameplay and is unchanged by these editor updates. Project documents are displayed only when the manifest lists resources; an empty resource section is hidden.
 
 ## Family references
 

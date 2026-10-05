@@ -5,7 +5,7 @@ import {readStarter, consumeStarter} from './links.js';
 const $ = selector => document.querySelector(selector);
 import {projectId, loadProject, normalizeProjectPath} from './projects.js';
 import {renderMarkdown} from './markdown.js';
-import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, encodeBundle, decodeBundle} from './local-projects.js';
+import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject} from './local-projects.js';
 import {loadCardBack} from './print.js';
 let localBundle;
 let project, activeProjectId, KEY = 'classroom-cards.static-first.v2';
@@ -23,6 +23,16 @@ function csvSettings(row,mapping,index,allowedSchemes=schemes,layout=template){
   const raw=(row[mapping.copies] || '').trim(), copies=raw?Number(raw):1;
   if(!Number.isInteger(copies)||copies<1||copies>600)throw Error(`CSV row ${index+2}: copies must be a whole number from 1 to 600.`);
   const name=(row[mapping.theme] || '').trim();
+  if(name.startsWith('custom:')){
+    const colors={...layout.colors},seen=new Set();
+    for(const entry of name.slice(7).split(';').filter(Boolean)){
+      const match=/^([a-z][a-z0-9_-]{0,29})=(#[0-9a-f]{6})$/i.exec(entry);
+      if(!match || !Object.hasOwn(layout.colors,match[1]) || seen.has(match[1]))throw Error(`CSV row ${index+2}: invalid custom color role or value.`);
+      seen.add(match[1]);colors[match[1]]=match[2].toLowerCase();
+    }
+    if(!seen.size)throw Error(`CSV row ${index+2}: custom theme needs colors.`);
+    return {copies,colors,colorScheme:''};
+  }
   const palette=name?allowedSchemes.find(p=>norm(p.name)===norm(name)):null;
   if(name&&!palette)throw Error(`CSV row ${index+2}: unknown or unavailable color theme “${name}”. Choose ${allowedSchemes.map(p=>p.name).join(', ')}.`);
   return {copies,colors:palette?{...layout.colors,...palette.colors}:undefined,colorScheme:palette?.name};
@@ -81,12 +91,12 @@ function buildColors() {
     const button=document.createElement('button');button.type='button';button.className='scheme-button';button.dataset.scheme=palette.name;
     const swatch=document.createElement('span');swatch.className='scheme-swatch';swatch.style.background=palette.colors.background || '#ffffff';swatch.style.borderColor=palette.colors.accent || '#555555';
     button.append(swatch,document.createTextNode(palette.name));
-    button.onclick=()=>{if(card().colors){card().colors={...template.colors,...palette.colors};card().colorScheme=palette.name;}else{for(const key of Object.keys(template.colors))if(palette.colors[key])state.colors[key]=palette.colors[key];state.colorScheme=palette.name;}buildColors();render();save();};return button;
+    button.onclick=()=>{card().colors={...template.colors,...palette.colors};card().colorScheme=palette.name;buildColors();render();save();};return button;
   }));
   $('#colors').replaceChildren(...Object.keys(template.colors).map(key => {
     const label=document.createElement('label'); label.textContent=key.replaceAll('-',' ');
     const input=document.createElement('input'); input.type='color'; input.value=cardColors()[key] || template.colors[key]; input.dataset.color=key;
-    input.addEventListener('input',()=>{cardColors()[key]=input.value;if(card().colors)card().colorScheme='';else state.colorScheme='';updateSchemes();render();save();}); label.append(input);return label;
+    input.addEventListener('input',()=>{card().colors={...cardColors(),[key]:input.value};card().colorScheme='';updateSchemes();render();save();}); label.append(input);return label;
   }));
   updateSchemes();
 }
@@ -102,9 +112,8 @@ function rebuildCardSelect() {
   $('#card-select').replaceChildren(...state.cards.map((c,i)=>new Option(`${i+1} · ${c.values.common_name || Object.values(c.values).find(Boolean) || 'Untitled card'} · ${c.copies ?? 1} copies`,String(i))));
   $('#card-select').value=String(state.active);
   $('#card-switcher').hidden=state.cards.length<2;
-  $('#remove-imports').disabled=busy || !importedIndices().size;
+
 }
-function importedIndices(){const latest=new Set(state.imported?.indices || []);return new Set(state.cards.flatMap((c,i)=>c.csvImportId || latest.has(i)?[i]:[]));}
 async function pruneAssets(clear=false){
   const retained=new Set(clear?[]:[...Object.values(state.assets),...state.cards.map(c=>c.drawingKey).filter(Boolean)]);
   for(const key of cache.keys())if(!retained.has(key))cache.delete(key);
@@ -115,19 +124,12 @@ async function pruneAssets(clear=false){
   });
 }
 function stopDrawing(){clearTimeout(drawTimer);drawingPointer=null;++generation;}
-async function removeImports(){
-  const indices=importedIndices();if(!indices.size)return;
-  if(!confirm(`Remove ${indices.size} CSV-imported card${indices.size===1?'':'s'}, including edits and drawings on those cards? Your manually created cards, template, colors, and uploaded images will stay. Save a project file first if you need a backup.`))return;
-  stopDrawing();const activeId=card().id;state.cards=state.cards.filter((_,i)=>!indices.has(i));
-  if(!state.cards.length)state.cards=[blankCard()];state.active=Math.max(0,state.cards.findIndex(c=>c.id===activeId));state.imported=null;
-  buildMapping();$('#csv-status').textContent='CSV imports removed. Open another CSV or create a new card.';save();await pruneAssets();await showCard();
-}
 async function startOver(){
   if(!confirm(`Start over? This clears all ${state.cards.length} card${state.cards.length===1?'':'s'}, CSV imports, uploaded images, drawings, and browser recovery for this workspace. Your current SVG template stays; starting colors are restored. Save a project file first if you need a backup.`))return;
   stopDrawing();state.cards=[blankCard()];state.active=0;state.assets={};state.imported=null;state.colors={...template.colors};state.colorScheme='Template';applyProjectScheme();
   try{localStorage.removeItem(KEY);}catch{}
-  save();await pruneAssets(true);buildColors();buildMapping();$('#csv-status').textContent='Fresh workspace. Open a CSV or make a new card.';await showCard();
-  $('#print-status').textContent='';$('#single-print-status').textContent='';$('#print-scope').value='all';$('#print-copies').value='1';$('#drawing-tools').open=false;$('#image-adjustments').open=false;
+  save();await pruneAssets(true);buildColors();await showCard();
+  $('#print-status').textContent='';$('#single-print-status').textContent='';$('#drawing-tools').open=false;$('#image-adjustments').open=false;
 }
 function rebuildAssets() {
   $('#asset-select').replaceChildren(new Option('No image',''),...Object.keys(state.assets).map(name=>new Option(name,name)));
@@ -164,48 +166,12 @@ function applyTemplate(source,id) {
   checkProjectTemplate(next.source,id);
   template=next;state.templateId=id;state.templateSVG=next.source;state.colors={...next.colors};state.colorScheme='Template';
   applyProjectScheme();
-  updateTemplateSelect();buildColors();buildMapping();$('#template-title').textContent=next.title;
+  updateTemplateSelect();buildColors();$('#template-title').textContent=next.title;
 }
 function updateTemplateSelect() {
   $('#template-select').replaceChildren(...catalog.map(item=>new Option(item.title,item.id)));
   if(!catalog.some(c=>c.id===state.templateId)) $('#template-select').add(new Option(template.title+' (opened SVG)',state.templateId));
   $('#template-select').value=state.templateId;$('#template-select').disabled=false;
-}
-function buildMapping() {
-  const imported=state.imported,host=$('#csv-mapping');host.hidden=!imported;if(!imported){host.replaceChildren();$('#unmapped').textContent='';return;}
-  host.replaceChildren(...csvFields().map(f=>{
-    const label=document.createElement('label');label.textContent=f.label;const select=document.createElement('select');select.dataset.map=f.key;
-    select.append(new Option('Skip this column',''),...imported.headers.map(h=>new Option(h,h)));select.value=imported.mapping[f.key] || '';select.onchange=()=>{imported.mapping[f.key]=select.value;save();};label.append(select);return label;
-  }));
-  const help=document.createElement('p');help.className='hint wide';help.textContent='Applying these column matches replaces the matched text, copies, and themes in the most recently imported CSV cards.';
-  const apply=document.createElement('button');apply.type='button';apply.className='button secondary';apply.textContent='Apply CSV column matches';apply.onclick=()=>run(()=>applyMapping());host.append(help,apply);
-  const used=new Set(Object.values(imported.mapping));$('#unmapped').textContent='Extra columns are kept in the project file: '+(imported.headers.filter(h=>!used.has(h)).join(', ') || 'none');
-}
-async function applyMapping() {
-  const imp=state.imported;
-  const settings=imp.rows.map((row,i)=>csvSettings(row,imp.mapping,i));
-  for(const [i,row] of imp.rows.entries()){
-    const c=state.cards[imp.indices[i]];
-    Object.assign(c,settings[i]);
-    for(const f of template.fields) if(imp.mapping[f.key]) c.values[f.key]=row[imp.mapping[f.key]] || '';
-    if(imp.mapping.image_filename){const name=(row[imp.mapping.image_filename] || '').trim();c.imageName=localBundle && name?normalizeProjectPath(name):name;}
-  }
-  buildMapping();await showCard();
-}
-async function importCsv(file) {
-  if(file.size>2_000_000)throw Error('Choose a CSV under 2 MB.');
-  const {headers,rows}=parseCsv(await file.text());
-  const emptyStarter=state.cards.length===1 && !Object.values(card().values).some(Boolean) && !card().imageName && !card().drawingKey;
-  if(state.cards.length-(emptyStarter?1:0)+rows.length>500)throw Error('Keep up to 500 cards in one workspace. Save a project file before starting another.');
-  const aliases={copies:['copies','card count','count','quantity'],theme:['theme','color theme','color scheme','colour theme','colour scheme']};
-  const mapping=Object.fromEntries(csvFields().map(f=>[f.key,headers.find(h=>(aliases[f.key] || [f.key,f.label]).some(alias=>norm(h)===norm(alias))) || '']));
-  rows.forEach((row,i)=>csvSettings(row,mapping,i));
-  if(emptyStarter)state.cards=[];
-  const start=state.cards.length;
-  const importId=blankCard().id;
-  state.cards.push(...rows.map(row=>({...blankCard(),csvImportId:importId,values:{...row}})));
-  state.imported={headers,rows,mapping,indices:rows.map((_,i)=>start+i)};state.active=start;
-  await applyMapping();$('#csv-status').textContent=`Added ${rows.length} cards. Match columns below if needed.`;
 }
 function decodeImage(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('This image could not be opened.'));img.src=src;});}
 async function normalizeImage(file) {
@@ -237,41 +203,92 @@ async function saveDrawing(use=true) {
   save();
 }
 function download(name,type,body){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
-function templateCsv(){return csvFields().map(f=>csvCell(f.key)).join(',')+'\r\n'+csvFields().map(f=>csvCell(f.key==='copies'?'1':'')).join(',')+'\r\n';}
-async function exportProject(){const snapshot=structuredClone(state),keys=new Set([...Object.values(snapshot.assets),...snapshot.cards.map(c=>c.drawingKey).filter(Boolean)]);const images={};for(const key of keys){const data=await getAsset(key);if(data)images[key]=data;else throw Error('A saved image is missing. Reopen its file before exporting the project.');}download('classroom-cards-project.json','application/json',JSON.stringify({state:snapshot,images,...(localBundle?{localBundle:await encodeBundle(localBundle)}:{})}));}
+function themeValue(c){
+  const colors=c.colors || state.colors;
+  const preferred=c.colors?c.colorScheme:state.colorScheme;
+  const match=[...schemes].sort((a,b)=>Number(b.name===preferred)-Number(a.name===preferred)).find(p=>Object.keys(template.colors).every(k=>colors[k]?.toLowerCase()===(p.colors?.[k] || template.colors[k]).toLowerCase()));
+  return match?.name || 'custom:'+Object.keys(template.colors).map(k=>k+'='+(colors[k] || template.colors[k])).join(';');
+}
+function cardCsv(imagePaths={}){
+  const keys=[...new Set(['card_id',...csvFields().map(f=>f.key),...state.cards.flatMap(c=>Object.keys(c.values))])];
+  return [keys.map(csvCell).join(','),...state.cards.map(c=>keys.map(k=>{const field=csvFields().find(f=>state.imported?.mapping[f.key]===k)?.key || k;return csvCell(field==='card_id'?c.id:field==='image_filename'?(imagePaths[c.imageName] || c.imageName):field==='copies'?String(c.copies ?? 1):field==='theme'?themeValue(c):(Object.hasOwn(c.values,field)?c.values[field]:c.values[k] || ''));}).join(','))].join('\r\n');
+}
+async function exportProject(){
+  clearTimeout(drawTimer);
+  if(drawingPointer!==null)throw Error('Finish your drawing before saving.');
+  const files=new Map(localBundle?.files.map(e=>[e.path,e.file]) || []);
+  let manifest={version:1,name:project?.name || 'Classroom Cards',files:[]};
+  if(localBundle)manifest=JSON.parse(await files.get('manifest.json').text());
+  else if(project){
+    const response=await fetch(new URL('manifest.json',project.base));if(!response.ok)throw Error('Cannot save project resources.');manifest=await response.json();
+    for(const item of project.files){const r=await fetch(item.url);if(!r.ok)throw Error('Cannot save '+item.path);files.set(item.path,await r.blob());}
+    if(project.cardBack){const r=await fetch(project.cardBack.url);if(!r.ok)throw Error('Cannot save card back.');files.set(project.cardBack.image,await r.blob());}
+  }
+  const templates=[];
+  for(const item of catalog){
+    const path=normalizeProjectPath(item.svg || 'templates/'+item.id+'.svg');let source=item.id===state.templateId?state.templateSVG:item.source;
+    if(!source){const r=await fetch(item.url || 'templates/'+item.svg);if(!r.ok)throw Error('Cannot save template.');source=await r.text();}
+    files.set(path,new Blob([source],{type:'image/svg+xml'}));templates.push({id:item.id,title:item.title,svg:path});
+  }
+  if(!templates.some(t=>t.id===state.templateId)){const path='templates/'+state.templateId+'.svg';files.set(path,new Blob([state.templateSVG]));templates.push({id:state.templateId,title:template.title,svg:path});}
+
+  // Basename aliases are lookup conveniences, not additional files.
+  const groups=new Map(),imagePaths=Object.create(null),claimed=new Set();
+  for(const [name,key] of Object.entries(state.assets)){
+    normalizeProjectPath(name);
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(name);
+  }
+  for(const [key,names] of groups){
+    const canonical=[...names].sort((a,b)=>Number(b.startsWith('graphics/'))-Number(a.startsWith('graphics/')) || Number(b.includes('/'))-Number(a.includes('/')))[0];
+    const data=await getAsset(key);if(!data)throw Error('A saved image is missing: '+canonical);
+    let path=canonical.includes('/')?canonical:'graphics/'+canonical;
+    if(!/\.(png|jpe?g|webp)$/i.test(path))throw Error('Image filenames must end in PNG, JPG, or WebP.');
+    const original=path;let count=2;
+    while(claimed.has(path))path=original.replace(/(\.[^.]+)$/, '-'+count+++'$1');
+    claimed.add(path);
+    for(const name of names){imagePaths[name]=path;if(name!==path)files.delete(name);}
+    files.set(path,await (await fetch(data)).blob());
+  }
+  if(manifest.cardBack && imagePaths[normalizeProjectPath(manifest.cardBack.image)])manifest.cardBack.image=imagePaths[normalizeProjectPath(manifest.cardBack.image)];
+  if(manifest.files)manifest.files=manifest.files.map(item=>({...item,path:imagePaths[normalizeProjectPath(item.path)] || item.path}));
+  const workspace={version:1,activeCardId:card().id,cards:Object.create(null),workspaceColors:Object.fromEntries(Object.keys(template.colors).map(k=>[k,state.colors[k] || template.colors[k]])),workspaceScheme:state.colorScheme || ''};
+  for(const c of state.cards){
+    const settings={crop:c.crop,drawingActive:c.drawingActive,csvImportId:c.csvImportId || null};
+    if(c.drawingKey){const data=await getAsset(c.drawingKey);if(!data)throw Error('A saved drawing is missing.');settings.drawingFile='graphics/drawing-'+c.id+'.png';files.set(settings.drawingFile,await (await fetch(data)).blob());}
+    workspace.cards[c.id]=settings;
+  }
+  const importedCsvs=localBundle?.files.filter(e=>/\.csv$/i.test(e.path)) || [];
+  manifest.templates=templates;manifest.csv=normalizeProjectPath(manifest.csv || (importedCsvs.length===1?importedCsvs[0].path:'cards.csv'));manifest.workspace='workspace.json';
+  manifest.starter={template:state.templateId,scheme:schemes[0].name,values:{}};
+  manifest.colorSchemes=schemes.map(p=>p.colors?{name:p.name,colors:p.colors}:p.name);
+  if(state.cardBack){const blob=await (await fetch(state.cardBack)).blob(),path='graphics/card-back.'+(blob.type==='image/jpeg'?'jpg':blob.type==='image/webp'?'webp':'png');files.set(path,blob);manifest.cardBack={image:path,description:'Card back'};}
+  else if(state.cardBack===null)delete manifest.cardBack;
+  files.set(manifest.csv,new Blob(['\ufeff'+cardCsv(imagePaths)],{type:'text/csv'}));
+  files.set('workspace.json',new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));
+  files.set('manifest.json',new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}));
+  download(slug(manifest.name)+'-project.zip','application/zip',await zipProject([...files].map(([path,file])=>({path,file}))));
+}
 function validateState(value,context){
-  const constraintProject=context?.project || project, constraintCatalog=context?.project.templates || catalog, constraintSchemes=context?.project.schemes || schemes;
+  const constraintProject=context?.project || project, constraintCatalog=context?.project.templates || catalog;
   if(!value||value.version!==2||!Array.isArray(value.cards)||!value.cards.length||value.cards.length>500||!Number.isInteger(value.active)||value.active<0||value.active>=value.cards.length)throw Error('This is not a supported Classroom Cards project file.');
   const checkedTemplate=readTemplate(value.templateSVG);
   if(constraintProject && !constraintCatalog.some(t=>t.id===value.templateId && t.source===checkedTemplate.source))throw projectConstraint('This saved template is not allowed in the project.');
-  if(constraintProject && !constraintSchemes.some(p=>Object.keys(checkedTemplate.colors).every(k=>(value.colors?.[k] || '').toLowerCase()===(p.colors?.[k] || checkedTemplate.colors[k]).toLowerCase())))throw projectConstraint('Saved colors are not allowed in this project.');
-  for(const c of value.cards){c.copies ??= 1;if(!Number.isInteger(c.copies)||c.copies<1||c.copies>600)throw Error('The project contains invalid copy counts.');if(c.colors && (Object.values(c.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)) || (constraintProject&&!constraintSchemes.some(p=>Object.keys(checkedTemplate.colors).every(k=>c.colors[k]?.toLowerCase()===(p.colors?.[k] || checkedTemplate.colors[k]).toLowerCase())))))throw Error('The project contains invalid or unavailable card colors.');if(!c.values||Object.values(c.values).some(v=>typeof v!=='string')||typeof c.id!=='string'||(c.imageName && typeof c.imageName!=='string')||(c.drawingKey && typeof c.drawingKey!=='string'))throw Error('The project contains invalid card data.');c.crop={x:.5,y:.5,zoom:1,...c.crop};for(const key of ['x','y','zoom'])if(!Number.isFinite(c.crop[key]))throw Error('The project contains invalid image positioning.');}
+
+
+  for(const c of value.cards){c.copies ??= 1;if(!Number.isInteger(c.copies)||c.copies<1||c.copies>600)throw Error('The project contains invalid copy counts.');if(c.colors && (Object.values(c.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v))))throw Error('The project contains invalid or unavailable card colors.');if(!c.values||Object.values(c.values).some(v=>typeof v!=='string')||typeof c.id!=='string'||(c.imageName && typeof c.imageName!=='string')||(c.drawingKey && typeof c.drawingKey!=='string'))throw Error('The project contains invalid card data.');c.crop={x:.5,y:.5,zoom:1,...c.crop};for(const key of ['x','y','zoom'])if(!Number.isFinite(c.crop[key]))throw Error('The project contains invalid image positioning.');}
   if(!value.assets||Object.values(value.assets).some(v=>typeof v!=='string')||!value.colors||Object.values(value.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('The project contains invalid image or color data.');
   if(value.imported && (!Array.isArray(value.imported.rows)||!Array.isArray(value.imported.headers)||!Array.isArray(value.imported.indices)||value.imported.indices.length!==value.imported.rows.length||value.imported.indices.some(i=>!Number.isInteger(i)||!value.cards[i])||!value.imported.mapping))throw Error('The saved CSV data is invalid.');
   if(value.imported)for(const i of value.imported.indices)value.cards[i].csvImportId ||= 'recovered-csv';
   return value;
 }
-async function importProject(file){
-  if(file.size>250_000_000)throw Error('Choose a saved project under 250 MB.');
-  const payload=JSON.parse(await file.text());
-  if(payload.localBundle){await importLocalFiles((await decodeBundle(payload.localBundle)).files,payload);return;}
-  const next=validateState(payload.state);
-  const required=new Set([...Object.values(next.assets),...next.cards.map(c=>c.drawingKey).filter(Boolean)]);
-  const remap={};
-  for(const key of required){const data=payload.images?.[key];if(typeof data!=='string'||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(data))throw Error('The project contains a missing or invalid image.');await decodeImage(data);remap[key]='import-'+blankCard().id;}
-  if(!confirm('Open this project in place of your current cards? Download your current project first if you need a copy.'))return;
-  for(const key of required)await putAsset(remap[key],payload.images[key]);
-  next.assets=Object.fromEntries(Object.entries(next.assets).map(([name,key])=>[name,remap[key]]));next.cards.forEach(c=>{if(c.drawingKey)c.drawingKey=remap[c.drawingKey];});
-  state=next;template=readTemplate(next.templateSVG);updateTemplateSelect();buildColors();buildMapping();$('#template-title').textContent=template.title;await showCard();
-}
-async function run(action){if(busy)return;busy=true;$('#page-error').textContent='';document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=true);try{await action();}catch(err){error(err);}finally{busy=false;document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=false);$('#remove-imports').disabled=!importedIndices().size;if(template && $('#recovery-error').hidden)render();}}
+async function importProject(file){try{await importLocalFiles(await unzip(file));}catch(err){$('#local-project-status').textContent='Project was not imported. '+err.message;throw err;}}
+async function run(action){if(busy)return;busy=true;$('#page-error').textContent='';document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=true);try{await action();}catch(err){error(err);}finally{busy=false;document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=false);if(template && $('#recovery-error').hidden)render();}}
 $('#template-select').onchange=()=>run(async()=>{const item=catalog.find(c=>c.id===$('#template-select').value);const r=await fetch(item.url || 'templates/'+item.svg,{cache:'no-cache'});if(!r.ok)throw Error('Cannot open that built-in template.');applyTemplate(await r.text(),item.id);await showCard();});
 $('#svg-file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)run(async()=>{if(f.size>500_000)throw Error('Choose a template SVG under 500 KB.');applyTemplate(await f.text(),'custom');await showCard();});};
 $('#card-copies').onchange=()=>{const value=Number($('#card-copies').value);if(!Number.isInteger(value)||value<1||value>600){$('#card-copies').value=card().copies ?? 1;error(Error('Choose 1–600 copies for this card.'));return;}card().copies=value;rebuildCardSelect();save();};
-$('#csv-file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)run(()=>importCsv(f));};
 $('#card-select').onchange=()=>run(async()=>{state.active=Number($('#card-select').value);await showCard();});
 $('#new-card').onclick=()=>run(async()=>{if(state.cards.length>=500)throw Error('Save this project and start another before adding more cards.');state.cards.push(blankCard());state.active=state.cards.length-1;await showCard();});
-$('#remove-imports').onclick=()=>run(removeImports);
 $('#start-over').onclick=()=>run(startOver);
 for(const id of ['image-files','camera-file'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';if(files.length)run(()=>uploadImages(files));};
 $('#asset-select').onchange=()=>run(async()=>{const name=$('#asset-select').value;card().drawingActive=name==='@drawing';if(!card().drawingActive)card().imageName=name;card().crop={x:.5,y:.5,zoom:1};await showCard();});
@@ -285,10 +302,9 @@ canvas.onpointerup=finishDrawing;canvas.onpointercancel=finishDrawing;
 $('#clear-drawing').onclick=()=>run(async()=>{ctx.clearRect(0,0,canvas.width,canvas.height);await saveDrawing(card().drawingActive);});
 $('#use-drawing').onclick=()=>run(()=>saveDrawing());
 $('#template-svg').onclick=()=>download(slug(template.title)+'-template.svg','image/svg+xml',template.source);
-$('#template-csv').onclick=()=>download(slug(template.title)+'-template.csv','text/csv;charset=utf-8','\ufeff'+templateCsv());
-$('#cards-csv').onclick=()=>{const keys=csvFields().map(f=>f.key);const csv=[keys.map(csvCell).join(','),...state.cards.map(c=>keys.map(k=>csvCell(k==='image_filename'?(c.drawingActive?'':c.imageName):k==='copies'?String(c.copies ?? 1):k==='theme'?(c.colors?c.colorScheme:state.colorScheme)||'':c.values[k]||'')).join(','))].join('\r\n');download('classroom-cards.csv','text/csv;charset=utf-8','\ufeff'+csv);};
-$('#save-json').onclick=()=>run(exportProject);
-$('#open-json').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)run(()=>importProject(f));};
+$('#save-project').onclick=()=>run(exportProject);
+$('#open-project').onclick=()=>$('#open-project-dialog').showModal();
+$('#open-json').onchange=e=>{if($('#open-project-dialog').open)$('#open-project-dialog').close();const f=e.target.files[0];e.target.value='';if(f)run(()=>importProject(f));};
 async function openStarter(recovered){
   let defaults;
   try{
@@ -304,7 +320,7 @@ async function openStarter(recovered){
     const next=readTemplate(source);
     checkProjectTemplate(next.source,defaults.svg?'custom':defaults.template);
     if(project && !schemes.some(p=>Object.keys(next.colors).every(k=>(defaults.colors[k] || next.colors[k]).toLowerCase()===(p.colors?.[k] || next.colors[k]).toLowerCase())))throw projectConstraint('Starter colors are not allowed in this project.');
-    if(recovered&&!confirm('Open the shared starter card in place of your saved cards? Cancel to keep your saved work. Save an editable copy before reopening this link if you need a backup.')){
+    if(recovered&&!confirm('Open the shared starter card in place of your saved cards? Cancel to keep your saved work. Save your project before reopening this link if you need a backup.')){
       consumeStarter();return;
     }
     stopDrawing();
@@ -312,10 +328,18 @@ async function openStarter(recovered){
     template=next;
     state.colors=Object.fromEntries(Object.entries(next.colors).map(([key,value])=>[key,Object.hasOwn(defaults.colors,key)?defaults.colors[key]:value]));
     card().values=Object.fromEntries(next.fields.map(f=>[f.key,Object.hasOwn(defaults.fields,f.key)?defaults.fields[f.key]:'']));
-    updateTemplateSelect();buildColors();buildMapping();$('#template-title').textContent=next.title;
+    updateTemplateSelect();buildColors();$('#template-title').textContent=next.title;
     save();consumeStarter();
   }catch(err){error(err);}
 }
+async function currentCardBack(){return state.cardBack===null?undefined:state.cardBack?{image:'images/card-back.png',url:state.cardBack}:project?.cardBack;}
+function showCardBack(){
+  const url=state.cardBack===null?'':state.cardBack || project?.cardBack?.url || '';
+  $('#card-back-preview').src=url;$('#card-back-preview').hidden=!url;$('#remove-card-back').hidden=!url;
+  $('#card-back-status').textContent=url?'Card back included in print sheets and project ZIP. Print double-sided, flip on the short edge.':'No card back selected.';
+}
+$('#card-back-file').onchange=e=>{const file=e.target.files[0];e.target.value='';if(file)run(async()=>{state.cardBack=await normalizeImage(file);save();showCardBack();});};
+$('#remove-card-back').onclick=()=>{state.cardBack=null;save();showCardBack();};
 async function openPrint(scope,copies,status){
   // Open during the button gesture, before image/font loading yields to Safari.
   const sheet=window.open('','_blank');
@@ -324,13 +348,13 @@ async function openPrint(scope,copies,status){
   sheet.document.write('<!doctype html><html><head><title>Preparing card sheets</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><p role="status">Preparing your card sheets…</p></body></html>');
   sheet.document.close();
   try{
-    const html=await printDocument(template,structuredClone(state),getAsset,scope,copies,project?.cardBack);
+    const html=await printDocument(template,structuredClone(state),getAsset,scope,copies,await currentCardBack());
     if(sheet.closed){$(status).textContent='Print sheet closed. Open it again when ready.';return;}
     sheet.document.open();sheet.document.write(html);sheet.document.close();
     $(status).textContent='Print sheets opened in a new tab. Choose Print / Save as PDF there; your editor stays in this tab.';
   }catch(err){if(!sheet.closed)sheet.close();throw err;}
 }
-$('#print-sheets').onclick=()=>run(()=>openPrint($('#print-scope').value,Number($('#print-copies').value),'#print-status'));
+$('#print-sheets').onclick=()=>run(()=>openPrint('all',1,'#print-status'));
 $('#print-card').onclick=()=>run(()=>openPrint('current',1,'#single-print-status'));
 $('#download-svg').onclick=()=>run(async()=>{
   render();if(rendered.issues.length)throw Error('Complete or shorten the marked fields before exporting.');
@@ -339,7 +363,7 @@ $('#download-svg').onclick=()=>run(async()=>{
   download(slug(card().values.common_name||'card')+'.svg','image/svg+xml',new XMLSerializer().serializeToString(svg));
 });
 function checkProjectTemplate(source,id){
-  if(project && !catalog.some(t=>t.id===id && t.source===source))throw projectConstraint('This template is not allowed in the current project. Download your saved work or start fresh with this project’s template.');
+  if(project && !catalog.some(t=>t.id===id && t.source===source))throw projectConstraint('This template is not allowed in the current project. Save your project before starting a different layout.');
 }
 function applyProjectScheme(){
   if(!project)return;
@@ -347,10 +371,10 @@ function applyProjectScheme(){
   state.colors={...template.colors,...scheme.colors};state.colorScheme=scheme.name;
 }
 function setupProject(){
+  $('#template-tools .open-project').hidden=true;
   $('.intro h1').textContent=project.name;$('.intro p').textContent=project.description || '';document.title=project.name+' · Classroom Cards';
-  $('#template-tools .open-project').hidden=true;$('.custom-colors').hidden=true;
-  if(project.cardBack){const hint=document.createElement('p');hint.className='hint';hint.textContent='Print sheets include this project’s card backs. Use double-sided printing, landscape, flip on the short edge.';$('#batch-print-tools').append(hint);}
-  $('#project-resources').hidden=false;$('#project-document').hidden=true;
+  $('.custom-colors').hidden=false;
+  $('#project-resources').hidden=!project.files.length;$('#project-files').replaceChildren();$('#project-document').hidden=true;
   for(const file of project.files){
     const link=document.createElement(file.type==='markdown'?'button':'a');link.className='button secondary';link.textContent=file.title;
     if(file.type==='markdown'){link.type='button';link.onclick=async()=>{
@@ -366,16 +390,19 @@ function offerRecoveryReset(saved,err){
   $('#recovery-error').hidden=false;
   $('#recovery-error-message').textContent=err.message || String(err);
   $('#save-state').textContent='Saved work needs your attention. Choose Download saved work or Start fresh above.';
-  $('.layout').inert=true;$('#more-tools').inert=true;
+  $('.layout').inert=true;$('#workspace-tools').inert=true;
   $('#download-recovery').onclick=async()=>{
     const status=$('#recovery-error-status');
     try{
-      let snapshot;try{snapshot=JSON.parse(saved);}catch{download('classroom-cards-recovery.json','application/json',saved);status.textContent='Saved recovery downloaded.';return;}
-      const keys=new Set([...Object.values(snapshot.assets || {}),...(Array.isArray(snapshot.cards)?snapshot.cards.map(c=>c?.drawingKey):[])]);
-      const images={};
-      for(const key of keys){if(typeof key!=='string' || !key)continue;const image=await getAsset(key);if(image)images[key]=image;}
-      download('classroom-cards-recovery.json','application/json',JSON.stringify({state:snapshot,images}));
-      status.textContent='Saved work downloaded. Open it using a compatible project URL or the normal editor.';
+      const files=new Map(localBundle?.files.map(e=>[e.path,e.file]) || []);
+      files.set('recovery.json',new Blob([saved],{type:'application/json'}));
+      if(!files.has('manifest.json'))files.set('manifest.json',new Blob([JSON.stringify({version:1,name:'Workspace recovery'})]));
+      let snapshot;try{snapshot=JSON.parse(saved);}catch{}
+      for(const key of new Set([...Object.values(snapshot?.assets || {}),...(Array.isArray(snapshot?.cards)?snapshot.cards.map(c=>c?.drawingKey):[])])){
+        if(typeof key!=='string' || !key)continue;const image=await getAsset(key);if(image)files.set('recovery-images/'+slug(key)+'.png',await (await fetch(image)).blob());
+      }
+      download('classroom-cards-recovery.zip','application/zip',await zipProject([...files].map(([path,file])=>({path,file}))));
+      status.textContent='Recovery ZIP downloaded for troubleshooting. It contains the original saved data; damaged work may need repair before reopening.';
     }catch(error){status.textContent=error.message || String(error);}
   };
   $('#fresh-recovery').onclick=()=>run(async()=>{
@@ -385,14 +412,14 @@ function offerRecoveryReset(saved,err){
     template=null;
     $('#recovery-error').hidden=true;
     try{await finishStart(false);}catch(err){$('#recovery-error').hidden=false;throw err;}
-    $('.layout').inert=false;$('#more-tools').inert=false;$('#recovery-error').hidden=true;
+    $('.layout').inert=false;$('#workspace-tools').inert=false;$('#recovery-error').hidden=true;
   });
 }
 function localMapping(headers,layout){
   const aliases={copies:['copies','card count','count','quantity'],theme:['theme','color theme','color scheme','colour theme','colour scheme'],image_filename:['image filename','image','image file'],scientific_name:['scientific name','binomial name']};
   return Object.fromEntries([...layout.fields,{key:'image_filename'},{key:'copies'},{key:'theme'}].map(f=>[f.key,headers.find(h=>(aliases[f.key] || [f.key,f.label].filter(Boolean)).some(alias=>norm(h)===norm(alias))) || '']));
 }
-async function importLocalFiles(entries,backup){
+async function importLocalFiles(entries){
   const status=$('#local-project-status');status.textContent='Checking project files…';
   let resolved;
   try{
@@ -421,17 +448,27 @@ async function importLocalFiles(entries,backup){
         const settings=csvSettings(row,mapping,i,p.schemes,layout),rawImageName=(row[mapping.image_filename] || '').trim(),imageName=rawImageName?normalizeProjectPath(rawImageName):'';
         if(imageName && !Object.hasOwn(next.assets,imageName))throw Error(`CSV row ${i+2}: missing or ambiguous image “${imageName}”. Use its full relative path.`);
         const values={...p.starter.values,...row};for(const field of layout.fields)if(mapping[field.key])values[field.key]=row[mapping[field.key]] || '';
-        return {id:crypto.randomUUID(),csvImportId:importId,values,...settings,imageName,drawingKey:null,drawingActive:false,crop:{x:.5,y:.5,zoom:1}};
+        return {id:row.card_id || crypto.randomUUID(),csvImportId:importId,values,...settings,imageName,drawingKey:null,drawingActive:false,crop:{x:.5,y:.5,zoom:1}};
       });
       next.imported={headers,rows,mapping,indices:rows.map((_,i)=>i)};
     }
     if(!next.cards.length)next.cards=[{id:crypto.randomUUID(),values:{...p.starter.values},copies:1,imageName:'',drawingKey:null,drawingActive:false,crop:{x:.5,y:.5,zoom:1}}];
-    if(backup){
-      next=validateState(backup.state,resolved);
-      for(const key of new Set([...Object.values(next.assets),...next.cards.map(c=>c.drawingKey).filter(Boolean)])){
-        const data=backup.images?.[key];if(typeof data!=='string'||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(data))throw Error('Saved project contains a missing or invalid image.');
-        const image=await decodeImage(data);if(image.width*image.height>25_000_000)throw Error('Saved image is too large.');images[key]=data;
+    if(next.cards.some(c=>!c.id || c.id.length>200 || /[\\/:\u0000-\u001f]/.test(c.id)) || new Set(next.cards.map(c=>c.id)).size!==next.cards.length)throw Error('Card IDs must be unique.');
+    if(p.workspace){
+      const path=normalizeProjectPath(p.workspace),file=resolved.files.get(path);if(!file || file.size>2_000_000)throw Error('Missing or oversized workspace settings.');
+      const workspace=JSON.parse(await file.text());
+      if(workspace.version!==1 || !workspace.cards || typeof workspace.cards!=='object')throw Error('Invalid workspace settings.');
+      for(const c of next.cards){
+        const settings=workspace.cards[c.id];if(!settings)continue;
+        const crop=settings.crop || {x:.5,y:.5,zoom:1};
+        if(![crop.x,crop.y,crop.zoom].every(Number.isFinite) || crop.x<0 || crop.x>1 || crop.y<0 || crop.y>1 || crop.zoom<1 || crop.zoom>4)throw Error('Invalid image crop.');
+        c.crop=crop;c.drawingActive=settings.drawingActive===true;c.csvImportId=typeof settings.csvImportId==='string'?settings.csvImportId:undefined;
+        if(settings.drawingFile){const path=normalizeProjectPath(settings.drawingFile);if(!next.assets[path])throw Error('Missing saved drawing.');c.drawingKey=next.assets[path];}
+        if(c.drawingActive&&!c.drawingKey)throw Error('Missing active drawing.');
       }
+      if(next.imported){const indices=next.cards.flatMap((c,i)=>c.csvImportId?[i]:[]);next.imported={...next.imported,indices,rows:indices.map(i=>next.imported.rows[i])};if(!indices.length)next.imported=null;}
+      const active=next.cards.findIndex(c=>c.id===workspace.activeCardId);if(active>=0)next.active=active;
+      if(workspace.workspaceColors){if(Object.entries(workspace.workspaceColors).some(([k,v])=>!Object.hasOwn(layout.colors,k)||!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid workspace colors.');next.colors={...layout.colors,...workspace.workspaceColors};next.colorScheme=workspace.workspaceScheme || '';}
     }
     const id=await storeLocalProject({files,state:next,images});
     status.textContent=`Opened ${p.name}: ${next.cards.length} cards. Files saved in this browser.`;
@@ -439,8 +476,7 @@ async function importLocalFiles(entries,backup){
   }catch(err){status.textContent='Project was not imported. '+err.message;if(err.code==='PROJECT_CONSTRAINT')delete err.code;throw err;}
   finally{resolved?.dispose();}
 }
-$('#project-folder').onchange=e=>{const entries=folderFiles(e.target.files);e.target.value='';if(entries.length)run(()=>importLocalFiles(entries));};
-$('#project-zip').onchange=e=>{const file=e.target.files[0];e.target.value='';if(file)run(async()=>{try{await importLocalFiles(await unzip(file));}catch(err){$('#local-project-status').textContent='Project was not imported. '+err.message;throw err;}});};
+$('#project-folder').onchange=e=>{if($('#open-project-dialog').open)$('#open-project-dialog').close();const entries=folderFiles(e.target.files);e.target.value='';if(entries.length)run(()=>importLocalFiles(entries));};
 async function start(){
   const localId=new URLSearchParams(location.search).get('local');
   if(localId && !/^[a-f0-9-]{36}$/.test(localId))throw Error('Invalid local project link.');
@@ -455,7 +491,7 @@ async function start(){
     for(const item of catalog){const response=await fetch(item.url);if(!response.ok)throw Error('Cannot load project template '+item.title);item.source=readTemplate(await response.text()).source;}
     state.cards=[blankCard()];
     setupProject();
-    if(localBundle)$('#local-project-status').textContent='Local project saved in this browser. Save an editable copy to move it to another device; its URL works only here.';
+    if(localBundle)$('#local-project-status').textContent='Local project saved in this browser. Save your project to move it to another device; its URL works only here.';
   }
   let saved;try{saved=localStorage.getItem(KEY);}catch{storageError='Browser recovery is unavailable. Save a project file while you work.';}
   if(!saved && localBundle){state=validateState(structuredClone(localBundle.state));for(const [key,data] of Object.entries(localBundle.images))await putAsset(key,data);}
@@ -463,12 +499,12 @@ async function start(){
   await finishStart(Boolean(saved));
 }
 async function finishStart(recovered){
-  if(state.templateSVG){template=readTemplate(state.templateSVG);updateTemplateSelect();buildColors();buildMapping();$('#template-title').textContent=template.title;}
+  if(state.templateSVG){template=readTemplate(state.templateSVG);updateTemplateSelect();buildColors();$('#template-title').textContent=template.title;}
   else {const item=catalog.find(t=>t.id===project?.starter.template) || catalog[0], response=await fetch(item.url || 'templates/'+item.svg);if(!response.ok)throw Error('Cannot open the first template.');applyTemplate(await response.text(),item.id);}
   await openStarter(recovered);
   if(!$('#recovery-error').hidden)return;
   await document.fonts.load('7px "Liberation Sans"');await document.fonts.load('bold 11px "Liberation Sans"');await document.fonts.load('italic 7px "Liberation Sans"');
-  await showCard();
+  await showCard();showCardBack();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 start().catch(error);

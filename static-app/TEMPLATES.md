@@ -4,10 +4,10 @@ The built-in SVG files in `templates/` are ordinary, visible SVG drawings. Their
 
 ## Tune an existing template
 
-1. Download the template SVG from the site, or open its file in `templates/`.
+1. In **Your cards**, choose a **Template layout** and click the download icon beside it (tooltip: **Download template SVG**), or open its file in `templates/`.
 2. In Inkscape, move or restyle the existing text objects, image rectangle, backgrounds, borders, and other artwork. Keep the page at 2.5 × 3.5 inches and its SVG viewBox at `0 0 180 252`.
 3. Keep the placeholder text objects as **text**, rather than converting them to paths. Keep their `data-*` attributes. Use Inkscape's XML Editor to adjust field limits or add new tagged fields.
-4. Save as SVG or Plain SVG. Open the edited SVG in the app and check the preview with your actual content. Groups and transforms, inline styles, local gradients, and local clipping paths are supported. External images, scripts, animation, and CSS style blocks are removed on import. Inline styles created by Inkscape are preserved.
+4. Save as SVG or Plain SVG. Use **Open template SVG** in Your cards to open the edited SVG and check the preview with your actual content. Groups and transforms, inline styles, local gradients, and local clipping paths are supported. External images, scripts, animation, and CSS style blocks are removed on import. Inline styles created by Inkscape are preserved.
 
 The browser uses the geometry and font styling in the SVG. If you change a font, it must exist on the student's device or be bundled locally into the site; the provided Liberation Sans font is bundled for consistent offline previews.
 
@@ -33,7 +33,7 @@ A text object looks like this:
 - `data-required="true"` requires text before finished-card export.
 - The editor uses the text object's `x`, `y`, transforms, font size, family, weight, style, and alignment. Inkscape's first `tspan` can also supply its position and font styling. Keep the text as one placeholder object; the editor replaces its lines with measured text.
 
-Use 1–12 text fields. The field list in the editor and downloadable CSV are generated from these attributes. Adding a new field to the SVG adds it to both.
+Use 1–12 text fields. The field list in the editor and saved project CSV are generated from these attributes. Adding a new field to the SVG adds it to both.
 
 ## Image placeholder
 
@@ -43,7 +43,7 @@ Use 1–12 text fields. The field list in the editor and downloadable CSV are ge
       fill="#ffffff" data-color-fill="picture"/>
 ```
 
-Move or resize this rectangle in Inkscape to adjust the image frame. Rounded corners and transforms are retained. The browser inserts the user's image over this rectangle and clips it to its geometry. Add `data-placeholder="true"` to a label such as `{{image}}` if that label should disappear from a finished card. Use one image frame per template.
+Move or resize this rectangle in Inkscape to adjust the image frame. Rounded corners and transforms are retained. The browser inserts the user's image over this rectangle and clips it to its geometry. Add `data-placeholder="true"` to a label such as `{{image}}` if that label should disappear from a finished card. Use one image frame per template. Uploaded artwork fills/crops the frame by default. Image zoom and position are preserved in project workspace settings; this does not remove white pixels from an image.
 
 ## Color placeholders
 
@@ -54,7 +54,7 @@ Add `data-color-fill="background"` or `data-color-stroke="accent"` to elements t
       data-color-fill="background"/>
 ```
 
-The first tagged element for each color role sets its default. The editor replaces all tagged elements for that role with the chosen color. Untagged colors retain your Inkscape edits. Changing default colors in Inkscape therefore changes what the editor starts with.
+The template defines the role names; the app discovers them from these attributes. Use lowercase names starting with a letter, followed by letters, digits, hyphens, or underscores (up to 30 characters). The first tagged element with a usable solid fill/stroke for each role sets its default. If other elements share that role but have different colors, the first color wins without a warning. Give them separate roles if their colors should differ. The editor replaces all tagged elements for that role with the chosen color. Untagged colors retain your Inkscape edits. Changing default colors in Inkscape therefore changes what the editor starts with.
 
 ## Add a built-in template
 
@@ -65,7 +65,13 @@ The first tagged element for each color role sets its default. The editor replac
 {"id":"pond-guide","title":"Pond guide","svg":"pond-guide.svg"}
 ```
 
-3. Open the new template in the app and download its template CSV. Save that CSV beside it as `templates/pond-guide.csv`.
-4. Publish the updated static-app folder. Increment the cache name in `sw.js` when publishing template or application changes so existing browsers install the revised offline files.
+3. Create `templates/pond-guide.csv` with the SVG field keys plus `image_filename`, `copies`, and `theme` as headers and one blank starting row (`copies` = 1). The offline cache expects this companion CSV. There is no template-CSV download control in the editor.
+4. Publish the updated static-app folder. Keep the versioned `studio.js` URL in `index.html` and the service-worker precache list aligned. Increment the cache name in `sw.js` when publishing template or application changes so existing browsers install the revised offline files.
 
-Students select built-in templates without uploading a layout. You can also open an edited template SVG locally before publishing it. The provided template CSV files contain headers and a blank row; fill in that row or add more before importing.
+Students select built-in templates without uploading a layout. You can also open an edited template SVG locally before publishing it. The provided companion CSV files contain headers and a blank row. To use one as project data, fill in rows and include it in a project folder with a manifest and its referenced artwork, then open the complete folder or ZIP.
+
+## Template SVG versus finished card SVG
+
+The download icon exports the tagged layout with placeholders and original template colors. **Download card** exports the current finished card with text, chosen colors, image, and fonts embedded. The app rejects finished cards through Open template SVG; use a project folder/ZIP to resume editing card data. Save project includes the selected template SVG as a separate readable file and current card data in CSV.
+
+Named palettes and custom per-card colors are stored in the CSV `theme` column. A custom value such as `custom:background=#ffffff;accent=#244734` uses this template's role names. Changing a color in the editor affects the current card. Untagged colors remain part of the SVG layout.

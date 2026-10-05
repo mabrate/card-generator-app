@@ -1,22 +1,36 @@
-"""One-command offline startup after installing requirements."""
+"""Serve Classroom Cards using Python's standard library; no app backend."""
+import argparse
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import os
-import socket
+from pathlib import Path
 
-if __name__ == "__main__":
+SITE = Path(__file__).resolve().parent / 'static-app'
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Serve the Classroom Cards static app.')
+    parser.add_argument('--host', default=os.environ.get('CARD_APP_HOST', '127.0.0.1'))
+    parser.add_argument('--port', type=int, default=int(os.environ.get('CARD_APP_PORT', '8765')))
+    args = parser.parse_args()
+    if not SITE.is_dir():
+        parser.error('The static-app directory is missing.')
+    handler = partial(SimpleHTTPRequestHandler, directory=str(SITE))
     try:
-        import uvicorn
-        import fontTools  # noqa: F401
-        import fastapi  # noqa: F401
-    except ImportError:
-        raise SystemExit("Dependencies are missing. Follow the one-time setup in README.md, then run .venv/bin/python run.py")
-    port = int(os.environ.get("CARD_APP_PORT", "8000"))
-    host = os.environ.get("CARD_APP_HOST", "0.0.0.0")
-    print(f"\nClassroom Cards: http://localhost:{port}\nStudents: http://<this computer's LAN IP>:{port}/student", flush=True)
-    try:
-        addresses = sorted({entry[4][0] for entry in socket.getaddrinfo(socket.gethostname(), port, socket.AF_INET)})
-        for address in addresses:
-            if not address.startswith("127."):
-                print(f"Possible LAN URL: http://{address}:{port}", flush=True)
-    except OSError:
-        pass
-    uvicorn.run("app.main:app", host=host, port=port, proxy_headers=False)
+        server = ThreadingHTTPServer((args.host, args.port), handler)
+    except OSError as error:
+        parser.exit(1, f'Cannot start Classroom Cards: {error}\n')
+    with server:
+        address = '127.0.0.1' if args.host in ('0.0.0.0', '::') else args.host
+        print(f'Classroom Cards: http://{address}:{server.server_port}/', flush=True)
+        if args.host == '0.0.0.0':
+            print(f'LAN devices: http://<this computer\'s LAN IP>:{server.server_port}/', flush=True)
+        print('Serving static-app only. Student work stays in each browser. Ctrl+C to stop.', flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+
+
+if __name__ == '__main__':
+    main()

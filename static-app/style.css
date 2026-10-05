@@ -7,3 +7,35 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 
 #project-resources{margin-bottom:22px}#project-files{flex-wrap:wrap}.markdown-document{line-height:1.6;overflow-wrap:anywhere;overflow-x:auto}.markdown-document table{border-collapse:collapse;width:100%}.markdown-document th,.markdown-document td{border:1px solid #ccd8cd;padding:8px;text-align:left}.markdown-document h2,.markdown-document h3{margin-top:24px}.markdown-document pre{white-space:pre-wrap}
 .more-tools h2{margin:0}.tool-section h3{font-size:15px;margin:0 0 14px;color:#345b43}.tool-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid #dce3dc}.tool-actions .hint{flex:1 1 220px;margin:0}.workspace-reset{margin-top:14px;padding-top:14px}@media(max-width:600px){.tool-actions .button{width:100%}.tool-actions .hint{flex-basis:100%}}
+
+.preview-panel .main-actions{grid-template-columns:1fr}
+.more-tools-grid{grid-template-columns:1fr}
+
+/* Workspace actions follow the edit, print, save flow. */
+.preview-card-back{margin-top:12px;padding-top:14px;border-top:1px solid #e2e8e2;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.preview-card-back>.open-project{flex:1;text-align:center}
+.preview-card-back .hint{flex-basis:100%;margin:0}
+#card-back-preview{width:80px;max-height:112px;object-fit:contain;display:block;margin:4px auto}
+.project-folder-open{display:block;text-align:center;margin-top:8px;font-size:11px}
+.template-layout-tools{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:20px;align-items:end;margin-top:18px}
+.template-layout-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.page-reset{margin-top:28px;padding-top:20px;border-top:1px solid #dce3dc}
+.page-reset .hint{margin:8px 0 0}
+@media(max-width:600px){.template-layout-tools{grid-template-columns:1fr;gap:10px}.template-layout-actions{display:grid;grid-template-columns:1fr}.template-layout-actions .button{text-align:center}}
+
+.card-layout-controls{display:flex;align-items:end;gap:9px;flex-wrap:wrap;margin:14px 0}
+.card-layout-controls .template-select{flex:1;min-width:160px}
+.card-layout-controls select{margin-bottom:0}
+.card-layout-controls .icon-button{width:42px;height:42px;padding:10px;display:inline-flex;align-items:center;justify-content:center}
+#open-project-dialog{border:1px solid #dce3dc;border-radius:14px;padding:24px;max-width:min(440px,calc(100vw - 28px));color:#18342c}
+#open-project-dialog::backdrop{background:rgba(15,35,25,.35)}
+#open-project-dialog form{margin-top:18px}
+
+.reference-links{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;margin-top:12px}
+.reference-links a{font-size:11px;color:#6e7e74;text-decoration:none}
+.reference-links a:hover,.reference-links a:focus-visible{color:#244734;text-decoration:underline}
+.reference-main{max-width:900px}
+.reference-actions{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;font-size:13px}
+.reference-actions a{color:#345b43}
+.reference-main .markdown-document{overflow-wrap:anywhere}
+.reference-main pre{overflow-x:auto}

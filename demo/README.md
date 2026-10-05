@@ -1,9 +1,11 @@
-# Classroom Cards demo
+# Classroom content archives
 
-The classroom-facing **Try examples** page and its download use the play-tested v1 card set. To import the same set, use its CSV, workbook, artwork, and turn guide:
+The main application is the browser app in [`../static-app/`](../static-app/). Its [Houston project guide](../static-app/projects/houston-food-web/README.md) explains the current folder/ZIP workflow.
 
-- [v1 import instructions and card files](v1/README.md)
-- [v1 expansion pack: eight additional food-web cards](v1/expansion-pack/README.md)
-- [Original prototype source files](source/)
+This directory retains teaching content and prototype history, not an alternative application:
 
-The simplified v2 set is no longer shown by the app or recommended for classroom use. Its files are retained in `v2/` as a local archive.
+- `v1/`: original play-tested deck data, artwork, rules, and expansion.
+- `v2/`: later archived content variant.
+- `source/`: original prototype records and PDF.
+
+Older archive guides refer to the removed teacher/server app. They describe historical workflows; use the current project guide when preparing a folder for the main app. These archives are outside the served site and do not require Python dependencies.

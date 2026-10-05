@@ -2,15 +2,18 @@
 
 This eight-card pack is designed to be added to the original [Campus Food Web v1 deck](../README.md). It adds **16 physical cards**: two copies of each organism.
 
-## Import it into an existing v1 project
+## Add it to a saved project folder
 
-1. Open the v1 project and choose **Layout & CSV**.
-2. Click **Import cards from CSV** near the top of the page.
-3. Choose `campus-food-web-expansion.csv` and select all eight PNG files in `graphics/`. Do not select `prompts.json`.
-4. Keep the suggested column matches and validate the import.
-5. Confirm **8 rows ready · 16 copies**, then import the reviewed rows.
+The static app opens complete project folders or ZIPs. It has no standalone CSV import, teacher studio, or Skip existing cards control.
 
-The `exp-` card IDs are distinct from the original v1 IDs, so the default **Skip existing cards** setting safely adds the pack. The expansion uses the v1 field guide layout and the same CSV columns, themes, image dimensions, and gameplay vocabulary.
+1. Use **Save project** for your base deck, then unzip it into a working folder.
+2. Locate the canonical CSV specified by `manifest.json` → `csv`. Append the expansion's eight rows to that CSV, matching its column headers to the saved project's headers. Preserve all existing rows and use the distinct `exp-` card IDs for the new ones. Set each new row's `copies` to 2 and a valid named/custom theme.
+3. Copy the expansion's eight PNGs into the project's `graphics/` folder. Set each appended row's `image_filename` to its project-relative path, such as `graphics/coopers-hawk.png`, using the actual filename. Keep prompt/provenance JSON separate from images.
+4. Keep the manifest's `csv` path pointing to the combined CSV. Do not rely on automatic detection when several CSVs are present. Existing `workspace.json` settings remain valid for the base card IDs; new cards use default crops and no saved drawing.
+5. Use **Open project folder** beside the preview and choose the working folder or a ZIP containing it. Verify eight added cards, each with two copies, and check their artwork and field text before printing.
+6. **Save project** creates the updated editable ZIP. **Print all cards** adds the expansion's 16 physical copies to the base deck, subject to the 600-copy sheet limit.
+
+The expansion uses the original v1 card-data vocabulary. Map those columns to the selected template's field keys when preparing the combined CSV; the app retains extra columns, but extra data is printed only when the template has a matching field.
 
 ## Cards and food-web gaps
 
