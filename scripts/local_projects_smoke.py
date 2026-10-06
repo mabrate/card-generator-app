@@ -42,7 +42,7 @@ try:
         expect(page.locator('#fields [data-field="common_name"]')).to_have_value('Leaf')
         expect(page.locator('#card-preview image').first).to_have_attribute('href', re.compile('data:image/'))
         expect(page.locator('#card-preview image').first).to_have_attribute('href', re.compile('data:image/'))
-        assert page.locator('#card-select option').count() == 2
+        assert page.locator('#preview-card-select option').count() == 2
         assert page.locator('#template-select option').count() == 1
         page.get_by_role('button', name='Local rules', exact=True).click()
         expect(page.locator('#document-content h1')).to_have_text('Private rules')
@@ -135,9 +135,9 @@ try:
         expect(restored.locator('[data-color="background"]')).to_have_value('#123456')
         expect(restored.locator('#image-status')).to_have_text('Using your drawing.')
         expect(restored.locator('#crop-zoom')).to_have_value('1.5')
-        restored.locator('#card-select').select_option('1')
+        restored.locator('#preview-card-select').select_option('1')
         expect(restored.locator('[data-color="background"]')).not_to_have_value('#123456')
-        restored.locator('#card-select').select_option('0')
+        restored.locator('#preview-card-select').select_option('0')
         with restored.expect_popup() as back_popup:
             restored.locator('#print-sheets').click()
         expect(back_popup.value.locator('#print')).to_be_enabled()

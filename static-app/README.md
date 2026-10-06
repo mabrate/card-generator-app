@@ -10,11 +10,11 @@ From the repository root, run that command and open http://localhost:8765. When 
 
 ## Student view
 
-Choose a starter in **Your cards**, then add words and artwork. Use **New card** and **Your cards** to manage the workspace. Each card has its own copy count and colors.
+Choose a starter in **Template layout**, then add words and artwork. Use **New card** to add cards and the arrows, dots, or title menu above the preview to select a card. Each card has its own copy count and colors.
 
 The preview groups **Download card**, **Print this card**, **Print all cards**, and **Define card back**. Card-back preview and removal appear only when a back is selected. Save project and Open project folder sit below the print controls. Open project folder offers a folder picker or a saved ZIP picker. Project imports create separate browser workspaces.
 
-**Your cards** includes template controls: choose a default starter, download the current template SVG using the icon beside the layout selector (hover for **Download template SVG**), or open an edited template SVG. Project-specific template restrictions still apply. Layout changes keep card text and artwork. Use Inkscape to edit the SVG's tagged elements, then reopen it here. See [TEMPLATES.md](TEMPLATES.md).
+**Template layout** includes template controls: choose a default starter, download the current template SVG using the icon beside the layout selector (hover for **Download template SVG**), or open an edited template SVG. Project-specific template restrictions still apply. Layout changes keep card text and artwork. Use Inkscape to edit the SVG's tagged elements, then reopen it here. See [TEMPLATES.md](TEMPLATES.md).
 
 **Start fresh** stands alone at the bottom and asks for confirmation. Save your project before clearing work.
 
@@ -58,7 +58,7 @@ Project CSVs match `copies` (also `card_count`, `count`, or `quantity`) and `the
 | `manifest.json` | Project name, template choices, palettes, CSV/settings paths, documents, and card-back reference. |
 | Project CSV | Current card text, IDs, artwork references, quantities, themes, and extra columns. |
 | `workspace.json` | Active card, image crops, drawing references/selection, and defaults for new cards. No embedded SVG XML or images. |
-| Template SVG | Reusable tagged layout; edit in Inkscape and open through Your cards. |
+| Template SVG | Reusable tagged layout; edit in Inkscape and open through Template layout. |
 | Finished card SVG | Current card's rendered appearance, including embedded artwork and fonts; cannot be reopened as a project or template. |
 | PDF | Print-ready output saved from the browser's print dialog. |
 

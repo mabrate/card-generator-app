@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
-  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=29"></script>
+  <link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=32"></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><span>STUDENT STUDIO</span></header>
@@ -16,18 +16,18 @@
   <div class="layout">
     <section class="workbench">
       <section class="panel source-panel">
-        <div class="student-heading"><h2>1. Your cards</h2><button id="new-card" type="button" class="button secondary">New card</button></div>
+        <div class="student-heading"><h2>1. Template layout</h2><button id="new-card" type="button" class="button secondary">New card</button></div>
         <div id="template-tools" class="card-layout-controls">
           <label class="template-select">Template layout<select id="template-select" disabled></select></label>
           <button id="template-svg" class="button secondary icon-button" type="button" title="Download template SVG" aria-label="Download template SVG"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></button>
           <label class="button secondary open-project">Open template SVG<input id="svg-file" type="file" accept=".svg,image/svg+xml"></label>
         </div>
         <p id="template-title" class="hint" hidden></p>
-        <label class="copies-label">Copies of this card<input id="card-copies" type="number" min="1" max="600" step="1" value="1"></label>
-        <div id="card-switcher" class="row-picker" hidden><label for="card-select">Your cards</label><select id="card-select"></select></div>
       </section>
       <section class="panel form-panel">
-        <h2>2. Add your words</h2><div id="fields" class="fields"></div>
+        <h2>2. Card data</h2>
+        <label class="copies-label">Copies of this card<input id="card-copies" type="number" min="1" max="600" step="1" value="1"></label>
+        <div id="fields" class="fields"></div>
         <div class="draw-heading"><h2>3. Add your artwork</h2></div>
         <div class="image-inputs"><label class="button secondary open-project">Choose an image<input id="image-files" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><label class="button secondary open-project">Take a photo<input id="camera-file" type="file" accept="image/*" capture="environment"></label></div>
         <p class="hint">Use a picture or a photo of your drawing.</p><p id="image-status" class="hint" role="status"></p>
@@ -38,6 +38,15 @@
     </section>
     <aside class="panel preview-panel">
       <div class="preview-head"><h2>Your card</h2><span class="size-tag">2.5 × 3.5 in</span></div>
+      <nav class="preview-navigation" aria-label="Choose a card">
+        <div class="preview-navigation-row">
+          <button id="previous-card" class="button secondary card-arrow" type="button" aria-label="Previous card">←</button>
+          <label class="preview-title-picker"><select id="preview-card-select" aria-label="Select a card by title"></select></label>
+          <button id="next-card" class="button secondary card-arrow" type="button" aria-label="Next card">→</button>
+        </div>
+        <div id="card-dots" class="card-dots" aria-label="Card positions"></div>
+        <p id="card-position" class="hint" role="status"></p>
+      </nav>
       <div class="card-wrap"><div id="card-preview" class="card-preview"></div></div>
       <ul id="fit-issues" class="error" aria-live="polite"></ul>
       <p id="save-state" class="save-state" role="status">Opening your card…</p>

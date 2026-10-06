@@ -109,11 +109,31 @@ function updateSchemes(){
   }
 }
 function rebuildCardSelect() {
-  $('#card-select').replaceChildren(...state.cards.map((c,i)=>new Option(`${i+1} · ${c.values.common_name || Object.values(c.values).find(Boolean) || 'Untitled card'} · ${c.copies ?? 1} copies`,String(i))));
-  $('#card-select').value=String(state.active);
-  $('#card-switcher').hidden=state.cards.length<2;
+  $('#preview-card-select').replaceChildren(...state.cards.map((c,i)=>new Option(`${i+1} · ${cardTitle(c)}`,String(i))));
+  $('#preview-card-select').value=String(state.active);
+  const dots=$('#card-dots');
+  if(dots.children.length!==state.cards.length){
+    dots.replaceChildren(...state.cards.map((c,i)=>{
+      const button=document.createElement('button');button.type='button';button.className='card-dot';
+      button.onclick=()=>selectCard(i);return button;
+    }));
+  }
+  [...dots.children].forEach((button,i)=>{
+    button.title=`${i+1} · ${cardTitle(state.cards[i])}`;
+    button.setAttribute('aria-label',`Card ${i+1}: ${cardTitle(state.cards[i])}`);
+    if(i===state.active)button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');
+  });
+  const selectedDot=dots.children[state.active];
+  if(selectedDot){
+    const rowBounds=dots.getBoundingClientRect(), dotBounds=selectedDot.getBoundingClientRect();
+    if(dotBounds.left<rowBounds.left)dots.scrollLeft-=rowBounds.left-dotBounds.left;
+    else if(dotBounds.right>rowBounds.right)dots.scrollLeft+=dotBounds.right-rowBounds.right;
+  }
+  $('#card-position').textContent=`Card ${state.active+1} of ${state.cards.length}`;
 
 }
+function cardTitle(c){return c.values.common_name || Object.values(c.values).find(Boolean) || 'Untitled card';}
+function selectCard(index){return run(async()=>{stopDrawing();state.active=(index+state.cards.length)%state.cards.length;await showCard();});}
 async function pruneAssets(clear=false){
   const retained=new Set(clear?[]:[...Object.values(state.assets),...state.cards.map(c=>c.drawingKey).filter(Boolean)]);
   for(const key of cache.keys())if(!retained.has(key))cache.delete(key);
@@ -301,7 +321,9 @@ async function run(action){if(busy)return;busy=true;$('#page-error').textContent
 $('#template-select').onchange=()=>run(async()=>{const item=catalog.find(c=>c.id===$('#template-select').value);const r=await fetch(item.url || 'templates/'+item.svg,{cache:'no-cache'});if(!r.ok)throw Error('Cannot open that built-in template.');applyTemplate(await r.text(),item.id);await showCard();});
 $('#svg-file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)run(async()=>{if(f.size>500_000)throw Error('Choose a template SVG under 500 KB.');applyTemplate(await f.text(),'custom');await showCard();});};
 $('#card-copies').onchange=()=>{const value=Number($('#card-copies').value);if(!Number.isInteger(value)||value<1||value>600){$('#card-copies').value=card().copies ?? 1;error(Error('Choose 1–600 copies for this card.'));return;}card().copies=value;rebuildCardSelect();save();};
-$('#card-select').onchange=()=>run(async()=>{state.active=Number($('#card-select').value);await showCard();});
+$('#preview-card-select').onchange=()=>selectCard(Number($('#preview-card-select').value));
+$('#previous-card').onclick=()=>selectCard(state.active-1);
+$('#next-card').onclick=()=>selectCard(state.active+1);
 $('#new-card').onclick=()=>run(async()=>{if(state.cards.length>=500)throw Error('Save this project and start another before adding more cards.');state.cards.push(blankCard());state.active=state.cards.length-1;await showCard();});
 $('#start-over').onclick=()=>run(startOver);
 for(const id of ['image-files','camera-file'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';if(files.length)run(()=>uploadImages(files));};

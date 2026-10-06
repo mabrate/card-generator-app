@@ -1,4 +1,4 @@
-const CACHE = 'classroom-cards-static-first-v30';
+const CACHE = 'classroom-cards-static-first-v34';
 const base = new URL('./', self.location.href);
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
@@ -6,7 +6,7 @@ self.addEventListener('install', event => event.waitUntil((async () => {
   const response = await fetch(catalogURL, {cache:'reload'});
   if (!response.ok) throw Error('Template catalog unavailable.');
   const catalog = await response.json();
-  await cache.addAll(['./','index.html','reference.html','reference.js','README.md','PROJECTS.md','TEMPLATES.md','projects/houston-food-web/README.md','projects/houston-food-web/campus-food-web-turn-guide.md','projects/houston-food-web/expansion-pack/README.md','projects/houston-food-web/card-back-artwork.md','style.css','studio.js','studio.js?v=29','template.js','palettes.js','print.js','links.js','projects.js','local-projects.js','markdown.js','templates/catalog.json',
+  await cache.addAll(['./','index.html','reference.html','reference.js','README.md','PROJECTS.md','TEMPLATES.md','projects/houston-food-web/README.md','projects/houston-food-web/campus-food-web-turn-guide.md','projects/houston-food-web/expansion-pack/README.md','projects/houston-food-web/card-back-artwork.md','style.css','studio.js','studio.js?v=32','template.js','palettes.js','print.js','links.js','projects.js','local-projects.js','markdown.js','templates/catalog.json',
     'fonts/LiberationSans-Regular.ttf','fonts/LiberationSans-Bold.ttf','fonts/LiberationSans-Italic.ttf',
     ...catalog.map(t=>'templates/'+t.svg)].map(p=>new URL(p,base)));
   await self.skipWaiting();
