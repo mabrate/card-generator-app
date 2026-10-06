@@ -5,6 +5,7 @@ const references=new Map([
   ['TEMPLATES.md','SVG templates'],
   ['projects/houston-food-web/README.md','Houston project'],
   ['projects/houston-food-web/campus-food-web-turn-guide.md','Game rules'],
+  ['projects/houston-food-web/card-design-guide.md','Card design guide'],
   ['projects/houston-food-web/expansion-pack/README.md','Expansion guide'],
   ['projects/houston-food-web/card-back-artwork.md','Card-back notes'],
 ]);
