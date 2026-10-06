@@ -37,7 +37,7 @@ try:
         for path in ['/run.py','/.git/config','/data/app.sqlite','/teacher','/api/projects','/migrations/001_initial.sql']:
             assert page.request.get(origin+path).status == 404, path
         references = page.locator('footer .reference-links a')
-        assert references.count() == 7
+        assert references.count() == 8
         for link in references.all():
             with page.expect_popup() as popup:
                 link.click()
