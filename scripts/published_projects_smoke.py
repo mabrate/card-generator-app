@@ -24,7 +24,7 @@ try:
         expect(page.locator('#save-project')).to_be_disabled()
         pending[0].continue_()
         page.unroute('**/projects/houston-food-web/cards.csv')
-        expect(page.locator('#card-select option')).to_have_count(22,timeout=60000)
+        expect(page.locator('#preview-card-select option')).to_have_count(22,timeout=60000)
         expect(page.locator('#fields [data-field="common_name"]')).to_have_value('Aquatic Milkweed')
         expect(page.locator('#card-copies')).to_have_value('4')
         expect(page.locator('#card-preview image')).to_have_attribute('href',__import__('re').compile('data:image/'))
@@ -45,7 +45,7 @@ try:
         page.locator('#fields [data-field="common_name"]').fill('Aquatic Milkweed')
         page.evaluate("async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));}")
         context.set_offline(True);page.reload()
-        expect(page.locator('#card-select option')).to_have_count(22)
+        expect(page.locator('#preview-card-select option')).to_have_count(22)
         expect(page.locator('#fields [data-field="common_name"]')).to_have_value('Aquatic Milkweed')
         context.set_offline(False)
         # An old blank checkpoint migrates, while edited work is never replaced.
@@ -53,10 +53,10 @@ try:
         blank['assets']={};blank['imported']=None;blank.pop('projectDataInitialized')
         key='classroom-cards.static-first.v2:project:houston-food-web'
         page.evaluate('([key,state])=>localStorage.setItem(key,JSON.stringify(state))',[key,blank])
-        page.reload();expect(page.locator('#card-select option')).to_have_count(22,timeout=60000)
+        page.reload();expect(page.locator('#preview-card-select option')).to_have_count(22,timeout=60000)
         page.locator('#fields [data-field="common_name"]').fill('My edited milkweed')
         page.reload();expect(page.locator('#fields [data-field="common_name"]')).to_have_value('My edited milkweed')
-        expect(page.locator('#card-select option')).to_have_count(22)
+        expect(page.locator('#preview-card-select option')).to_have_count(22)
         # Published resources, CSV name and graphics survive a downloaded ZIP.
         try:
             with page.expect_download(timeout=60000) as download:page.locator('#save-project').click()
@@ -73,12 +73,12 @@ try:
         page.evaluate("async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));}")
         context.set_offline(True);page.reload()
         expect(page.locator('#fields [data-field="common_name"]')).to_have_value('My edited milkweed')
-        expect(page.locator('#card-select option')).to_have_count(22)
+        expect(page.locator('#preview-card-select option')).to_have_count(22)
         context.set_offline(False)
         # Explicit Start fresh stays blank on reload; auto-seeding is not repeated.
         page.once('dialog',lambda d:d.accept());page.locator('#start-over').click()
-        expect(page.locator('#card-switcher')).to_be_hidden()
-        page.reload();expect(page.locator('#card-switcher')).to_be_hidden()
+        expect(page.locator('#preview-card-select option')).to_have_count(1)
+        page.reload();expect(page.locator('#preview-card-select option')).to_have_count(1)
         expect(page.locator('#fields [data-field="common_name"]')).to_have_value('')
         assert not errors,errors
         browser.close()

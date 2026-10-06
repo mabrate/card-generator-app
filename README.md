@@ -22,7 +22,7 @@ Open `http://<the server computer's LAN IP>:8765/` on each device. The app does 
 
 ## Make and save cards
 
-1. In **Your cards**, choose a default template layout. The adjacent download icon saves its template SVG; hover for **Download template SVG**. Use **Open template SVG** for your own edited layout where project restrictions allow it.
+1. In **Template layout**, choose a default template layout. The adjacent download icon saves its template SVG; hover for **Download template SVG**. Use **Open template SVG** for your own edited layout where project restrictions allow it.
 2. Add text, artwork, colors, and copy quantities. Use New card and the card selector for multiple cards.
 3. The preview contains Download card, Print this card, Print all cards, and Define card back. Print sheets use saved quantities and include backs when selected. Save as PDF through the browser print dialog.
 4. **Save project** creates an editable ZIP. **Open project folder** opens a dialog with a folder picker and a ZIP picker. Importing opens a separate browser workspace and does not overwrite the original folder.
