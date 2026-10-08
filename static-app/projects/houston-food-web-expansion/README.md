@@ -1,19 +1,17 @@
-# Campus Food Web expansion pack
+# Houston Food Web expansion pack
 
-This eight-card pack is designed to be added to the original [Campus Food Web v1 deck](../README.md). It adds **16 physical cards**: two copies of each organism.
+This eight-card pack is designed to be added to the original Houston Food Web base deck. It adds **16 physical cards**: two copies of each organism.
 
-## Add it to a saved project folder
+## Open or add this pack
 
-The static app opens complete project folders or ZIPs. It has no standalone CSV import, teacher studio, or Skip existing cards control.
+This is a complete, self-contained project containing only the expansion's eight cards. Its manifest identifies `houston-food-web-expansion` version `1.0.0`, designed for the `houston-food-web` base game version `1.0.0`. The base deck is required for gameplay. The packaged [game rules](game-rules.md) are a snapshot for that version.
 
-1. Use **Save project** for your base deck, then unzip it into a working folder.
-2. Locate the canonical CSV specified by `manifest.json` → `csv`. Append the expansion's eight rows to that CSV, matching its column headers to the saved project's headers. Preserve all existing rows and use the distinct `exp-` card IDs for the new ones. Set each new row's `copies` to 2 and a valid named/custom theme.
-3. Copy the expansion's eight PNGs into the project's `graphics/` folder. Set each appended row's `image_filename` to its project-relative path, such as `graphics/coopers-hawk.png`, using the actual filename. Keep prompt/provenance JSON separate from images.
-4. Keep the manifest's `csv` path pointing to the combined CSV. Do not rely on automatic detection when several CSVs are present. Existing `workspace.json` settings remain valid for the base card IDs; new cards use default crops and no saved drawing.
-5. Use **Open project folder** beside the preview and choose the working folder or a ZIP containing it. Verify eight added cards, each with two copies, and check their artwork and field text before printing.
-6. **Save project** creates the updated editable ZIP. **Print all cards** adds the expansion's 16 physical copies to the base deck, subject to the 600-copy sheet limit.
+- **Edit the pack:** open `?project=houston-food-web-expansion`, or use **Open project folder** with this folder or its saved ZIP. Use **Save project** to share the complete editable pack.
+- **Add to your game:** open your base project, choose **Add expansion**, and select this folder or ZIP. The published Houston project also offers **Add Houston Food Web Expansion** directly. Review the eight cards and import them into the prefilled expansion group.
+- Cards are appended to the current project. Existing IDs are checked; repeated cards default to Skip and changed cards require an explicit conflict choice. Keep the original `exp-` IDs when updating this pack.
+- **Save project** exports the combined deck, artwork, expansion labels, and imported-pack version records. **Print all cards** prints the base and accepted expansion cards using their copy counts.
 
-The expansion uses the original v1 card-data vocabulary. Map those columns to the selected template's field keys when preparing the combined CSV; the app retains extra columns, but extra data is printed only when the template has a matching field.
+The app reads the manifest's canonical CSV; no manual row merging or image copying is needed. Artwork, a local editable template, and the card back are included inside the package. SVG submissions from students still use **Import cards**.
 
 ## Cards and food-web gaps
 
@@ -32,7 +30,11 @@ The mechanics are classroom play-test abstractions. In particular, the Pyramid A
 
 ## Files
 
-- `campus-food-web-expansion.csv`: UTF-8 CSV in the v1 import format.
+- `manifest.json`: project identity, version, base-game compatibility, resources, and canonical CSV.
+- `templates/food-web.svg`: local editable layout.
+- `card-back.png`: matching game back.
+- `game-rules.md`: packaged base-game rules.
+- `campus-food-web-expansion.csv`: canonical UTF-8 card data.
 - `graphics/*.png`: eight natural-history illustrations, 1503 × 1046 pixels with physical-size metadata matching the v1 artwork.
 - `graphics/prompts.json`: image prompts and generation provenance.
 

@@ -65,7 +65,7 @@ Run the import browser checks with:
 
 ## Houston Food Web Game
 
-Open `?project=houston-food-web` to load the base deck automatically: 22 card types, 48 copies, artwork, rules, and the game back. Its manifest selects `cards.csv` and `graphics/`. Existing saved edits take precedence. The expansion remains an optional resource; it is not added automatically. See the project's [README](projects/houston-food-web/README.md) for the complete workflow.
+Open `?project=houston-food-web` to load the base deck automatically: 22 card types, 48 copies, artwork, rules, and the game back. Its manifest selects `cards.csv` and `graphics/`. Existing saved edits take precedence. The expansion is a separate project at `?project=houston-food-web-expansion`; it is not added automatically. Houston offers Open and Add actions for the linked pack. See the project's [README](projects/houston-food-web/README.md) for the complete workflow.
 
 ## Validation
 
@@ -100,3 +100,30 @@ The manifest sets `workspace` to `workspace.json`. Its `version` is 1, with `act
 Define card back in the preview selects/replaces an image; Remove card back switches to front-only printing. Save project includes the selected image and writes `cardBack.image` into the manifest, or removes the setting when the back was removed. Old single-file JSON backup import/export has been removed. A recovery-error ZIP is a troubleshooting checkpoint, not a guaranteed reopenable project.
 
 CSV columns match SVG `data-field` keys; `data-label` controls the editor label. Scientific names use `scientific_name` in the built-in food-web project. Imports also recognize `binomial_name`; an exact field-key match takes priority. A loading banner appears while the workspace, project cards, and artwork open.
+
+## Expansion projects
+
+Store published expansions as sibling projects, such as `projects/houston-food-web-expansion/`, with exactly one manifest per package. Each package contains only its additional cards and all required local artwork, templates, and any chosen back or rules snapshot. Preserve card IDs when releasing updates; keep base cards out of expansion CSVs.
+
+Expansion manifests use the normal version-1 project format plus:
+
+```json
+{
+  "id": "houston-food-web-expansion",
+  "packageVersion": "1.0.0",
+  "expansion": {
+    "baseProjectId": "houston-food-web",
+    "basePackageVersion": "1.0.0"
+  }
+}
+```
+
+`version` identifies the manifest format; `packageVersion` identifies the content release using major.minor.patch. Base projects should also declare `id` and `packageVersion`. Compatibility records the intended exact base release; different or unknown projects/versions show a review notice, without silently treating the pack as compatible.
+
+A base manifest can link published packs using `"expansions": [{"id": "houston-food-web-expansion", "name": "Houston Food Web Expansion"}]`. These IDs resolve to sibling project URLs, not files outside the base package. Resource paths under `files` still stay inside their own package. Linked packs are not automatically bundled into a base-project ZIP.
+
+**Open project folder** opens a pack in its own workspace for editing. **Add expansion** reads a folder or ZIP and opens the same review used by individual SVG imports. It preselects the pack's name as the expansion group, checks existing/batch IDs, offers explicit conflicts, and appends accepted cards. The current project, template defaults, card back, and documents remain the destination's. Published base projects also offer a direct Add action for linked packs. Repeated imports default to Skip; Undo last import restores the preceding workspace.
+
+Save project packages all accepted cards, editable layouts, and artwork. `workspace.json` includes per-card expansion labels and an `expansionPacks` registry keyed by imported pack ID, recording its name, package version, and intended base project/version. This registry is saved only when cards are accepted. The manifest and CSV remain normal project files, so the combined output can be reopened or used as the static site's project files. Expansion documents and a separate nested manifest are not inserted into the combined package.
+
+Expansion browser coverage: `.venv/bin/python scripts/expansion_projects_smoke.py` checks standalone pack loading, hosted/folder/ZIP append, repeat/conflict handling, undo, stable base IDs, combined ZIPs, and rejected invalid packages.

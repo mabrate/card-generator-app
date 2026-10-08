@@ -1,9 +1,10 @@
+import {serializeCard,parseCard,validateCard,normalized,uniqueId,assertCards,insertCard,FORMAT} from './card-transfer.js';
 import {readTemplate, renderTemplate, parseCsv, csvCell} from './template.js';
 import {PALETTES} from './palettes.js';
 import {fontStyles, printDocument} from './print.js';
 import {readStarter, consumeStarter} from './links.js';
 const $ = selector => document.querySelector(selector);
-import {projectId, loadProject, normalizeProjectPath, fetchProjectFile} from './projects.js';
+import {projectId, loadProject, validateExpansionPacks, normalizeProjectPath, fetchProjectFile} from './projects.js';
 import {renderMarkdown} from './markdown.js';
 import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject} from './local-projects.js';
 import {loadCardBack} from './print.js';
@@ -13,9 +14,11 @@ let schemes = [{name:'Template',colors:null},...PALETTES];
 const canvas = $('#drawing'), ctx = canvas.getContext('2d');
 const cache = new Map();
 let db, template, rendered, catalog = [], assetLoading = false, imageData = null, generation = 0, storageError = '', assetError = '', busy = false, drawTimer;
-let state = {version:2, templateId:'field-guide', templateSVG:'', colors:{}, cards:[blankCard()], active:0, assets:{}, imported:null};
-function blankCard() { return {id:globalThis.crypto?.randomUUID?.() || Date.now()+'-'+Math.random(), values:{...project?.starter.values}, copies:1, imageName:'', drawingKey:null, drawingActive:false, crop:{x:.5,y:.5,zoom:1}}; }
+let state;
+state = {version:2, templateId:'field-guide', templateSVG:'', colors:{}, cards:[blankCard()], active:0, assets:{}, imported:null};
+function blankCard() { return {id:uniqueId(new Set(state?.cards?.map(c=>c.id) || [])), values:{...project?.starter.values}, copies:1, imageName:'', drawingKey:null, drawingActive:false, crop:{x:.5,y:.5,zoom:1}}; }
 const card = () => state.cards[state.active];
+const cardLayout = () => card().layout ? readTemplate(card().layout) : template;
 const cardColors = () => card().colors || state.colors;
 const cardScheme = () => card().colors ? card().colorScheme : state.colorScheme;
 const csvFields = () => [...template.fields.map(f=>({key:f.key,label:f.label})),{key:'image_filename',label:'Image filename'},{key:'copies',label:'Copies / card count'},{key:'theme',label:'Color theme'}];
@@ -77,7 +80,7 @@ async function getAsset(key) {
   return value;
 }
 function buildFields() {
-  $('#fields').replaceChildren(...template.fields.map(f => {
+  $('#fields').replaceChildren(...cardLayout().fields.map(f => {
     const label = document.createElement('label'); if (f.lines > 1) label.className='wide';
     const caption = document.createElement('span'); caption.textContent=f.label+(f.required?' *':'');
     const count = document.createElement('span'); count.className='counter'; count.dataset.count=f.key;
@@ -87,15 +90,15 @@ function buildFields() {
   }));
 }
 function buildColors() {
-  $('#color-schemes').replaceChildren(...schemes.map(p=>({...p,colors:p.colors || template.colors})).map(palette=>{
+  $('#color-schemes').replaceChildren(...schemes.map(p=>({...p,colors:p.colors || cardLayout().colors})).map(palette=>{
     const button=document.createElement('button');button.type='button';button.className='scheme-button';button.dataset.scheme=palette.name;
     const swatch=document.createElement('span');swatch.className='scheme-swatch';swatch.style.background=palette.colors.background || '#ffffff';swatch.style.borderColor=palette.colors.accent || '#555555';
     button.append(swatch,document.createTextNode(palette.name));
-    button.onclick=()=>{card().colors={...template.colors,...palette.colors};card().colorScheme=palette.name;buildColors();render();save();};return button;
+    button.onclick=()=>{card().colors={...cardLayout().colors,...palette.colors};card().colorScheme=palette.name;buildColors();render();save();};return button;
   }));
-  $('#colors').replaceChildren(...Object.keys(template.colors).map(key => {
+  $('#colors').replaceChildren(...Object.keys(cardLayout().colors).map(key => {
     const label=document.createElement('label'); label.textContent=key.replaceAll('-',' ');
-    const input=document.createElement('input'); input.type='color'; input.value=cardColors()[key] || template.colors[key]; input.dataset.color=key;
+    const input=document.createElement('input'); input.type='color'; input.value=cardColors()[key] || cardLayout().colors[key]; input.dataset.color=key;
     input.addEventListener('input',()=>{card().colors={...cardColors(),[key]:input.value};card().colorScheme='';updateSchemes();render();save();}); label.append(input);return label;
   }));
   updateSchemes();
@@ -103,8 +106,8 @@ function buildColors() {
 function updateSchemes(){
   let matched=false;
   const buttons=[...$('#color-schemes').children].sort((a,b)=>Number(b.dataset.scheme===cardScheme())-Number(a.dataset.scheme===cardScheme()));
-  for(const button of buttons){const palette=button.dataset.scheme==='Template'?{colors:template.colors}:schemes.find(p=>p.name===button.dataset.scheme);
-    const same=!matched&&Object.keys(template.colors).every(key=>!palette.colors[key]||cardColors()[key]?.toLowerCase()===palette.colors[key].toLowerCase());
+  for(const button of buttons){const palette=button.dataset.scheme==='Template'?{colors:cardLayout().colors}:schemes.find(p=>p.name===button.dataset.scheme);
+    const same=!matched&&Object.keys(cardLayout().colors).every(key=>!palette.colors[key]||cardColors()[key]?.toLowerCase()===palette.colors[key].toLowerCase());
     button.setAttribute('aria-pressed',String(same));if(same)matched=true;
   }
 }
@@ -129,7 +132,7 @@ function rebuildCardSelect() {
     if(dotBounds.left<rowBounds.left)dots.scrollLeft-=rowBounds.left-dotBounds.left;
     else if(dotBounds.right>rowBounds.right)dots.scrollLeft+=dotBounds.right-rowBounds.right;
   }
-  $('#card-position').textContent=`Card ${state.active+1} of ${state.cards.length}`;
+  $('#card-position').textContent=`Card ${state.active+1} of ${state.cards.length}`+(card().expansion?' · '+card().expansion:'');
 
 }
 function cardTitle(c){return c.values.common_name || Object.values(c.values).find(Boolean) || 'Untitled card';}
@@ -146,7 +149,7 @@ async function pruneAssets(clear=false){
 function stopDrawing(){clearTimeout(drawTimer);drawingPointer=null;++generation;}
 async function startOver(){
   if(!confirm(`Start over? This clears all ${state.cards.length} card${state.cards.length===1?'':'s'}, CSV imports, uploaded images, drawings, and browser recovery for this workspace. Your current SVG template stays; starting colors are restored. Save a project file first if you need a backup.`))return;
-  stopDrawing();state.cards=[blankCard()];state.active=0;state.assets={};state.imported=null;state.colors={...template.colors};state.colorScheme='Template';applyProjectScheme();
+  stopDrawing();state.cards=[blankCard()];state.active=0;state.assets={};state.imported=null;delete state.expansionPacks;state.colors={...template.colors};state.colorScheme='Template';applyProjectScheme();
   try{localStorage.removeItem(KEY);}catch{}
   save();await pruneAssets(true);buildColors();await showCard();
   $('#print-status').textContent='';$('#single-print-status').textContent='';$('#drawing-tools').open=false;$('#image-adjustments').open=false;
@@ -159,18 +162,20 @@ function rebuildAssets() {
   $('#image-adjustments').hidden=!Object.keys(state.assets).length && !card().drawingKey && !card().imageName;
 }
 function render() {
-  rendered=renderTemplate(template,card().values,cardColors(),imageData,card().crop,$('#card-preview'));
+  rendered=renderTemplate(cardLayout(),card().values,cardColors(),imageData,card().crop,$('#card-preview'));
   if (assetLoading) rendered.issues.push('Loading this card’s image…');
   if (card().drawingActive && !imageData && !assetLoading) rendered.issues.push('The saved drawing is missing. Open a project backup or draw it again.');
   if (card().imageName && !card().drawingActive && !imageData && !assetLoading) rendered.issues.push(`Choose the image file “${card().imageName}” to include it in the card.`);
   $('#fit-issues').replaceChildren(...rendered.issues.map(t=>{const li=document.createElement('li');li.textContent=t;return li;}));
   $('#download-svg').disabled=rendered.issues.length>0 || busy;
   $('#print-card').disabled=rendered.issues.length>0 || busy;
-  for(const f of template.fields){ const input=$(`#fields [data-field="${f.key}"]`); if(!input)continue; input.setAttribute('aria-invalid',String(rendered.issues.some(t=>t.startsWith(f.label+':')))); $(`[data-count="${f.key}"]`).textContent=`${[...(card().values[f.key]||'')].length} / ${f.max}`; }
+  $('#delete-card').disabled=state.cards.length<=1 || busy;
+  $('#delete-card').title=state.cards.length<=1?'Keep at least one card. Add or import another card first.':'Delete the selected card';
+  for(const f of cardLayout().fields){ const input=$(`#fields [data-field="${f.key}"]`); if(!input)continue; input.setAttribute('aria-invalid',String(rendered.issues.some(t=>t.startsWith(f.label+':')))); $(`[data-count="${f.key}"]`).textContent=`${[...(card().values[f.key]||'')].length} / ${f.max}`; }
 }
 async function showCard() {
   const seq=++generation; assetLoading=true; imageData=null;
-  buildFields(); buildColors(); rebuildCardSelect(); rebuildAssets();$('#card-copies').value=card().copies ?? 1;
+  updateTemplateSelect();buildFields(); buildColors(); rebuildCardSelect(); rebuildAssets();$('#card-copies').value=card().copies ?? 1;
   for(const key of ['x','y','zoom']) $('#crop-'+key).value=card().crop[key];
   ctx.clearRect(0,0,canvas.width,canvas.height); render();
   const current=card();
@@ -184,6 +189,7 @@ async function showCard() {
 function applyTemplate(source,id) {
   const next=readTemplate(source);
   checkProjectTemplate(next.source,id);
+  const item=catalog.find(t=>t.id===id);if(item)item.source=next.source;
   template=next;state.templateId=id;state.templateSVG=next.source;state.colors={...next.colors};state.colorScheme='Template';
   applyProjectScheme();
   updateTemplateSelect();buildColors();$('#template-title').textContent=next.title;
@@ -191,7 +197,7 @@ function applyTemplate(source,id) {
 function updateTemplateSelect() {
   $('#template-select').replaceChildren(...catalog.map(item=>new Option(item.title,item.id)));
   if(!catalog.some(c=>c.id===state.templateId)) $('#template-select').add(new Option(template.title+' (opened SVG)',state.templateId));
-  $('#template-select').value=state.templateId;$('#template-select').disabled=false;
+  if(card().layout){const match=catalog.find(t=>t.source===card().layout);if(match)$('#template-select').value=match.id;else{$('#template-select').add(new Option(readTemplate(card().layout).title+' (this card)','@card-layout'));$('#template-select').value='@card-layout';}}else $('#template-select').value=state.templateId;$('#template-select').disabled=false;
 }
 function decodeImage(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('This image could not be opened.'));img.src=src;});}
 async function normalizeImage(file) {
@@ -199,7 +205,7 @@ async function normalizeImage(file) {
   if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error('Use PNG, JPG, or WebP images. Convert HEIC photos to JPG first.');
   const src=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Could not read the image.'));r.readAsDataURL(file);});
   const img=await decodeImage(src);if(img.width*img.height>25_000_000)throw Error('Use an image smaller than 25 megapixels.');
-  const scale=Math.min(1,1600/Math.max(img.width,img.height)); const c=document.createElement('canvas');c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const scale=Math.min(1,1600/Math.max(img.width,img.height));if(scale===1)return src; const c=document.createElement('canvas');c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   return c.toDataURL(file.type==='image/jpeg'?'image/jpeg':'image/png',.92);
 }
 async function uploadImages(files) {
@@ -236,12 +242,13 @@ function cardCsv(imagePaths={}){
 async function exportProject(){
   clearTimeout(drawTimer);
   if(drawingPointer!==null)throw Error('Finish your drawing before saving.');
-  const files=new Map(localBundle?.files.map(e=>[e.path,e.file]) || []);
+  const files=new Map(localBundle?.files.map(e=>[e.path,e.file]) || []),missingArchives=[];
   let manifest={version:1,name:project?.name || 'Classroom Cards',files:[]};
   if(localBundle)manifest=JSON.parse(await files.get('manifest.json').text());
   else if(project){
     const response=await fetch(new URL('manifest.json',project.base));if(!response.ok)throw Error('Cannot save project resources.');manifest=await response.json();
-    for(const item of project.files){const r=await fetch(item.url);if(!r.ok)throw Error('Cannot save '+item.path);files.set(item.path,await r.blob());}
+    for(const item of project.files){const r=await fetch(item.url);if(!r.ok){if(r.status===404 && item.type==='download' && /\.zip$/i.test(item.path)){missingArchives.push(item.path);continue;}throw Error('Cannot save '+item.path);}files.set(item.path,await r.blob());}
+    if(missingArchives.length)manifest.files=manifest.files.filter(item=>!missingArchives.includes(item.path));
     if(project.cardBack){const r=await fetch(project.cardBack.url);if(!r.ok)throw Error('Cannot save card back.');files.set(project.cardBack.image,await r.blob());}
   }
   const templates=[];
@@ -272,9 +279,10 @@ async function exportProject(){
   }
   if(manifest.cardBack && imagePaths[normalizeProjectPath(manifest.cardBack.image)])manifest.cardBack.image=imagePaths[normalizeProjectPath(manifest.cardBack.image)];
   if(manifest.files)manifest.files=manifest.files.map(item=>({...item,path:imagePaths[normalizeProjectPath(item.path)] || item.path}));
-  const workspace={version:1,activeCardId:card().id,cards:Object.create(null),workspaceColors:Object.fromEntries(Object.keys(template.colors).map(k=>[k,state.colors[k] || template.colors[k]])),workspaceScheme:state.colorScheme || ''};
+  const workspace={version:1,expansionPacks:state.expansionPacks || {},activeCardId:card().id,cards:Object.create(null),workspaceColors:Object.fromEntries(Object.keys(template.colors).map(k=>[k,state.colors[k] || template.colors[k]])),workspaceScheme:state.colorScheme || ''};
   for(const c of state.cards){
-    const settings={crop:c.crop,drawingActive:c.drawingActive,csvImportId:c.csvImportId || null};
+    const settings={sourceProjectId:c.sourceProjectId || null,colors:c.colors || state.colors,colorScheme:c.colorScheme || '',crop:c.crop,drawingActive:c.drawingActive,csvImportId:c.csvImportId || null,expansion:c.expansion || '',attribution:c.attribution || ''};
+    if(c.layout){settings.layoutFile='templates/card-'+c.id+'.svg';files.set(settings.layoutFile,new Blob([c.layout],{type:'image/svg+xml'}));}
     if(c.drawingKey){const data=await getAsset(c.drawingKey);if(!data)throw Error('A saved drawing is missing.');settings.drawingFile='graphics/drawing-'+c.id+'.png';files.set(settings.drawingFile,await (await fetch(data)).blob());}
     workspace.cards[c.id]=settings;
   }
@@ -288,6 +296,7 @@ async function exportProject(){
   files.set('workspace.json',new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));
   files.set('manifest.json',new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}));
   download(slug(manifest.name)+'-project.zip','application/zip',await zipProject([...files].map(([path,file])=>({path,file}))));
+  $('#local-project-status').textContent=missingArchives.length?'Project saved with current cards and artwork. Unavailable resource archives omitted: '+missingArchives.join(', '):'Project ZIP saved with current cards and artwork.';
 }
 function alignSavedScientificName(value,allowed){
   if(value?.templateId!=='food-web' || typeof value.templateSVG!=='string')return;
@@ -314,17 +323,33 @@ function validateState(value,context){
   if(!value.assets||Object.values(value.assets).some(v=>typeof v!=='string')||!value.colors||Object.values(value.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('The project contains invalid image or color data.');
   if(value.imported && (!Array.isArray(value.imported.rows)||!Array.isArray(value.imported.headers)||!Array.isArray(value.imported.indices)||value.imported.indices.length!==value.imported.rows.length||value.imported.indices.some(i=>!Number.isInteger(i)||!value.cards[i])||!value.imported.mapping))throw Error('The saved CSV data is invalid.');
   if(value.imported)for(const i of value.imported.indices)value.cards[i].csvImportId ||= 'recovered-csv';
+  if(value.expansionPacks!==undefined)validateExpansionPacks(value.expansionPacks);
+  assertCards(value.cards);for(const c of value.cards)if(c.layout)c.layout=readTemplate(c.layout).source;
   return value;
 }
 async function importProject(file){try{await importLocalFiles(await unzip(file));}catch(err){$('#local-project-status').textContent='Project was not imported. '+err.message;throw err;}}
 async function run(action){if(busy)return;busy=true;$('#page-error').textContent='';document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=true);try{await action();}catch(err){error(err);}finally{busy=false;document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=false);if(template && $('#recovery-error').hidden)render();}}
-$('#template-select').onchange=()=>run(async()=>{const item=catalog.find(c=>c.id===$('#template-select').value);const r=await fetch(item.url || 'templates/'+item.svg,{cache:'no-cache'});if(!r.ok)throw Error('Cannot open that built-in template.');applyTemplate(await r.text(),item.id);await showCard();});
-$('#svg-file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)run(async()=>{if(f.size>500_000)throw Error('Choose a template SVG under 500 KB.');applyTemplate(await f.text(),'custom');await showCard();});};
+$('#template-select').onchange=()=>run(async()=>{const item=catalog.find(c=>c.id===$('#template-select').value);if(!item)return;const r=await fetch(item.url || 'templates/'+item.svg,{cache:'no-cache'});if(!r.ok)throw Error('Cannot open that built-in template.');applyTemplate(await r.text(),item.id);if(card().layout)card().layout=state.templateSVG;await showCard();});
+$('#svg-file').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)run(async()=>{if(f.size>500_000)throw Error('Choose a template SVG under 500 KB.');applyTemplate(await f.text(),'custom');if(card().layout)card().layout=state.templateSVG;await showCard();});};
 $('#card-copies').onchange=()=>{const value=Number($('#card-copies').value);if(!Number.isInteger(value)||value<1||value>600){$('#card-copies').value=card().copies ?? 1;error(Error('Choose 1–600 copies for this card.'));return;}card().copies=value;rebuildCardSelect();save();};
 $('#preview-card-select').onchange=()=>selectCard(Number($('#preview-card-select').value));
 $('#previous-card').onclick=()=>selectCard(state.active-1);
 $('#next-card').onclick=()=>selectCard(state.active+1);
-$('#new-card').onclick=()=>run(async()=>{if(state.cards.length>=500)throw Error('Save this project and start another before adding more cards.');state.cards.push(blankCard());state.active=state.cards.length-1;await showCard();});
+$('#delete-card').onclick=()=>run(async()=>{
+  if(state.cards.length<=1)return;
+  const index=state.active;
+  if(!confirm(`Delete “${cardTitle(card())}”? This removes this card from the current project.`))return;
+  stopDrawing();
+  state.cards.splice(index,1);
+  if(state.imported){
+    const retained=state.imported.indices.flatMap((old,i)=>old===index?[]:[{index:old>index?old-1:old,row:state.imported.rows[i]}]);
+    state.imported.indices=retained.map(item=>item.index);state.imported.rows=retained.map(item=>item.row);
+    if(!retained.length)state.imported=null;
+  }
+  state.active=Math.min(index,state.cards.length-1);
+  save();await showCard();
+});
+$('#new-card').onclick=()=>run(async()=>{if(state.cards.length>=500)throw Error('Save this project and start another before adding more cards.');insertCard(state.cards,blankCard());state.active=state.cards.length-1;await showCard();});
 $('#start-over').onclick=()=>run(startOver);
 for(const id of ['image-files','camera-file'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';if(files.length)run(()=>uploadImages(files));};
 $('#asset-select').onchange=()=>run(async()=>{const name=$('#asset-select').value;card().drawingActive=name==='@drawing';if(!card().drawingActive)card().imageName=name;card().crop={x:.5,y:.5,zoom:1};await showCard();});
@@ -396,6 +421,8 @@ $('#download-svg').onclick=()=>run(async()=>{
   render();if(rendered.issues.length)throw Error('Complete or shorten the marked fields before exporting.');
   const svg=rendered.root.cloneNode(true);svg.setAttribute('data-card-app','finished-card');
   const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent=await fontStyles();svg.prepend(style);
+  state.projectIdentity ||= crypto.randomUUID();save();
+  const metadata=document.createElementNS('http://www.w3.org/2000/svg','metadata');metadata.setAttribute('data-card-format',FORMAT);metadata.textContent=JSON.stringify(await serializeCard(card(),state,getAsset,activeProjectId));svg.prepend(metadata);
   download(slug(card().values.common_name||'card')+'.svg','image/svg+xml',new XMLSerializer().serializeToString(svg));
 });
 function checkProjectTemplate(source,id){
@@ -410,7 +437,7 @@ function setupProject(){
   $('#template-tools .open-project').hidden=true;
   $('.intro h1').textContent=project.name;$('.intro p').textContent=project.description || '';document.title=project.name+' · Classroom Cards';
   $('.custom-colors').hidden=false;
-  $('#project-resources').hidden=!project.files.length;$('#project-files').replaceChildren();$('#project-document').hidden=true;
+  $('#project-resources').hidden=!project.files.length && !project.expansions?.length;$('#project-files').replaceChildren();$('#project-document').hidden=true;
   for(const file of project.files){
     const link=document.createElement(file.type==='markdown'?'button':'a');link.className='button secondary';link.textContent=file.title;
     if(file.type==='markdown'){link.type='button';link.onclick=async()=>{
@@ -420,6 +447,12 @@ function setupProject(){
     };}else{link.href=file.url;link.download=file.path.split('/').pop();}
     $('#project-files').append(link);
   }
+  for(const pack of project.expansions || []){
+    const open=document.createElement('a');open.className='button secondary';open.textContent='Open '+pack.name;const target=new URL(location.href);target.search='';target.hash='';target.searchParams.set('project',pack.id);open.href=target.href;
+    const add=document.createElement('button');add.type='button';add.className='button secondary';add.textContent='Add '+pack.name;add.onclick=()=>run(()=>addHostedExpansion(pack.id));
+    $('#project-files').append(open,add);
+  }
+
 }
 function offerRecoveryReset(saved,err){
   $('#page-error').textContent='';
@@ -468,6 +501,24 @@ function csvCards(p,layout,text,assets){
   return {cards,imported:{headers,rows,mapping,indices:rows.map((_,i)=>i)}};
 }
 function loadingStatus(message){$('#loading-message').textContent=message;}
+async function restoreWorkspace(next,workspace,layout,readFile,loadImage){
+      if(workspace.expansionPacks!==undefined)next.expansionPacks=validateExpansionPacks(workspace.expansionPacks);
+      if(workspace.version!==1 || !workspace.cards || typeof workspace.cards!=='object')throw Error('Invalid workspace settings.');
+      for(const c of next.cards){
+        const settings=workspace.cards[c.id];if(!settings)continue;
+        const crop=settings.crop || {x:.5,y:.5,zoom:1};
+        if(![crop.x,crop.y,crop.zoom].every(Number.isFinite) || crop.x<0 || crop.x>1 || crop.y<0 || crop.y>1 || crop.zoom<1 || crop.zoom>4)throw Error('Invalid image crop.');
+        if(settings.colors){if(Object.values(settings.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid saved card colors.');c.colors=settings.colors;c.colorScheme=settings.colorScheme || '';}
+        c.sourceProjectId=typeof settings.sourceProjectId==='string'?settings.sourceProjectId:undefined;c.expansion=settings.expansion || '';c.attribution=settings.attribution || '';
+        if(settings.layoutFile){const file=await readFile(normalizeProjectPath(settings.layoutFile));if(!file)throw Error('Missing card layout.');c.layout=readTemplate(await file.text()).source;}
+        c.crop=crop;c.drawingActive=settings.drawingActive===true;c.csvImportId=typeof settings.csvImportId==='string'?settings.csvImportId:undefined;
+        if(settings.drawingFile){const path=normalizeProjectPath(settings.drawingFile);c.drawingKey=await loadImage(path);if(!c.drawingKey)throw Error('Missing saved drawing.');}
+        if(c.drawingActive&&!c.drawingKey)throw Error('Missing active drawing.');
+      }
+      if(next.imported){const indices=next.cards.flatMap((c,i)=>c.csvImportId?[i]:[]);next.imported={...next.imported,indices,rows:indices.map(i=>next.imported.rows[i])};if(!indices.length)next.imported=null;}
+      const active=next.cards.findIndex(c=>c.id===workspace.activeCardId);if(active>=0)next.active=active;
+      if(workspace.workspaceColors){if(Object.entries(workspace.workspaceColors).some(([k,v])=>!Object.hasOwn(layout.colors,k)||!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid workspace colors.');next.colors={...layout.colors,...workspace.workspaceColors};next.colorScheme=workspace.workspaceScheme || '';}
+}
 async function loadHostedCards(){
   loadingStatus('Loading project cards and artwork…');
   const item=catalog.find(t=>t.id===project.starter.template) || catalog[0],layout=readTemplate(item.source),scheme=schemes.find(s=>s.name===project.starter.scheme) || schemes[0];
@@ -492,17 +543,25 @@ async function loadHostedCards(){
   }
   const data=csvCards(project,layout,text,assets);
   const next={version:2,templateId:item.id,templateSVG:item.source,colors:{...layout.colors,...scheme.colors},colorScheme:scheme.name,cards:data.cards.length?data.cards:[blankCard()],active:0,assets,imported:data.cards.length?data.imported:null,projectDataInitialized:true};
+  if(project.workspace){
+    const readFile=async path=>{const response=await fetchProjectFile(new URL(normalizeProjectPath(path),project.base));if(!response.ok)throw Error('Missing project file: '+path);const blob=await response.blob();if(blob.size>2_000_000)throw Error('Oversized workspace/layout file.');return blob;};
+    const workspace=JSON.parse(await (await readFile(project.workspace)).text());
+    await restoreWorkspace(next,workspace,layout,readFile,async path=>{
+      if(next.assets[path])return next.assets[path];
+      const response=await fetchProjectFile(new URL(path,project.base));if(!response.ok)throw Error('Missing project drawing.');const blob=await response.blob(),key='drawing-'+crypto.randomUUID();images.set(key,await normalizeImage(new File([blob],path.split('/').pop(),{type:blob.type})));next.assets[path]=key;return key;
+    });
+  }
   for(const [key,image] of images)await putAsset(key,image);
+  if(project.expansion)for(const c of next.cards)c.expansion ||= project.name;
   state=next;
   $('#local-project-status').textContent=`Loaded ${data.cards.length} project cards and their artwork.`;
 }
-async function importLocalFiles(entries){
-  const status=$('#local-project-status');status.textContent='Checking project files…';
+async function prepareLocalProject(entries,asExpansion=false){
   let resolved;
   try{
     const files=projectFiles(entries),response=await fetch('templates/catalog.json');if(!response.ok)throw Error('Cannot load built-in templates.');
     resolved=await resolveLocalProject(files,await response.json());
-    const p=resolved.project;
+    const p=resolved.project;if(asExpansion && !p.expansion)throw Error('Choose an expansion project with expansion metadata in manifest.json.');
     for(const item of p.templates){const response=await fetch(item.url);if(!response.ok)throw Error('Cannot open template '+item.title);item.source=readTemplate(await response.text()).source;}
     if(p.cardBack)await loadCardBack(p.cardBack);
     const item=p.templates.find(t=>t.id===p.starter.template) || p.templates[0],layout=readTemplate(item.source),scheme=p.schemes.find(s=>s.name===p.starter.scheme) || p.schemes[0];
@@ -510,7 +569,7 @@ async function importLocalFiles(entries){
     const images={};
     // Full relative paths always work; unique basenames are convenient CSV aliases.
     const imageEntries=files.filter(e=>/\.(png|jpe?g|webp)$/i.test(e.path));
-    for(const {path,file} of imageEntries){status.textContent='Checking '+path+'…';const key='image-'+crypto.randomUUID();images[key]=await normalizeImage(file);next.assets[path]=key;}
+    for(const {path,file} of imageEntries){$('#local-project-status').textContent='Checking '+path+'…';const key='image-'+crypto.randomUUID();images[key]=await normalizeImage(file);next.assets[path]=key;}
     for(const {path} of imageEntries){const name=path.split('/').pop();if(imageEntries.filter(e=>e.path.split('/').pop()===name).length===1 && !Object.hasOwn(next.assets,name))next.assets[name]=next.assets[path];}
     const csvs=files.filter(e=>/\.csv$/i.test(e.path));
     if(p.csv!==undefined && typeof p.csv!=='string')throw Error('Manifest csv must be a relative CSV file path.');
@@ -526,24 +585,19 @@ async function importLocalFiles(entries){
     if(p.workspace){
       const path=normalizeProjectPath(p.workspace),file=resolved.files.get(path);if(!file || file.size>2_000_000)throw Error('Missing or oversized workspace settings.');
       const workspace=JSON.parse(await file.text());
-      if(workspace.version!==1 || !workspace.cards || typeof workspace.cards!=='object')throw Error('Invalid workspace settings.');
-      for(const c of next.cards){
-        const settings=workspace.cards[c.id];if(!settings)continue;
-        const crop=settings.crop || {x:.5,y:.5,zoom:1};
-        if(![crop.x,crop.y,crop.zoom].every(Number.isFinite) || crop.x<0 || crop.x>1 || crop.y<0 || crop.y>1 || crop.zoom<1 || crop.zoom>4)throw Error('Invalid image crop.');
-        c.crop=crop;c.drawingActive=settings.drawingActive===true;c.csvImportId=typeof settings.csvImportId==='string'?settings.csvImportId:undefined;
-        if(settings.drawingFile){const path=normalizeProjectPath(settings.drawingFile);if(!next.assets[path])throw Error('Missing saved drawing.');c.drawingKey=next.assets[path];}
-        if(c.drawingActive&&!c.drawingKey)throw Error('Missing active drawing.');
-      }
-      if(next.imported){const indices=next.cards.flatMap((c,i)=>c.csvImportId?[i]:[]);next.imported={...next.imported,indices,rows:indices.map(i=>next.imported.rows[i])};if(!indices.length)next.imported=null;}
-      const active=next.cards.findIndex(c=>c.id===workspace.activeCardId);if(active>=0)next.active=active;
-      if(workspace.workspaceColors){if(Object.entries(workspace.workspaceColors).some(([k,v])=>!Object.hasOwn(layout.colors,k)||!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid workspace colors.');next.colors={...layout.colors,...workspace.workspaceColors};next.colorScheme=workspace.workspaceScheme || '';}
+      await restoreWorkspace(next,workspace,layout,async path=>resolved.files.get(path),async path=>next.assets[path]);
     }
-    const id=await storeLocalProject({files,state:next,images});
-    status.textContent=`Opened ${p.name}: ${next.cards.length} cards. Files saved in this browser.`;
+    if(p.expansion)for(const c of next.cards)c.expansion ||= p.name;
+    return {files,project:p,state:next,images};
+  }finally{resolved?.dispose();}
+}
+async function importLocalFiles(entries){
+  const status=$('#local-project-status');status.textContent='Checking project files…';
+  try{
+    const bundle=await prepareLocalProject(entries),id=await storeLocalProject({files:bundle.files,state:bundle.state,images:bundle.images});
+    status.textContent=`Opened ${bundle.project.name}: ${bundle.state.cards.length} cards. Files saved in this browser.`;
     const target=new URL(location.href);target.search='';target.hash='';target.searchParams.set('local',id);location.assign(target.href);
   }catch(err){status.textContent='Project was not imported. '+err.message;if(err.code==='PROJECT_CONSTRAINT')delete err.code;throw err;}
-  finally{resolved?.dispose();}
 }
 $('#project-folder').onchange=e=>{if($('#open-project-dialog').open)$('#open-project-dialog').close();const entries=folderFiles(e.target.files);e.target.value='';if(entries.length)run(()=>importLocalFiles(entries));};
 async function start(){
@@ -585,3 +639,93 @@ async function finishStart(recovered){
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 run(async()=>{try{await start();}finally{$('#app-loading').hidden=true;$('main').setAttribute('aria-busy','false');}});
+let cardBatch=[],importUndo,invalidCardFiles=0,pendingExpansion=null;
+$('#import-cards').onclick=()=>{ $('#import-cards-title').textContent='Import cards'; $('#expansion-names').replaceChildren(...[...new Set(state.cards.map(c=>c.expansion).filter(Boolean))].map(x=>new Option(x,x)));$('#import-cards-dialog').showModal();};
+async function reviewCards(files){
+ if(files.length>40)throw Error('Choose up to 40 SVG cards at a time.');
+ if(files.reduce((n,f)=>n+f.size,0)>640_000_000)throw Error('Keep each batch under 640 MB.');
+ pendingExpansion=null;$('#card-import-notice').textContent='';$('#import-cards-title').textContent='Import cards';
+ return reviewPayloads(files.map(file=>({name:file.name,load:()=>parseCard(file)})));
+}
+async function reviewPayloads(entries){
+ cardBatch=[];invalidCardFiles=0;$('#card-import-review').replaceChildren();$('#card-import-result').textContent='';
+ const known=new Map();for(const c of state.cards){try{known.set(c.id,normalized(await serializeCard(c,state,getAsset)));}catch{known.set(c.id,null);}}
+ for(const file of entries){
+  const row=document.createElement('div');row.className='card-import-row';const label=document.createElement('p');row.append(label);$('#card-import-review').append(row);
+  try{
+   const payload=await file.load(),c=payload.card,signature=normalized(payload),prior=known.get(c.id),present=known.has(c.id),status=prior===signature?'Already present':present?'ID conflict':'New card';
+   const entry={payload,signature,choice:present?'skip':'add'};cardBatch.push(entry);
+   label.textContent=file.name+' · '+cardTitle(c)+' · '+status+(state.cards.some(x=>cardTitle(x)===cardTitle(c))?' · Matching name':'');
+   const thumb=document.createElement('div');thumb.className='import-thumbnail';row.append(thumb);const result=renderTemplate(readTemplate(c.layout),c.values,c.colors,c.drawingActive?payload.assets.drawing:payload.assets.image,c.crop,thumb);
+   if(result.issues.length)throw Error(result.issues.join(' '));
+   const select=document.createElement('select');select.setAttribute('aria-label','Import choice for '+file.name);
+   for(const [value,title] of [['skip','Skip'],['add','Add as new'],['replace','Replace existing']])select.add(new Option(title,value));
+   if(!present)select.add(new Option('Keep original ID','keep'));entry.choice=present?'skip':'keep';select.value=entry.choice;select.onchange=()=>entry.choice=select.value;row.append(select);
+   known.set(c.id,signature);
+  }catch(err){invalidCardFiles++;label.textContent=file.name+' · '+err.message;row.classList.add('invalid');const last=cardBatch.at(-1);if(last?.payload?.card && row.querySelector('.import-thumbnail'))cardBatch.pop();}
+ }
+ $('#confirm-card-import').disabled=!cardBatch.length;
+}
+for(const id of ['card-svg-files','card-svg-folder'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';run(()=>reviewCards(files));};
+const drop=$('#card-import-drop');drop.ondragover=e=>{e.preventDefault();};drop.ondrop=e=>{e.preventDefault();run(()=>reviewCards([...e.dataTransfer.files]));};
+$('#confirm-card-import').onclick=()=>run(async()=>{
+ const next=structuredClone(state),ids=new Set(next.cards.map(c=>c.id));let added=0,replaced=0,skipped=0;
+ for(const entry of cardBatch){
+  if(entry.choice==='skip'){skipped++;continue;}
+  const p=entry.payload,c=structuredClone(p.card),existing=next.cards.find(x=>x.id===c.id);
+  if(entry.choice!=='add'&&existing){let signature;try{signature=normalized(await serializeCard(existing,next,getAsset));}catch{signature=null;}if(signature===entry.signature){skipped++;continue;}if(entry.choice!=='replace')throw Error('A batch ID conflict needs Replace existing, Add as new, or Skip.');}
+  if(entry.choice==='add'){c.id=uniqueId(ids);}ids.add(c.id);
+  c.sourceProjectId=typeof p.sourceProjectId==='string'?p.sourceProjectId:undefined;delete c.values.card_id;delete c.values.image_filename;
+  c.imageName='';c.drawingKey=null;
+  if(p.assets.image){const key='image-'+crypto.randomUUID(),name='graphics/import-'+c.id+'-'+crypto.randomUUID()+'.'+(/^data:image\/jpeg/.test(p.assets.image)?'jpg':/^data:image\/webp/.test(p.assets.image)?'webp':'png');await putAsset(key,p.assets.image);next.assets[name]=key;c.imageName=name;}
+  if(p.assets.drawing){c.drawingKey='drawing-'+crypto.randomUUID();await putAsset(c.drawingKey,p.assets.drawing);}
+  const expansion=$('#card-import-expansion').value.trim();c.expansion=expansion;
+  insertCard(next.cards,c,entry.choice==='replace');if(existing&&entry.choice==='replace')replaced++;else added++;
+ }
+ if(pendingExpansion && (added || replaced)){next.expansionPacks={...next.expansionPacks,[pendingExpansion.id]:pendingExpansion};}
+ assertCards(next.cards);importUndo=structuredClone(state);state=next;save();await showCard();
+ $('#card-import-result').textContent=`${added} added, ${replaced} replaced, ${skipped} skipped, ${invalidCardFiles} invalid files excluded.`;
+ cardBatch=[];pendingExpansion=null;$('#card-import-review').querySelectorAll('select').forEach(el=>el.remove());$('#undo-card-import').hidden=false;
+});
+$('#undo-card-import').onclick=()=>run(async()=>{if(!importUndo)return;state=importUndo;importUndo=null;save();await showCard();$('#undo-card-import').hidden=true;$('#card-import-result').textContent='Last import undone.';});
+$('#duplicate-card').onclick=()=>run(async()=>{const copy=structuredClone(card());copy.id=uniqueId(new Set(state.cards.map(c=>c.id)));delete copy.values.card_id;if(copy.drawingKey){const drawing=await getAsset(copy.drawingKey);copy.drawingKey='drawing-'+crypto.randomUUID();await putAsset(copy.drawingKey,drawing);}insertCard(state.cards,copy);state.active=state.cards.length-1;await showCard();});
+$('#add-expansion').onclick=()=>$('#add-expansion-dialog').showModal();
+async function addExpansionFiles(entries){
+  const bundle=await prepareLocalProject(entries,true),p=bundle.project;
+  $('#add-expansion-dialog').close();$('#import-cards-dialog').showModal();
+  $('#import-cards-title').textContent='Add expansion: '+p.name;
+  $('#card-import-expansion').value=p.name;
+  const baseId=project?.id || (activeProjectId?.startsWith('local-')?null:activeProjectId);
+  const differentBase=baseId!==p.expansion.baseProjectId;
+  const differentVersion=project?.packageVersion!==p.expansion.basePackageVersion;
+  $('#card-import-notice').textContent=`Designed for ${p.expansion.baseProjectId} ${p.expansion.basePackageVersion}.`+(differentBase || differentVersion?' This differs from the current project or its version; check compatibility before importing.':'');
+  pendingExpansion={id:p.id,name:p.name,packageVersion:p.packageVersion,baseProjectId:p.expansion.baseProjectId,basePackageVersion:p.expansion.basePackageVersion};
+  await reviewPayloads(bundle.state.cards.map(c=>({name:cardTitle(c),load:async()=>validateCard(await serializeCard(c,bundle.state,async key=>bundle.images[key] || null,p.id))})));
+}
+for(const id of ['expansion-folder','expansion-zip'])$('#'+id).onchange=e=>{
+  const files=[...e.target.files];e.target.value='';if(!files.length)return;
+  run(async()=>{cardBatch=[];pendingExpansion=null;await addExpansionFiles(id==='expansion-zip'?await unzip(files[0]):folderFiles(files));});
+};
+async function addHostedExpansion(id){
+  const response=await fetch('templates/catalog.json');if(!response.ok)throw Error('Cannot load built-in templates.');
+  const p=await loadProject(id,await response.json());if(!p.expansion)throw Error('This project is not an expansion pack.');
+  const entries=new Map();let total=0;
+  async function collect(path){
+    path=normalizeProjectPath(path);if(entries.has(path))return entries.get(path);
+    const response=await fetchProjectFile(new URL(path,p.base));if(!response.ok)throw Error('Missing expansion file: '+path);
+    const file=await response.blob();total+=file.size;if(total>250_000_000 || entries.size>=2000)throw Error('Expansion exceeds project file limits.');entries.set(path,file);return file;
+  }
+  await collect('manifest.json');
+  if(!p.csv)throw Error('Expansion must specify its canonical CSV.');
+  const csv=await collect(p.csv);if(csv.size>2_000_000)throw Error('Expansion CSV must be under 2 MB.');
+  for(const t of p.templates)if(t.svg && t.url.startsWith(p.base.href))await collect(t.svg);
+  for(const f of p.files)await collect(f.path);
+  if(p.cardBack)await collect(p.cardBack.image);
+  const parsed=parseCsv(await csv.text()),imageColumn=localMapping(parsed.headers,readTemplate(await (await fetch(p.templates[0].url)).text())).image_filename;
+  for(const name of new Set(parsed.rows.map(row=>(row[imageColumn] || '').trim()).filter(Boolean)))await collect(name.includes('/')?name:(p.imageDirectory || 'graphics')+'/'+name);
+  if(p.workspace){
+    const file=await collect(p.workspace);if(file.size>2_000_000)throw Error('Oversized expansion settings.');const workspace=JSON.parse(await file.text());
+    for(const settings of Object.values(workspace.cards || {}))for(const key of ['layoutFile','drawingFile'])if(settings[key])await collect(settings[key]);
+  }
+  await addExpansionFiles([...entries].map(([path,file])=>({path,file})));
+}

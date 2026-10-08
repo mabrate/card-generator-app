@@ -46,7 +46,7 @@ Classroom Cards is browser-only. Share downloaded project ZIPs with your teacher
 
 ## Project URLs
 
-Open `?project=houston-food-web` for **Houston Food Web Game**. On first opening it automatically loads the base deck’s 22 card types, 48 copies, and artwork, alongside rules and the game back. Previously edited workspaces are recovered instead; untouched blank checkpoints from the earlier editor load the deck once. Expansion cards remain optional resources. Publish more project folders using [PROJECTS.md](PROJECTS.md). Without a project parameter, the normal editor and its existing browser recovery behave as before.
+Open `?project=houston-food-web` for **Houston Food Web Game**. On first opening it automatically loads the base deck’s 22 card types, 48 copies, and artwork, alongside rules and the game back. Previously edited workspaces are recovered instead; untouched blank checkpoints from the earlier editor load the deck once. The expansion is a separate project; use its linked Open or Add action, or choose **Add expansion** with its folder/ZIP. Publish more project folders using [PROJECTS.md](PROJECTS.md). Without a project parameter, the normal editor and its existing browser recovery behave as before.
 
 Project CSVs match `copies` (also `card_count`, `count`, or `quantity`) and `theme` (also `color_theme` or `color_scheme`). Blank counts default to 1, and counts must be whole numbers from 1 to 600. Invalid quantities or themes stop project import before changing the workspace. Save project preserves current quantities and colors in the CSV.
 
@@ -59,7 +59,7 @@ Project CSVs match `copies` (also `card_count`, `count`, or `quantity`) and `the
 | Project CSV | Current card text, IDs, artwork references, quantities, themes, and extra columns. |
 | `workspace.json` | Active card, image crops, drawing references/selection, and defaults for new cards. No embedded SVG XML or images. |
 | Template SVG | Reusable tagged layout; edit in Inkscape and open through Template layout. |
-| Finished card SVG | Current card's rendered appearance, including embedded artwork and fonts; cannot be reopened as a project or template. |
+| Finished card SVG | Editable card metadata, rendered appearance, embedded artwork and fonts; reopen with Import cards. |
 | PDF | Print-ready output saved from the browser's print dialog. |
 
 Old JSON workspace backups are no longer accepted by the project opener. Empty **Project documents and files** sections are hidden.
@@ -77,3 +77,17 @@ Use **Define card back** beside the print controls to choose and preview a PNG, 
 ## Footer references
 
 Small links at the bottom of the editor open readable reference pages in new tabs: this app guide, project format, SVG templates, Houston project instructions, game rules, expansion guide, and card-back notes. Each page also offers Download Markdown. References are included in the offline cache; they are separate from project resources, whose section remains hidden when empty.
+
+## Individual card submissions
+
+**Download card** embeds version 1 `classroom-cards.card` JSON in SVG metadata, including stable ID, every text column, copies, colors, crop, drawing and artwork, and a sanitized editable layout. The source project ID records provenance; imports do not need that project. Shared base IDs stay unchanged. **Duplicate card** assigns a new UUID.
+
+**Import cards** accepts up to 40 SVGs (640 MB per batch, 40 MB per file), using files, a folder where supported, or drag-and-drop. Review thumbnails, file errors, matching names, and ID conflicts before importing. Skip is the default for existing IDs. Replace existing is explicit; Add as new assigns an unused UUID. Identical IDs/content are skipped, including repeats within a batch. Destination expansion is a persistent label in workspace settings; leave it blank for the main game. Expansion labels do not make otherwise identical cards different. Imported cards participate in normal editing, print sheets and Save project. Undo last import restores the workspace before that import; it also removes edits made since the import.
+
+Older finished SVGs without this metadata must be re-exported from the updated app. Visible SVG text is never used to recover editable data. Uploaded SVG markup is never inserted into the page; layouts pass the existing template sanitizer and artwork accepts only embedded PNG/JPEG/WebP images. Unsupported versions and invalid files are reported individually. The current model has no card-ID relationships: food-web links are text fields, preserved verbatim. Expansion labels group cards without creating a separate deck or changing print selection.
+
+Save project reports and omits archive links whose files return 404; other resource failures still stop export. This handles the Houston manifest's unavailable optional artwork archives without dropping the current deck or its embedded artwork. Images already within the 1600-pixel limit retain their original bytes when reopened, avoiding repeated JPEG recompression.
+
+Select a card in the preview and choose **Delete this card** to remove it after confirmation. You can delete the untitled starter after importing another card. The editor keeps at least one card, so deletion is disabled for the final card.
+
+**Add expansion** reads a complete project pack and opens card review without switching workspaces. The pack name fills the expansion group; duplicates default to Skip. **Open project folder** instead opens the pack for editing. See [Expansion projects](PROJECTS.md) for pack identity, versioning, and compatibility metadata.

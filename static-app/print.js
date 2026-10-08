@@ -1,4 +1,4 @@
-import {renderTemplate} from './template.js';
+import {renderTemplate, readTemplate} from './template.js';
 let fontPromise;
 export function fontStyles() {
   return fontPromise ??= Promise.all([['Regular','normal','normal'],['Bold','bold','normal'],['Italic','normal','italic']].map(async([file,weight,style])=>{
@@ -62,7 +62,7 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
       const image=await getAsset(key);
       const name=card.values.common_name||'Untitled card';
       const missing=(card.drawingActive||card.imageName)&&!image;
-      const result=renderTemplate(template,card.values,card.colors || snapshot.colors,image,card.crop,host);
+      const result=renderTemplate(card.layout?readTemplate(card.layout):template,card.values,card.colors || snapshot.colors,image,card.crop,host);
       if(missing)result.issues.push(card.drawingActive?'The drawing is missing.':`Choose the image file “${card.imageName}”.`);
       if(result.issues.length)throw Error(`Card ${index+1} (“${name}”): ${result.issues.join(' ')}`);
       for(let n=0;n<(card.copies ?? 1)*copies;n++)svgs.push(result.root.cloneNode(true));

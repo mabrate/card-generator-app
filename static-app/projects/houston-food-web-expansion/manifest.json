@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "id": "houston-food-web-expansion",
+  "packageVersion": "1.0.0",
+  "name": "Houston Food Web Expansion",
+  "description": "Eight additional organism cards (16 copies). Open to edit or add to the Houston Food Web base game.",
+  "expansion": {
+    "baseProjectId": "houston-food-web",
+    "basePackageVersion": "1.0.0"
+  },
+  "csv": "campus-food-web-expansion.csv",
+  "imageDirectory": "graphics",
+  "templates": [
+    {
+      "id": "food-web",
+      "title": "Food web game",
+      "svg": "templates/food-web.svg"
+    }
+  ],
+  "colorSchemes": [
+    "Template",
+    "Sage",
+    "Sky",
+    "Sand",
+    "Rose",
+    "Lavender",
+    "Ink"
+  ],
+  "starter": {
+    "template": "food-web",
+    "scheme": "Sage",
+    "values": {}
+  },
+  "placeholders": {
+    "common_name": "Name your organism",
+    "mechanic_1": "Describe its ecosystem action",
+    "mechanic_2": "Describe a special ability",
+    "extra_info": "Which organisms does it interact with?",
+    "scientific_name": "Scientific name",
+    "category": "Plant, pollinator, predator\u2026"
+  },
+  "cardBack": {
+    "image": "card-back.png",
+    "description": "Houston Food Web Game botanical card back"
+  },
+  "files": [
+    {
+      "type": "markdown",
+      "title": "Expansion guide",
+      "path": "README.md"
+    },
+    {
+      "type": "markdown",
+      "title": "Base game rules (1.0.0)",
+      "path": "game-rules.md"
+    },
+    {
+      "type": "download",
+      "title": "Expansion card data CSV",
+      "path": "campus-food-web-expansion.csv"
+    },
+    {
+      "type": "download",
+      "title": "Artwork provenance",
+      "path": "graphics/prompts.json"
+    }
+  ]
+}

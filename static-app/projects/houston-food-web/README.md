@@ -1,6 +1,8 @@
 # Campus Food Web demo
 
-An optional [eight-card food-web expansion](expansion-pack/README.md) adds native ants, consumers of decomposers, ground predators, and a predator above the Carolina Wren.
+An optional [eight-card food-web expansion](../houston-food-web-expansion/README.md) adds native ants, consumers of decomposers, ground predators, and a predator above the Carolina Wren.
+
+The [Houston Foundation Garden](../houston-foundation-garden/README.md) is a separate 15-organism expansion with 38 printable cards, action-focused botanical watercolor artwork, and abilities for shelter, underground spreading, pollinator invitation, escape, and territorial competition. Open `?project=houston-foundation-garden` to edit or play it alone, or choose **Add Houston Foundation Garden** in this project to review and append it. Its garden variants have their own stable IDs and preserve the original base cards.
 
 ## Open it in the static app
 
@@ -8,11 +10,11 @@ Open `?project=houston-food-web` to load the base deck automatically: 22 card ty
 
 1. Use **Your cards** to select a card and edit text, quantities, artwork, or colors.
 2. **Save project** downloads a complete editable ZIP with the current `cards.csv`, graphics, template, documents, and workspace settings. It does not change the hosted source files.
-3. **Open project folder** beside the preview reopens the saved ZIP or an unpacked working folder. The manifest’s `csv` setting selects `cards.csv` rather than the separate expansion CSV.
+3. **Open project folder** beside the preview reopens the saved ZIP or an unpacked working folder. The manifest’s `csv` setting selects `cards.csv` rather than other resource CSVs.
 4. **Print all cards** prints each card's saved quantity. The project supplies the game back; **Define card back** beside printing can replace it, and **Remove card back** switches to front-only printing. Print double-sided, landscape, flip on the short edge.
 5. **Start fresh** clears this browser workspace to a blank card and stays blank on reload. To start a new copy of the original deck after a reset, open the published project folder/ZIP in a separate local workspace or use a fresh browser profile.
 
-Each import opens a separate browser workspace. Reopening edited CSV data supplies the card values; saved settings retain image crops and drawings by stable card ID. To add the expansion, follow its [folder-based instructions](expansion-pack/README.md).
+Each import opens a separate browser workspace. Reopening edited CSV data supplies the card values; saved settings retain image crops and drawings by stable card ID. To add the expansion, choose **Add expansion** and review the pack using its [instructions](../houston-food-web-expansion/README.md).
 
 ## Files and content
 

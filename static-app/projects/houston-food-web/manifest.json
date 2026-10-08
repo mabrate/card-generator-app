@@ -25,38 +25,13 @@
     "mechanic_2": "Describe a special ability",
     "extra_info": "Which organisms does it interact with?",
     "scientific_name": "Scientific name",
-    "category": "Plant, pollinator, predator\u2026"
+    "category": "Plant, pollinator, predator…"
   },
   "files": [
     {
       "type": "markdown",
       "title": "Game rules",
       "path": "campus-food-web-turn-guide.md"
-    },
-    {
-      "type": "download",
-      "title": "Original card data CSV",
-      "path": "cards.csv"
-    },
-    {
-      "type": "markdown",
-      "title": "Expansion pack guide",
-      "path": "expansion-pack/README.md"
-    },
-    {
-      "type": "download",
-      "title": "Expansion card data CSV",
-      "path": "expansion-pack/campus-food-web-expansion.csv"
-    },
-    {
-      "type": "download",
-      "title": "Original artwork ZIP",
-      "path": "graphics.zip"
-    },
-    {
-      "type": "download",
-      "title": "Expansion pack with artwork ZIP",
-      "path": "expansion-pack.zip"
     }
   ],
   "cardBack": {
@@ -64,5 +39,17 @@
     "description": "Houston Food Web Game botanical card back"
   },
   "csv": "cards.csv",
-  "imageDirectory": "graphics"
+  "imageDirectory": "graphics",
+  "id": "houston-food-web",
+  "packageVersion": "1.0.0",
+  "expansions": [
+    {
+      "id": "houston-food-web-expansion",
+      "name": "Houston Food Web Expansion"
+    },
+    {
+      "id": "houston-foundation-garden",
+      "name": "Houston Foundation Garden"
+    }
+  ]
 }

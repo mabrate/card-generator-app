@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "id": "houston-foundation-garden",
+  "packageVersion": "1.0.0",
+  "name": "Houston Foundation Garden",
+  "description": "15 garden organisms, 38 printable cards, and ecological abilities. Play alone or add to Houston Food Web.",
+  "expansion": {
+    "baseProjectId": "houston-food-web",
+    "basePackageVersion": "1.0.0"
+  },
+  "csv": "cards.csv",
+  "imageDirectory": "graphics",
+  "templates": [
+    {
+      "id": "foundation-garden",
+      "title": "Foundation Garden (54 × 34 mm artwork)",
+      "svg": "templates/foundation-garden.svg"
+    }
+  ],
+  "colorSchemes": [
+    "Template",
+    "Sage",
+    "Sky",
+    "Sand",
+    "Rose",
+    "Lavender",
+    "Ink"
+  ],
+  "starter": {
+    "template": "foundation-garden",
+    "scheme": "Sage",
+    "values": {}
+  },
+  "placeholders": {
+    "common_name": "Name your organism",
+    "mechanic_1": "Describe its ecosystem action",
+    "mechanic_2": "Describe a special ability",
+    "extra_info": "Which organisms does it interact with?",
+    "scientific_name": "Scientific name",
+    "category": "Plant, pollinator, predator…"
+  },
+  "cardBack": {
+    "image": "card-back.png",
+    "description": "Houston Food Web Game botanical card back"
+  },
+  "files": [
+    {
+      "type": "markdown",
+      "title": "Garden expansion guide",
+      "path": "README.md"
+    },
+    {
+      "type": "markdown",
+      "title": "Garden rules and special moves",
+      "path": "garden-rules.md"
+    },
+    {
+      "type": "markdown",
+      "title": "Base game rules (1.0.0)",
+      "path": "game-rules.md"
+    },
+    {
+      "type": "download",
+      "title": "Garden card data CSV",
+      "path": "cards.csv"
+    },
+    {
+      "type": "download",
+      "title": "Artwork prompts and provenance",
+      "path": "graphics/prompts.json"
+    }
+  ],
+  "workspace": "workspace.json"
+}

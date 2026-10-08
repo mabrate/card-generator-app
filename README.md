@@ -41,7 +41,7 @@ The app footer opens readable Markdown references in new tabs:
 - [SVG templates and Inkscape](static-app/TEMPLATES.md)
 - [Houston Food Web project](static-app/projects/houston-food-web/README.md)
 - [Game rules](static-app/projects/houston-food-web/campus-food-web-turn-guide.md)
-- [Expansion guide](static-app/projects/houston-food-web/expansion-pack/README.md)
+- [Expansion guide](static-app/projects/houston-food-web-expansion/README.md)
 - [Card-back artwork](static-app/projects/houston-food-web/card-back-artwork.md)
 
 ## Static hosting

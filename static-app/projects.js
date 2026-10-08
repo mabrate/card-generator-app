@@ -14,9 +14,19 @@ export function normalizeProjectPath(path) {
 export function localFile(path, base) {
   return new URL(normalizeProjectPath(path), base).href;
 }
+const validId=id=>typeof id==='string' && /^[a-z0-9][a-z0-9_-]{0,79}$/.test(id);
+const validVersion=v=>typeof v==='string' && /^\d+\.\d+\.\d+$/.test(v);
+export function validateExpansionPacks(value){
+  if(!value || typeof value!=='object' || Array.isArray(value) || Object.entries(value).some(([id,p])=>!p || id!==p.id || !validId(id) || typeof p.name!=='string' || !p.name.trim() || !validVersion(p.packageVersion) || !validId(p.baseProjectId) || !validVersion(p.basePackageVersion)))throw Error('Invalid imported expansion records.');
+  return value;
+}
 export function readManifest(value, base, catalog) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim()) throw Error('Unsupported project manifest. Use version 1 and a project name.');
   if ((value.templates !== undefined && !Array.isArray(value.templates)) || (value.colorSchemes !== undefined && !Array.isArray(value.colorSchemes)) || (value.files !== undefined && !Array.isArray(value.files)) || (value.description !== undefined && typeof value.description !== 'string')) throw Error('Invalid project manifest lists or description.');
+  if(value.id!==undefined && !validId(value.id))throw Error('Invalid project ID.');
+  if(value.packageVersion!==undefined && !validVersion(value.packageVersion))throw Error('Package version must use major.minor.patch.');
+  if(value.expansion!==undefined && (!value.expansion || typeof value.expansion!=='object' || Array.isArray(value.expansion) || !validId(value.expansion.baseProjectId) || !validVersion(value.expansion.basePackageVersion) || !value.id || !value.packageVersion))throw Error('Expansion needs a stable project ID, package version, and base-game ID/version.');
+  if(value.expansions!==undefined && (!Array.isArray(value.expansions) || value.expansions.length>40 || value.expansions.some(p=>!p || !validId(p.id) || typeof p.name!=='string' || !p.name.trim()) || new Set(value.expansions.map(p=>p.id)).size!==value.expansions.length))throw Error('Invalid linked expansions.');
   const templates = value.templates === undefined ? catalog.map(t => ({...t, url:new URL('templates/'+t.svg, new URL('../../',base)).href})) : value.templates.map(t => {
     if (typeof t === 'string') { const item = catalog.find(c => c.id === t); if (!item) throw Error('Unknown project template: '+t); return {...item, url:new URL('templates/'+item.svg,new URL('../../',base)).href}; }
     if (!t || !/^[a-z0-9_-]+$/.test(t.id) || typeof t.title !== 'string') throw Error('Invalid project template.');

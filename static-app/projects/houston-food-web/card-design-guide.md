@@ -220,4 +220,4 @@ It adds a real food-web connection with the usual Hunt exchange. It does not nee
 
 Use the [Game rules](campus-food-web-turn-guide.md) and printed cards with your teacher. The prototype has a few unresolved differences: the turn guide describes Soil Bacterium's Rapid Recycling while its current card prints Multiply; Mulch mentions hot-day evaporation that the weather table does not specify; and the wasp has a special card-conversion action. This guide does not settle those differences or use them as default new-card patterns. Your teacher should choose the ruling before play.
 
-See the [Expansion guide](expansion-pack/README.md) for more existing examples and ecology sources, and [SVG templates](../../TEMPLATES.md) for layout editing.
+See the [Expansion guide](../houston-food-web-expansion/README.md) for more existing examples and ecology sources, and [SVG templates](../../TEMPLATES.md) for layout editing.
