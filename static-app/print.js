@@ -60,7 +60,7 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
     for(const [index,card] of selected){
       const key=card.drawingActive?card.drawingKey:snapshot.assets[card.imageName];
       const image=await getAsset(key);
-      const name=card.values.common_name||'Untitled card';
+      const name=card.values.common_name||card.values.element_name||'Untitled card';
       const missing=(card.drawingActive||card.imageName)&&!image;
       const result=renderTemplate(card.layout?readTemplate(card.layout):template,card.values,card.colors || snapshot.colors,image,card.crop,host);
       if(missing)result.issues.push(card.drawingActive?'The drawing is missing.':`Choose the image file “${card.imageName}”.`);

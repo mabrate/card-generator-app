@@ -15,16 +15,16 @@ Read [Garden rules and special moves](garden-rules.md) before playing. The packa
 
 | Plant (3 copies each) | Animal (2 copies each) |
 | --- | --- |
-| Inland sea oats | Phaon crescent |
-| Pink evening primrose | Northern cardinal |
+| Inland Sea Oats | Phaon Crescent |
+| Pink Evening Primrose | Northern Cardinal |
 | Firewheel | Hoverfly |
 | Sunflower | Pillbug |
-| Crape myrtle | Grasshopper |
-| Frogfruit | Green anole |
-| Sideoats grama | Crape myrtle aphid |
-| Mealy blue sage | |
+| Crape Myrtle | Grasshopper |
+| Frogfruit | Green Anole |
+| Sideoats Grama | Crape Myrtle Aphid |
+| Mealy Blue Sage | |
 
-Selected abilities include underground spreading, tree shelter, pollinator invitation, contrasting insect life stages, omnivory, litter recycling, predator escape, and territorial competition. The other plants use the familiar Grow action. Crape myrtle aphid supplies a food target for Hoverfly larvae.
+Selected abilities include underground spreading, tree shelter, pollinator invitation, contrasting insect life stages, omnivory, litter recycling, predator escape, and territorial competition. The other plants use the familiar Grow action. Crape Myrtle Aphid supplies a food target for Hoverfly larvae.
 
 ## Artwork
 
@@ -46,13 +46,13 @@ The local template's picture area is exactly **54 × 34 mm** within a **63.5 × 
 
 The numeric costs and bonuses are classroom game abstractions. For example, Spread Underground trades water for growth; it does not claim that primroses grow without sunlight. Shelter limits a single population loss rather than making an animal invulnerable. Flower visits represent pollination at a broad classroom level, not a measured species-specific pollination rate.
 
-- [Phaon crescent host plants and adult feeding](https://www.butterfliesandmoths.org/species/Phyciodes-phaon)
+- [Phaon Crescent host plants and adult feeding](https://www.butterfliesandmoths.org/species/Phyciodes-phaon)
 - [Houston–Galveston hoverflies and aphid-eating larvae](https://txmg.org/galveston/beneficials-in-the-garden-and-landscape/hover-syrphid-flower-flies/)
-- [Northern cardinal seeds and insect prey](https://www.audubon.org/field-guide/bird/northern-cardinal)
+- [Northern Cardinal seeds and insect prey](https://www.audubon.org/field-guide/bird/northern-cardinal)
 - [Local green anole natural history](https://txmg.org/galveston/beneficials-in-the-garden-and-landscape/green-anole/)
 - [Texas pillbugs and decaying plant material](https://citybugs.tamu.edu/factsheets/landscape/veggie/ent-1006/)
 - [Differential grasshopper](https://texasinsects.tamu.edu/differential-grasshopper/)
-- [Crape myrtle aphid and sap feeding](https://ask.ifas.ufl.edu/publication/IN663)
-- [Pink evening primrose](https://plants.ces.ncsu.edu/plants/oenothera-speciosa/)
+- [Crape Myrtle Aphid and sap feeding](https://ask.ifas.ufl.edu/publication/IN663)
+- [Pink Evening Primrose](https://plants.ces.ncsu.edu/plants/oenothera-speciosa/)
 
 The sources require internet. The complete project and its artwork work offline after loading or folder/ZIP import.

@@ -1,3 +1,4 @@
+import {readColorRules} from './color-rules.js';
 import {PALETTES} from './palettes.js';
 export function projectId(search) {
   const params = new URLSearchParams(search);
@@ -39,6 +40,7 @@ export function readManifest(value, base, catalog) {
     return s;
   });
   if (!schemes.length || new Set(schemes.map(s=>s.name)).size !== schemes.length) throw Error('Choose color schemes with unique names.');
+  const colorRules = readColorRules(value.colorRules, schemes);
   const starter = value.starter || {};
   if (typeof starter !== 'object' || Array.isArray(starter)) throw Error('Invalid project starter.');
   if ((starter.template && !templates.some(t=>t.id===starter.template)) || (starter.scheme && !schemes.some(s=>s.name===starter.scheme))) throw Error('Starter template or scheme is not allowed.');
@@ -49,7 +51,7 @@ export function readManifest(value, base, catalog) {
     if(!value.cardBack || typeof value.cardBack !== 'object' || !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image || '') || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string'))throw Error('Card back needs a PNG, JPG, or WebP image path.');
     cardBack={...value.cardBack,image:normalizeProjectPath(value.cardBack.image),url:localFile(value.cardBack.image,base)};
   }
-  return {...value,...(value.csv!==undefined?{csv:normalizeProjectPath(value.csv)}:{}),...(value.imageDirectory!==undefined?{imageDirectory:normalizeProjectPath(value.imageDirectory)}:{}),templates,schemes,starter,files,base,cardBack};
+  return {...value,...(value.csv!==undefined?{csv:normalizeProjectPath(value.csv)}:{}),...(value.imageDirectory!==undefined?{imageDirectory:normalizeProjectPath(value.imageDirectory)}:{}),templates,schemes,colorRules,starter,files,base,cardBack};
 }
 // Public starter files are cached even on a first visit before the worker controls the page.
 export async function fetchProjectFile(url){

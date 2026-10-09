@@ -93,6 +93,7 @@ try:
         assert 'garden-rules.md' in z.namelist() and 'graphics/prompts.json' in z.namelist()
         assert len([f for f in z.namelist() if f.startswith('graphics/') and f.endswith('.png')])>=15
     page.goto(origin)
+    page.wait_for_function("document.querySelector('main').getAttribute('aria-busy')==='false'")
     page.locator('#open-project').click()
     page.locator('#open-json').set_input_files(saved)
     expect(page.locator('#preview-card-select option')).to_have_count(15,timeout=120000)
@@ -106,6 +107,7 @@ try:
         assert after['copies']==before['copies']
     assert all(c['attribution'] and c['imageName'] for c in reopened['cards'])
     page.goto(origin)
+    page.wait_for_function("document.querySelector('main').getAttribute('aria-busy')==='false'")
     page.locator('#project-folder').set_input_files(PACK)
     expect(page.locator('#preview-card-select option')).to_have_count(15,timeout=120000)
     assert [c['id'] for c in state()['cards']]==[r['card_id'] for r in rows]
@@ -135,6 +137,7 @@ try:
     with page.expect_download() as d:page.locator('#save-project').click()
     combined_zip=Path(directory)/'combined.zip';d.value.save_as(combined_zip)
     page.goto(origin)
+    page.wait_for_function("document.querySelector('main').getAttribute('aria-busy')==='false'")
     page.locator('#open-project').click();page.locator('#open-json').set_input_files(combined_zip)
     expect(page.locator('#preview-card-select option')).to_have_count(37,timeout=120000)
     assert sum(c['copies'] for c in state()['cards'])==86

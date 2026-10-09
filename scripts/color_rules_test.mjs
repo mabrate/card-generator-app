@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readColorRules, validateRuleTemplates, resolveCardColors} from '../static-app/color-rules.js';
+const layout={fields:[{key:'family'},{key:'category'}],colors:{background:'#ffffff',accent:'#555555',family_strip:'#555555'}};
+const schemes=[{name:'Ink',colors:layout.colors},{name:'Sage',colors:{background:'#eef3e8',accent:'#668256'}}];
+const rules=readColorRules([{field:'family',equals:'Noble gas',colors:{family_strip:'#70448c'}},{field:'category',equals:'Plant',theme:'Sage'}],schemes);
+validateRuleTemplates(rules,[layout]);
+let card={values:{family:'  NOBLE GAS  ',category:'Plant'}};
+assert.deepEqual(resolveCardColors(layout,card,layout.colors,rules,schemes),{...layout.colors,family_strip:'#70448c'});
+assert.equal(resolveCardColors(layout,{values:{category:'plant'}},layout.colors,rules,schemes).background,'#eef3e8');
+assert.deepEqual(resolveCardColors(layout,{values:{family:'unknown'}},layout.colors,rules,schemes),layout.colors);
+assert.deepEqual(resolveCardColors(layout,{...card,colors:{family_strip:'#123456'}},layout.colors,rules,schemes),{...layout.colors,family_strip:'#123456'});
+assert.deepEqual(resolveCardColors(layout,card,layout.colors,[],schemes),layout.colors);
+for(const rule of [{field:'family',equals:'',colors:{accent:'#123456'}},{field:'family',equals:'x',theme:'Missing'},{field:'family',equals:'x',colors:{accent:'red'}},{field:'family',equals:'x',theme:'Ink',colors:{accent:'#123456'}}])assert.throws(()=>readColorRules([rule],schemes));
+assert.throws(()=>validateRuleTemplates(readColorRules([{field:'unknown',equals:'x',theme:'Ink'}],schemes),[layout]));
+assert.throws(()=>validateRuleTemplates(readColorRules([{field:'family',equals:'x',colors:{unknown:'#123456'}}],schemes),[layout]));
+console.log('PASS: rule validation, normalized matching, first-match priority, theme/role rules, fallback, manual overrides, no-rule compatibility.');

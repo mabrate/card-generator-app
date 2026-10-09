@@ -13,7 +13,7 @@ Organisms enter with 1 Population and have a maximum of 3. Water is stored benea
 ## Each round
 
 1. **Weather:** Toss two marked coins or weather peas once for everyone. Both marked sides up: each plant gains 2 Light, no Water. Both unmarked: each plant gains 1 Light and each player gains 3 Water. One of each: no Light, each player gains 3 Water. Allocate your Water among your own plants, respecting capacity; return anything you cannot store.
-2. **Plant Growth:** Each plant may repeatedly spend 1 of its Light and 1 of its Water to gain 1 Population, up to 3. Pink evening primrose can also use Spread Underground once in this phase.
+2. **Plant Growth:** Each plant may repeatedly spend 1 of its Light and 1 of its Water to gain 1 Population, up to 3. Pink Evening Primrose can also use Spread Underground once in this phase.
 3. **Player turns:** At the start of your turn, remove Shelter, Bloom, and Territory markers created by your cards on your previous turn. Draw one card; play up to one card; activate one organism you control, choosing one of its printed actions. Newly played cards may activate immediately. You may skip play or activation.
 4. **Cleanup:** Return all unused Light to the supply. Water stays. Remove all Jump used markers. Check scores: total Population plus one point for each distinct organism type you control. At 20 or more, highest score wins; tied players share the win.
 
@@ -38,29 +38,29 @@ Population losses occur even if the feeder or hunter is already at its maximum. 
 
 ## Special moves
 
-### Pink evening primrose: Spread Underground
+### Pink Evening Primrose: Spread Underground
 
 Once per Plant Growth phase, spend 2 Water stored beneath this plant to gain 1 Population without spending Light. It may also use ordinary Grow if it has the resources. Both methods obey maximum 3. This is a growth option, not a turn activation.
 
-### Crape myrtle: Shelter
+### Crape Myrtle: Shelter
 
-Activate the tree to put a Shelter marker on one Green anole or Northern cardinal in your plot. It prevents the next loss of 1 Population before your next turn. Remove the marker when used or when it expires. Only one Shelter marker per animal; refreshing it does not stack protection. Shelter cannot prevent a voluntarily paid cost.
+Activate the tree to put a Shelter marker on one Green Anole or Northern Cardinal in your plot. It prevents the next loss of 1 Population before your next turn. Remove the marker when used or when it expires. Only one Shelter marker per animal; refreshing it does not stack protection. Shelter cannot prevent a voluntarily paid cost.
 
-### Mealy blue sage: Pollinator Invitation
+### Mealy Blue Sage: Pollinator Invitation
 
 Activate Sage and spend 1 Light remaining on it to place one Bloom marker. The next Hoverfly that uses Flower Visit on that Sage gains an extra 1 Population, in addition to ordinary pollination gains. All gains obey maximum 3. Consume Bloom after that visit, even if the fly is at its maximum. An unused Bloom expires at the start of your next turn; markers do not stack.
 
-### Phaon crescent: two life stages
+### Phaon Crescent: two life stages
 
 Choose Caterpillar Munch or Butterfly Visit when activated. One card represents the organism's whole life cycle; there is no separate caterpillar card or transformation cost. Its only larval host in this deck is Frogfruit.
 
-### Northern cardinal: omnivory
+### Northern Cardinal: omnivory
 
 Choose Crack Seeds or Catch Insects when activated. Seed feeding uses the game's plant Population cost to represent resources consumed, not the death of a plant for every seed.
 
 ### Hoverfly: pollination and aphid control
 
-Choose Flower Visit or Hungry Larva when activated. The card represents both adult and larval stages of an aphid-eating hoverfly. Hungry Larva targets Crape myrtle aphid; it does not require a flower visit first.
+Choose Flower Visit or Hungry Larva when activated. The card represents both adult and larval stages of an aphid-eating hoverfly. Hungry Larva targets Crape Myrtle Aphid; it does not require a flower visit first.
 
 ### Pillbug: Hide in Mulch
 
@@ -70,23 +70,23 @@ After a successful Shred Leaf Litter action, put a Shelter marker on that Pillbu
 
 After a hunt targets Grasshopper but before losses occur, its owner may pay 1 Population if it has at least 2. Cancel that hunt completely; the hunter gains nothing and its activation is used. Put a Jump used marker on Grasshopper; it cannot jump again that round. Jump Away needs no activation and can be used during another player's turn. The payment is not prevented by Shelter. Grasshopper cannot pay its last Population to jump.
 
-### Green anole: Territorial Display
+### Green Anole: Territorial Display
 
-Instead of hunting, activate an Anole to put a Territory marker on an opponent's Green anole. That target cannot use any Hunt action until the displaying player's next turn; it may still use Territorial Display. Each target can receive this ability only once per round. Keep a used reminder until Cleanup if the marker ends early. Multiple displays do not extend the duration. Territorial Display does not reduce Population and Shelter cannot block it.
+Instead of hunting, activate an Anole to put a Territory marker on an opponent's Green Anole. That target cannot use any Hunt action until the displaying player's next turn; it may still use Territorial Display. Each target can receive this ability only once per round. Keep a used reminder until Cleanup if the marker ends early. Multiple displays do not extend the duration. Territorial Display does not reduce Population and Shelter cannot block it.
 
 ## Relationships in this deck
 
 | Consumer or pollinator | Eligible targets |
 | --- | --- |
-| Phaon crescent, caterpillar | Frogfruit |
-| Phaon crescent, adult | Frogfruit, Firewheel, Sunflower |
-| Northern cardinal, seeds | Sunflower, Inland sea oats, Sideoats grama |
-| Northern cardinal, insects | Grasshopper, Phaon crescent, Hoverfly |
-| Hoverfly, adult | Frogfruit, Firewheel, Sunflower, Pink evening primrose, Mealy blue sage |
-| Hoverfly, larva | Crape myrtle aphid |
-| Grasshopper | Inland sea oats, Sideoats grama, Sunflower, Pink evening primrose |
-| Green anole | Grasshopper, Hoverfly, Phaon crescent |
-| Crape myrtle aphid | Crape myrtle |
+| Phaon Crescent, caterpillar | Frogfruit |
+| Phaon Crescent, adult | Frogfruit, Firewheel, Sunflower |
+| Northern Cardinal, seeds | Sunflower, Inland Sea Oats, Sideoats Grama |
+| Northern Cardinal, insects | Grasshopper, Phaon Crescent, Hoverfly |
+| Hoverfly, adult | Frogfruit, Firewheel, Sunflower, Pink Evening Primrose, Mealy Blue Sage |
+| Hoverfly, larva | Crape Myrtle Aphid |
+| Grasshopper | Inland Sea Oats, Sideoats Grama, Sunflower, Pink Evening Primrose |
+| Green Anole | Grasshopper, Hoverfly, Phaon Crescent |
+| Crape Myrtle Aphid | Crape Myrtle |
 | Pillbug | Face-up plant cards in Compost |
 
 These interactions and costs are simplified classroom mechanics. Playtest the 20-point goal and special abilities before competitive classroom use.

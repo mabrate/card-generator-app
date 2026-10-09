@@ -127,3 +127,18 @@ A base manifest can link published packs using `"expansions": [{"id": "houston-f
 Save project packages all accepted cards, editable layouts, and artwork. `workspace.json` includes per-card expansion labels and an `expansionPacks` registry keyed by imported pack ID, recording its name, package version, and intended base project/version. This registry is saved only when cards are accepted. The manifest and CSV remain normal project files, so the combined output can be reopened or used as the static site's project files. Expansion documents and a separate nested manifest are not inserted into the combined package.
 
 Expansion browser coverage: `.venv/bin/python scripts/expansion_projects_smoke.py` checks standalone pack loading, hosted/folder/ZIP append, repeat/conflict handling, undo, stable base IDs, combined ZIPs, and rejected invalid packages.
+
+## Conditional project colors
+
+A project can declare `colorRules` in its manifest. Each rule matches one text field using `field` and `equals` (case-insensitive, trimming surrounding whitespace). Rules are evaluated in order; the first match wins. Apply either a named project `theme` or a `colors` object containing existing SVG color roles:
+
+```json
+"colorRules": [
+  {"field":"family","equals":"Noble gas","colors":{"family_strip":"#70448c"}},
+  {"field":"category","equals":"Plant","theme":"Sage"}
+]
+```
+
+The theme must be present in `colorSchemes`; fields and color roles must exist in the project's templates. Rules affect supported roles of the current card layout. Unmatched values retain base colors. Explicit CSV themes and per-card manual colors override rules. The editor's **Use automatic colors** button removes a manual override. A blank CSV theme preserves automatic behavior when saving/reopening a project, rather than freezing the evaluated colors. Rules remain in `manifest.json`; finished SVGs and print sheets contain the evaluated colors.
+
+The `element-explorer` starter project includes elements 1–20, with an Ink card body and conditional family-strip colors. Open it with `?project=element-explorer`.

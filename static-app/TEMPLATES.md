@@ -74,3 +74,9 @@ Students select built-in templates without uploading a layout. You can also open
 The download icon exports the tagged layout with placeholders and original template colors. **Download card** exports the current finished card with text, chosen colors, image, and fonts embedded. The app rejects finished cards through Open template SVG; use a project folder/ZIP to resume editing card data. Save project includes the selected template SVG as a separate readable file and current card data in CSV.
 
 Named palettes and custom per-card colors are stored in the CSV `theme` column. A custom value such as `custom:background=#ffffff;accent=#244734` uses this template's role names. Changing a color in the editor affects the current card. Untagged colors remain part of the SVG layout.
+
+## Element Explorer
+
+Choose **Element Explorer** in the Template layout picker for periodic-table cards. Atomic number, chemical symbol, and element name are required. Optional fields are atomic mass, element family, group, period, state at room temperature, everyday use, and a short fun fact. The image frame is for a familiar object or illustration connected to the element.
+
+Use the accent color for element families and write the family name in the strip, so meaning remains clear in grayscale. Keep everyday uses to three short lines and fun facts to two. Group may be left blank when it does not apply. Image filename, copies, and theme are supplied by the app when saving the project CSV.

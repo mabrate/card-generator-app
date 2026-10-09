@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "id": "element-explorer",
+  "packageVersion": "1.0.0",
+  "name": "Element Explorer",
+  "description": "The first 20 elements, with family-colored strips and an Ink card body.",
+  "csv": "cards.csv",
+  "imageDirectory": "graphics",
+  "templates": [
+    {
+      "id": "element-explorer",
+      "title": "Element Explorer \u2014 Ink",
+      "svg": "templates/element-explorer.svg"
+    }
+  ],
+  "colorSchemes": [
+    "Ink"
+  ],
+  "starter": {
+    "template": "element-explorer",
+    "scheme": "Ink",
+    "values": {}
+  },
+  "colorRules": [
+    {
+      "field": "family",
+      "equals": "Nonmetal",
+      "colors": {
+        "family_strip": "#326c48"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Noble Gas",
+      "colors": {
+        "family_strip": "#70448c"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Alkali Metal",
+      "colors": {
+        "family_strip": "#a84b16"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Alkaline Earth Metal",
+      "colors": {
+        "family_strip": "#8b641c"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Metalloid",
+      "colors": {
+        "family_strip": "#236c7b"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Post-Transition Metal",
+      "colors": {
+        "family_strip": "#405e91"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Halogen",
+      "colors": {
+        "family_strip": "#a23860"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Transition Metal",
+      "colors": {
+        "family_strip": "#80513b"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Lanthanide",
+      "colors": {
+        "family_strip": "#6f577d"
+      }
+    },
+    {
+      "field": "family",
+      "equals": "Actinide",
+      "colors": {
+        "family_strip": "#814447"
+      }
+    }
+  ],
+  "files": [
+    {
+      "type": "markdown",
+      "title": "Element Explorer guide",
+      "path": "README.md"
+    },
+    {
+      "type": "download",
+      "title": "Element card data",
+      "path": "cards.csv"
+    }
+  ]
+}
