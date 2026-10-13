@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "id": "field-guide",
+  "packageVersion": "1.6.0",
+  "name": "Field Guide Starter",
+  "description": "A two-sided field-guide card starter. Edit the front and back SVG layouts, then add observations on both sides.",
+  "editableTemplates": true,
+  "csv": "cards.csv",
+  "imageDirectory": "graphics",
+  "templates": [
+    {
+      "id": "field-guide-front",
+      "title": "Field Guide \u2014 Front",
+      "svg": "templates/field-guide-front.svg"
+    }
+  ],
+  "cardBack": {
+    "svg": "templates/field-guide-back.svg",
+    "description": "Editable field-guide back with per-card information fields"
+  },
+  "colorSchemes": [
+    "Template",
+    "Sage",
+    "Sky",
+    "Sand",
+    "Rose",
+    "Lavender",
+    "Ink"
+  ],
+  "starter": {
+    "template": "field-guide-front",
+    "scheme": "Template",
+    "values": {}
+  },
+  "placeholders": {
+    "common_name": "Organism name",
+    "scientific_name": "Genus species",
+    "family": "Family name",
+    "category": "Plant, insect, reptile\u2026",
+    "size": "Adult size or mature height",
+    "identification_clues": "What clues help you identify it?",
+    "adaptations_ecology": "How does it live here? Include a campus observation or question."
+  },
+  "files": [
+    {
+      "type": "markdown",
+      "title": "Field Guide project guide",
+      "path": "README.md"
+    },
+    {
+      "type": "download",
+      "title": "Field Guide card data",
+      "path": "cards.csv"
+    }
+  ],
+  "workspace": "workspace.json"
+}

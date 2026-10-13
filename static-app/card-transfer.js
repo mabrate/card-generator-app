@@ -21,7 +21,7 @@ export async function validateCard(p){
  if(!p || p.format!==FORMAT||p.version!==1)throw Error('Unsupported card metadata version. Re-export from the updated app.');
  if(!Object.hasOwn(p,'sourceProjectId') || p.sourceProjectId!==null && (typeof p.sourceProjectId!=='string'||p.sourceProjectId.length>2000))throw Error('Invalid source project provenance.');
  const c=p.card;if(!c||!c.values||Array.isArray(c.values)||Object.keys(c.values).length>100||Object.values(c.values).some(v=>typeof v!=='string'||v.length>10000))throw Error('Invalid card fields.');assertCards([c]);
- if(!Number.isInteger(c.copies)||c.copies<1||c.copies>600||!c.crop||![c.crop.x,c.crop.y,c.crop.zoom].every(Number.isFinite)||c.crop.x<0||c.crop.x>1||c.crop.y<0||c.crop.y>1||c.crop.zoom<1||c.crop.zoom>4)throw Error('Invalid copies or image crop.');
+ if(!Number.isInteger(c.copies)||c.copies<1||c.copies>600||!c.crop||![c.crop.x,c.crop.y,c.crop.zoom].every(Number.isFinite)||c.crop.x<0||c.crop.x>1||c.crop.y<0||c.crop.y>1||c.crop.zoom<.1||c.crop.zoom>4)throw Error('Invalid copies or image crop.');
  for(const key of ['imageName','colorScheme','expansion','attribution'])if(typeof c[key]!=='string'||c[key].length>2000)throw Error('Invalid '+key+'.');
  if(typeof c.drawingActive!=='boolean')throw Error('Invalid drawing selection.');
  const layout=readTemplate(c.layout);c.layout=layout.source;

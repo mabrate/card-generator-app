@@ -43,7 +43,7 @@ Use 1–12 text fields. The field list in the editor and saved project CSV are g
       fill="#ffffff" data-color-fill="picture"/>
 ```
 
-Move or resize this rectangle in Inkscape to adjust the image frame. Rounded corners and transforms are retained. The browser inserts the user's image over this rectangle and clips it to its geometry. Add `data-placeholder="true"` to a label such as `{{image}}` if that label should disappear from a finished card. Use one image frame per template. Uploaded artwork fills/crops the frame by default. Image zoom and position are preserved in project workspace settings; this does not remove white pixels from an image.
+Move or resize this rectangle in Inkscape to adjust the image frame. Rounded corners and transforms are retained. The browser inserts the user's image over this rectangle and clips it to its geometry. Add `data-image-fit="contain"` to keep the entire image visible; otherwise artwork fills/crops the frame by default. Add `data-placeholder="true"` to a label such as `{{image}}` if that label should disappear from a finished card. Use one image frame per template. Image zoom and position are preserved in project workspace settings; this does not remove white pixels from an image.
 
 ## Color placeholders
 
@@ -80,3 +80,15 @@ Named palettes and custom per-card colors are stored in the CSV `theme` column. 
 Choose **Element Explorer** in the Template layout picker for periodic-table cards. Atomic number, chemical symbol, and element name are required. Optional fields are atomic mass, element family, group, period, state at room temperature, everyday use, and a short fun fact. The image frame is for a familiar object or illustration connected to the element.
 
 Use the accent color for element families and write the family name in the strip, so meaning remains clear in grayscale. Keep everyday uses to three short lines and fun facts to two. Group may be left blank when it does not apply. Image filename, copies, and theme are supplied by the app when saving the project CSV.
+
+## Two-sided Field Guide
+
+Open `?project=field-guide` for the opt-in two-sided editor. Its `manifest.json` uses `cardBack.svg` to name an editable back layout and `editableTemplates: true` to let students reopen edited SVGs in the studio. That layout's `data-field` keys appear as additional CSV columns and are edited when **Back** is selected. A `back_image_filename` CSV column can provide separate artwork for each card's back; when absent, the front image is reused. A project with `cardBack.image` continues to use a shared back image and does not show side controls.
+
+The Field Guide project keeps its front SVG at `templates/field-guide-front.svg` and its back SVG at `templates/field-guide-back.svg`. Students can download and reopen each side separately. Keep front/back field keys distinct except for a shared key such as `common_name`; each SVG must remain a 2.5 × 3.5 inch card and retain its `data-field` / `data-image` tags. Its scientific name and family fields share a line through `data-after-field`, `data-prefix`, and `data-suffix` on the family text. Print sheets render each back from that card's values and reference graphic, and mirror the columns for short-edge duplex.
+
+Images always cover their SVG image area by default, including templates that previously used `data-image-fit="contain"`. Students can reduce Zoom below 1 to show more of the image. Field Guide saves separate front and back image adjustments in `workspace.json`.
+
+### Checkbox fields
+
+A `text[data-field]` can set `data-input="checkbox"` and `data-checked-text="N"` to show a checkbox in Card data and a symbol when checked. Store values as `true`/`false` in CSV; `yes`, `1`, and `on` are also recognized as checked. Wrap its icon in `g data-visible-if="field_key"` to hide the full icon when unchecked. The Field Guide native badge is an editable example.

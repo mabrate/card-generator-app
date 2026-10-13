@@ -15,7 +15,7 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 .preview-card-back{margin-top:12px;padding-top:14px;border-top:1px solid #e2e8e2;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .preview-card-back>.open-project{flex:1;text-align:center}
 .preview-card-back .hint{flex-basis:100%;margin:0}
-#card-back-preview{width:80px;max-height:112px;object-fit:contain;display:block;margin:4px auto}
+#card-back-preview{width:80px;max-height:112px;object-fit:cover;display:block;margin:4px auto}
 .project-folder-open{display:block;text-align:center;margin-top:8px;font-size:11px}
 .template-layout-tools{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:20px;align-items:end;margin-top:18px}
 .template-layout-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
@@ -46,5 +46,9 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 
 .preview-navigation{margin-top:16px}.preview-navigation-row{display:flex;align-items:center;gap:8px}.preview-title-picker{flex:1;min-width:0}.preview-title-picker .hint{display:block;margin-bottom:4px}.preview-title-picker select{width:100%;min-width:0;border:1px solid #ccd8cd;border-radius:7px;background:#fff;padding:8px;font:inherit;font-size:12px;color:#234b38}.card-arrow{flex-shrink:0;width:44px;height:44px;padding:0;font-size:22px}.card-dots{display:flex;overflow-x:auto;gap:0;padding:6px 0;max-width:100%}.card-dot{flex:0 0 32px;min-height:40px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;padding:0}.card-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:#b7c7ba}.card-dot[aria-current=true]::before{background:#234b38;box-shadow:0 0 0 3px #dce9de}.preview-navigation button:focus-visible,.preview-title-picker select:focus-visible{outline:3px solid #6295c0;outline-offset:2px}#card-position{text-align:center;margin:0}.preview-navigation+.card-wrap{margin-top:10px}
 .preview-panel{min-width:0}.preview-navigation{min-width:0}
+.side-toggle{display:flex;gap:8px;margin:10px 0}.side-toggle[hidden]{display:none}.side-toggle .button[aria-pressed=true]{background:#244734;color:#fff;border-color:#244734}.side-toggle button{flex:1}
+.field-guide #drawing{aspect-ratio:156/176}
 
 #import-cards-dialog{width:min(900px,95vw)}#card-import-drop{border:2px dashed #789;padding:16px}.card-import-row{border-bottom:1px solid #ccc;padding:10px;display:flex;gap:16px;align-items:center}.card-import-row p{flex:1}.import-thumbnail{width:90px;height:126px;flex-shrink:0}.import-thumbnail svg{width:90px;height:126px}
+
+.fields .checkbox-field{display:flex;align-items:center;gap:8px}.fields .checkbox-field input[type=checkbox]{width:20px;height:20px;min-height:20px;margin:0;accent-color:#228b22}

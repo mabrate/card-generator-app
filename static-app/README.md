@@ -10,6 +10,8 @@ From the repository root, run that command and open http://localhost:8765. When 
 
 ## Student view
 
+Open the two-sided [Field Guide Starter](./?project=field-guide) to explore editable front and back layouts with ladybug, green anole, Texas bluebonnet, and field madder examples. Each card has a student drawing area on the front and its own colored-pencil reference plate on the back. Other projects keep editable fronts with a shared back image. The optional two-sided mode is enabled by `cardBack.svg` in a project's manifest.
+
 Choose a starter in **Template layout**, then add words and artwork. Use **New card** to add cards and the arrows, dots, or title menu above the preview to select a card. Each card has its own copy count and colors.
 
 The preview groups **Download card**, **Print this card**, **Print all cards**, and **Define card back**. Card-back preview and removal appear only when a back is selected. Save project and Open project folder sit below the print controls. Open project folder offers a folder picker or a saved ZIP picker. Project imports create separate browser workspaces.

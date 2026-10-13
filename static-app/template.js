@@ -1,3 +1,4 @@
+export const checkedValue = value => /^(true|1|yes|y|on)$/i.test(String(value ?? '').trim());
 const NS = 'http://www.w3.org/2000/svg';
 const allowed = new Set(['svg','g','defs','clipPath','mask','linearGradient','radialGradient','stop','pattern','image','rect','text','tspan','title','desc','metadata','use','path','ellipse','circle','line','polygon','polyline']);
 function inheritedPaint(el, property) {
@@ -54,7 +55,7 @@ export function readTemplate(source) {
     const key = el.getAttribute('data-field');
     const width = Number(el.getAttribute('data-width')), lines = Number(el.getAttribute('data-lines') || 1), max = Number(el.getAttribute('data-max-chars') || 200);
     if (!/^[a-z][a-z0-9_]{0,49}$/.test(key) || ['image_filename','theme','card_id'].includes(key) || !(width > 0 && width <= 180) || !(lines >= 1 && lines <= 30) || !Number.isInteger(lines) || !(max >= 1 && max <= 2000)) throw Error('Each text placeholder needs a unique field key, data-width, data-lines, and data-max-chars.');
-    return {key, label: el.getAttribute('data-label') || key.replaceAll('_',' '), width, lines, max, required: el.getAttribute('data-required') === 'true'};
+    return {key, type:el.getAttribute('data-input')==='checkbox'?'checkbox':'text', label: el.getAttribute('data-label') || key.replaceAll('_',' '), width, lines, max, required: el.getAttribute('data-required') === 'true'};
   });
   if (!fields.length || fields.length > 12 || new Set(fields.map(f => f.key)).size !== fields.length) throw Error('Use 1–12 unique text placeholders marked with data-field.');
   const frame = root.querySelector('rect[data-image]');
@@ -73,6 +74,7 @@ export function readTemplate(source) {
 }
 
 export function renderTemplate(template, values, colors, imageData, crop, host) {
+  const previousImage=host.id==='card-preview'?host.querySelector('image[data-card-artwork]'):null;
   const root = template.root.cloneNode(true);
   host.replaceChildren(root);
   for (const el of root.querySelectorAll('[data-color-fill],[data-color-stroke]')) for (const property of ['fill','stroke']) {
@@ -85,7 +87,7 @@ export function renderTemplate(template, values, colors, imageData, crop, host) 
   for (const field of template.fields) {
     const el = [...root.querySelectorAll('text[data-field]')].find(e => e.getAttribute('data-field') === field.key);
     const first = el.querySelector('tspan');
-    const x = first?.getAttribute('x') ?? el.getAttribute('x') ?? '0';
+    let x = first?.getAttribute('x') ?? el.getAttribute('x') ?? '0', width=field.width;
     const y = first?.getAttribute('y') ?? el.getAttribute('y') ?? '0';
     // Inkscape often puts font styling on the tspan instead of its parent.
     if (first?.getAttribute('style')) el.style.cssText += ';' + first.getAttribute('style');
@@ -93,13 +95,20 @@ export function renderTemplate(template, values, colors, imageData, crop, host) 
     const colorKey = el.getAttribute('data-color-fill');
     if (colors[colorKey]) replacePaint(el, 'fill', colors[colorKey]);
     el.replaceChildren(); el.setAttribute('x', x); el.setAttribute('y', y);
-    const value = String(values[field.key] || '');
+    const value = field.type==='checkbox' ? (checkedValue(values[field.key]) ? (el.getAttribute('data-checked-text') || 'N') : '') : String(values[field.key] || '');
+    const after=el.getAttribute('data-after-field');
+    if(after){
+      const previous=[...root.querySelectorAll('text[data-field]')].find(node=>node.getAttribute('data-field')===after);
+      const used=previous?.getComputedTextLength() || 0;
+      x=String((Number(previous?.getAttribute('x')) || 0)+used+1.5);width=Math.max(1,field.width-used-1.5);
+    }
+    const display=value?(el.getAttribute('data-prefix') || '')+value+(el.getAttribute('data-suffix') || ''):'';
     const computed = getComputedStyle(el), fontSize = parseFloat(computed.fontSize) || 7;
     const lineHeight = Number(el.getAttribute('data-line-height')) || fontSize * 1.2;
     const measure = document.createElementNS(NS, 'tspan'); el.append(measure);
-    const fits = text => { measure.textContent = text; return measure.getComputedTextLength() <= field.width + .01; };
+    const fits = text => { measure.textContent = text; return measure.getComputedTextLength() <= width + .01; };
     const lines = [];
-    for (const paragraph of value.split('\n')) {
+    for (const paragraph of display.split('\n')) {
       let line = '';
       for (const word of paragraph.trim().split(/\s+/).filter(Boolean)) {
         if (fits(line ? line + ' ' + word : word)) { line = line ? line + ' ' + word : word; continue; }
@@ -122,12 +131,14 @@ export function renderTemplate(template, values, colors, imageData, crop, host) 
     const box = frame.cloneNode(); box.removeAttribute('transform'); box.removeAttribute('id'); clip.append(box);
     const defs = document.createElementNS(NS,'defs'); defs.append(clip); group.append(defs);
     const clipped = document.createElementNS(NS,'g'); clipped.setAttribute('clip-path','url(#static-card-image-clip)');
-    const image = document.createElementNS(NS,'image');
-    const zoom = Math.max(1, Math.min(4,Number(crop?.zoom) || 1));
+    const image = previousImage?.getAttribute('href')===imageData?previousImage:document.createElementNS(NS,'image');
+    image.setAttribute('data-card-artwork','true');
+    const zoom = Math.max(.1, Math.min(4,Number(crop?.zoom) || 1));
     image.setAttribute('x',String(x - (w * zoom - w) * (crop?.x ?? .5))); image.setAttribute('y',String(y - (h * zoom - h) * (crop?.y ?? .5)));
-    image.setAttribute('width',String(w * zoom)); image.setAttribute('height',String(h * zoom)); image.setAttribute('preserveAspectRatio','xMidYMid slice'); image.setAttribute('href',imageData);
+    image.setAttribute('width',String(w * zoom)); image.setAttribute('height',String(h * zoom)); image.setAttribute('preserveAspectRatio','xMidYMid slice'); if(image.getAttribute('href')!==imageData)image.setAttribute('href',imageData);
     clipped.append(image); group.append(clipped); frame.after(group);
   }
+  root.querySelectorAll('[data-visible-if]').forEach(el=>{if(!checkedValue(values[el.getAttribute('data-visible-if')]))el.remove();});
   root.querySelectorAll('[data-placeholder]').forEach(el => el.remove());
   return {root, issues};
 }

@@ -23,7 +23,7 @@ export function validateExpansionPacks(value){
 }
 export function readManifest(value, base, catalog) {
   if (!value || value.version !== 1 || typeof value.name !== 'string' || !value.name.trim()) throw Error('Unsupported project manifest. Use version 1 and a project name.');
-  if ((value.templates !== undefined && !Array.isArray(value.templates)) || (value.colorSchemes !== undefined && !Array.isArray(value.colorSchemes)) || (value.files !== undefined && !Array.isArray(value.files)) || (value.description !== undefined && typeof value.description !== 'string')) throw Error('Invalid project manifest lists or description.');
+  if ((value.templates !== undefined && !Array.isArray(value.templates)) || (value.colorSchemes !== undefined && !Array.isArray(value.colorSchemes)) || (value.files !== undefined && !Array.isArray(value.files)) || (value.description !== undefined && typeof value.description !== 'string') || (value.editableTemplates !== undefined && typeof value.editableTemplates !== 'boolean')) throw Error('Invalid project manifest lists or description.');
   if(value.id!==undefined && !validId(value.id))throw Error('Invalid project ID.');
   if(value.packageVersion!==undefined && !validVersion(value.packageVersion))throw Error('Package version must use major.minor.patch.');
   if(value.expansion!==undefined && (!value.expansion || typeof value.expansion!=='object' || Array.isArray(value.expansion) || !validId(value.expansion.baseProjectId) || !validVersion(value.expansion.basePackageVersion) || !value.id || !value.packageVersion))throw Error('Expansion needs a stable project ID, package version, and base-game ID/version.');
@@ -48,14 +48,14 @@ export function readManifest(value, base, catalog) {
   const files = (value.files || []).map(f=>{if (!f || typeof f.title !== 'string' || (f.type === 'markdown' && !/\.md$/i.test(f.path))) throw Error('Invalid project file.'); return {...f,path:normalizeProjectPath(f.path),url:localFile(f.path,base)};});
   let cardBack;
   if(value.cardBack !== undefined){
-    if(!value.cardBack || typeof value.cardBack !== 'object' || !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image || '') || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string'))throw Error('Card back needs a PNG, JPG, or WebP image path.');
-    cardBack={...value.cardBack,image:normalizeProjectPath(value.cardBack.image),url:localFile(value.cardBack.image,base)};
+    if(!value.cardBack || typeof value.cardBack !== 'object' || (value.cardBack.image && value.cardBack.svg) || (value.cardBack.image && !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image)) || (value.cardBack.svg && !/\.svg$/i.test(value.cardBack.svg)) || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string') || (!value.cardBack.image && !value.cardBack.svg))throw Error('Card back needs either an image or an SVG template path.');
+    cardBack={...value.cardBack,...(value.cardBack.image?{image:normalizeProjectPath(value.cardBack.image),url:localFile(value.cardBack.image,base)}:{}),...(value.cardBack.svg?{svg:normalizeProjectPath(value.cardBack.svg),templateUrl:localFile(value.cardBack.svg,base)}:{})};
   }
   return {...value,...(value.csv!==undefined?{csv:normalizeProjectPath(value.csv)}:{}),...(value.imageDirectory!==undefined?{imageDirectory:normalizeProjectPath(value.imageDirectory)}:{}),templates,schemes,colorRules,starter,files,base,cardBack};
 }
 // Public starter files are cached even on a first visit before the worker controls the page.
 export async function fetchProjectFile(url){
-  const response=await fetch(url);
+  const response=await fetch(url,{cache:'no-cache'});
   if(response.ok && globalThis.isSecureContext && 'caches' in globalThis){
     try{const cache=await caches.open('classroom-cards-published-projects-v1');await cache.put(new Request(url),response.clone());}catch{}
   }

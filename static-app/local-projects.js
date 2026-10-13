@@ -72,7 +72,8 @@ export async function resolveLocalProject(entries,catalog) {
   try{
     for(const item of project.templates)if(typeof (manifest.templates || []).find(t=>t?.id===item.id)==='object')item.url=url(item.svg);
     for(const item of project.files){item.base=new URL(item.path,base).href;item.url=url(item.path);}
-    if(project.cardBack)project.cardBack.url=url(project.cardBack.image);
+    if(project.cardBack?.image)project.cardBack.url=url(project.cardBack.image);
+    if(project.cardBack?.svg)project.cardBack.templateUrl=url(project.cardBack.svg);
     // Resolve Markdown links only against selected local files, never the host.
     project.resolveLink=(path,documentBase)=>{let target;try{target=new URL(path,documentBase);}catch{return null;}if(target.href.startsWith(base.href))return files.has(decodeURIComponent(target.pathname.slice(base.pathname.length)))?url(decodeURIComponent(target.pathname.slice(base.pathname.length))):null;return ['http:','https:'].includes(target.protocol)?target.href:null;};
     return {project,files,manifest,dispose:()=>urls.forEach(u=>URL.revokeObjectURL(u))};
