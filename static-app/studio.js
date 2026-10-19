@@ -171,23 +171,25 @@ async function startOver(){
   const hosted=Boolean(project?.csv && !localBundle);
   const message=hosted?`Restore ${project.name}? This replaces your current cards, drawings, and edited layouts with the project's starter cards, artwork, and both original layouts. Save your project first to keep your work.`:`Start over? This clears all ${state.cards.length} cards, imported images, and drawings. Your current SVG template stays; starting colors are restored. Save your project first to keep your work.`;
   if(!confirm(message))return;
-  stopDrawing();
-  if(hosted){
-    // Fetch both layouts before replacing recovery; a failed download keeps saved work.
-    const sources=await Promise.all(catalog.map(async item=>{const response=await fetchProjectFile(item.url);if(!response.ok)throw Error('Cannot restore starter template.');return readTemplate(await response.text()).source;}));
-    let restoredBack=null;
-    if(project.cardBack?.svg){const response=await fetchProjectFile(project.cardBack.templateUrl);if(!response.ok)throw Error('Cannot restore starter back.');restoredBack=readTemplate(await response.text());}
-    const previousSources=catalog.map(item=>item.source),previousBack=backTemplate,previousState=state;
-    try{
-      catalog.forEach((item,i)=>item.source=sources[i]);backTemplate=restoredBack; if(project.cardBack?.svg)project.cardBack.layout=restoredBack;
-      await loadHostedCards();
-    }catch(err){catalog.forEach((item,i)=>item.source=previousSources[i]);backTemplate=previousBack;state=previousState;if(project.cardBack?.svg)project.cardBack.layout=previousBack;throw err;}
-    template=readTemplate(state.templateSVG);activeSide='front';updateSideTools();
-  }else{
-    state.cards=[blankCard()];state.active=0;state.assets={};state.imported=null;delete state.expansionPacks;state.colors={...template.colors};state.colorScheme='Template';applyProjectScheme();
-  }
-  save();await pruneAssets();buildColors();await showCard();
-  $('#print-status').textContent='';$('#single-print-status').textContent='';$('#drawing-tools').open=false;$('#image-adjustments').open=false;
+  return withLoading(hosted?'Restoring starter project…':'Starting a fresh workspace…',async()=>{
+    stopDrawing();
+    if(hosted){
+      // Fetch both layouts before replacing recovery; a failed download keeps saved work.
+      const sources=await Promise.all(catalog.map(async item=>{const response=await fetchProjectFile(item.url);if(!response.ok)throw Error('Cannot restore starter template.');return readTemplate(await response.text()).source;}));
+      let restoredBack=null;
+      if(project.cardBack?.svg){const response=await fetchProjectFile(project.cardBack.templateUrl);if(!response.ok)throw Error('Cannot restore starter back.');restoredBack=readTemplate(await response.text());}
+      const previousSources=catalog.map(item=>item.source),previousBack=backTemplate,previousState=state;
+      try{
+        catalog.forEach((item,i)=>item.source=sources[i]);backTemplate=restoredBack; if(project.cardBack?.svg)project.cardBack.layout=restoredBack;
+        await loadHostedCards();
+      }catch(err){catalog.forEach((item,i)=>item.source=previousSources[i]);backTemplate=previousBack;state=previousState;if(project.cardBack?.svg)project.cardBack.layout=previousBack;throw err;}
+      template=readTemplate(state.templateSVG);activeSide='front';updateSideTools();
+    }else{
+      state.cards=[blankCard()];state.active=0;state.assets={};state.imported=null;delete state.expansionPacks;state.colors={...template.colors};state.colorScheme='Template';applyProjectScheme();
+    }
+    save();await pruneAssets();buildColors();await showCard();
+    $('#print-status').textContent='';$('#single-print-status').textContent='';$('#drawing-tools').open=false;$('#image-adjustments').open=false;
+  });
 }
 function rebuildAssets() {
   const back=activeSide==='back',selected=back?card().backImageName:card().imageName;
@@ -551,7 +553,7 @@ function offerRecoveryReset(saved,err){
       status.textContent='Recovery ZIP downloaded for troubleshooting. It contains the original saved data; damaged work may need repair before reopening.';
     }catch(error){status.textContent=error.message || String(error);}
   };
-  $('#fresh-recovery').onclick=()=>run(async()=>{
+  $('#fresh-recovery').onclick=()=>run(()=>withLoading('Starting a fresh project…',async()=>{
     stopDrawing();consumeStarter();
     // Only replace recovery after the requested starting template has loaded.
     state={version:2,templateId:'',templateSVG:'',colors:{},cards:[blankCard()],active:0,assets:{},imported:null};
@@ -559,7 +561,7 @@ function offerRecoveryReset(saved,err){
     $('#recovery-error').hidden=true;
     try{if(project?.csv && !localBundle)await loadHostedCards();await finishStart(false);}catch(err){$('#recovery-error').hidden=false;throw err;}
     $('.layout').inert=false;$('#workspace-tools').inert=false;$('#recovery-error').hidden=true;
-  });
+  }));
 }
 function localMapping(headers,layout){
   const aliases={copies:['copies','card count','count','quantity'],theme:['theme','color theme','color scheme','colour theme','colour scheme'],image_filename:['image filename','image','image file'],back_image_filename:['back image filename','back image','back artwork'],scientific_name:['scientific name','binomial name']};
@@ -578,6 +580,20 @@ function csvCards(p,layout,text,assets){
   });
   if(cards.some(c=>!c.id || c.id.length>200 || /[\\/:\u0000-\u001f]/.test(c.id)) || new Set(cards.map(c=>c.id)).size!==cards.length)throw Error('Card IDs must be unique.');
   return {cards,imported:{headers,rows,mapping,indices:rows.map((_,i)=>i)}};
+}
+async function withLoading(message,action){
+  loadingStatus(message);
+  $('#app-loading').hidden=false;
+  $('main').setAttribute('aria-busy','true');
+  $('#app-loading').scrollIntoView({block:'center'});
+  try{
+    // Let the browser paint the progress indicator before preparing the project.
+    await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+    return await action();
+  }finally{
+    $('#app-loading').hidden=true;
+    $('main').setAttribute('aria-busy','false');
+  }
 }
 function loadingStatus(message){$('#loading-message').textContent=message;}
 async function restoreWorkspace(next,workspace,layout,readFile,loadImage){
