@@ -1,6 +1,6 @@
 # Field Guide Starter
 
-This starter uses one simple layout for all organisms. Each demo has a replaceable artistic colored-pencil scene on the front and a separate, simple identification sketch on the back. Both use a deliberately loose middle-school drawing style: uneven outlines, scribbly coloring, and simplified shapes. The drawings are observation models, not precise scientific diagrams. The front has a large, unlabeled drawing space for a student's identification sketch. The back has a colored-pencil reference plate plus three open fields: Adult Size, What clues help you identify it?, and Adaptations & Ecology. Campus observations, ecosystem services, and student questions fit inside these fields.
+This starter uses one simple layout for all organisms. Each demo has a replaceable artistic colored-pencil scene on the front and a separate, simple identification sketch on the back. Both use a deliberately loose middle-school drawing style: uneven outlines, scribbly coloring, and simplified shapes. The drawings are observation models, not precise scientific diagrams. The front has a large, unlabeled drawing space for a student's identification sketch. The back has a colored-pencil reference plate plus three open fields: Adult Size, Identification clues, and Adaptations & Ecology. The examples model descriptive writing about identifying features, adaptations, habitat, and ecosystem roles.
 
 ## Make a card
 
@@ -23,7 +23,7 @@ The back reference plates are colored-pencil classroom illustrations. Students c
 
 Choose **Restore starter examples** below the editor to reload all four demo cards, their graphics, and both original SVG layouts. Save your project first to keep your edits. Opening the starter link normally recovers your browser workspace; it does not replace saved work. An earlier saved Field Guide shows a notice explaining how to restore the updated starter.
 
-The plant example explicitly describes growth habit, leaf arrangement, and inflorescence in the open identification notes. Students can draw these features in the unlabeled artwork area without choosing a more complex plant-only template. Suggested campus locations are search prompts, not records of organisms actually observed at your school.
+The plant example explicitly describes growth habit, leaf arrangement, and inflorescence in the open identification notes. Students can draw these features in the unlabeled artwork area without choosing a more complex plant-only template. Example text describes the organisms rather than giving directions or asking questions. It does not claim sightings at your school.
 
 Both layouts have white backgrounds, sharp corners, and a 2 mm border. Images have no separate outline and meet the inner left, right, and bottom card border. Images fill their area by default; open image adjustments and reduce Zoom to show more of the original. Front and back image positions are saved separately in workspace.json.
 

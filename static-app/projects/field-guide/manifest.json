@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "field-guide",
-  "packageVersion": "1.6.0",
+  "packageVersion": "1.6.1",
   "name": "Field Guide Starter",
   "description": "A two-sided field-guide card starter. Edit the front and back SVG layouts, then add observations on both sides.",
   "editableTemplates": true,
@@ -38,8 +38,8 @@
     "family": "Family name",
     "category": "Plant, insect, reptile\u2026",
     "size": "Adult size or mature height",
-    "identification_clues": "What clues help you identify it?",
-    "adaptations_ecology": "How does it live here? Include a campus observation or question."
+    "identification_clues": "Distinctive features, colors, and body parts",
+    "adaptations_ecology": "Habitat, food, adaptations, and ecosystem role"
   },
   "files": [
     {
