@@ -167,6 +167,32 @@ async function pruneAssets(clear=false){
   });
 }
 function stopDrawing(){clearTimeout(drawTimer);drawingPointer=null;++generation;}
+async function readHostedLayouts(){
+  const layouts=await Promise.all(catalog.map(async item=>{const response=await fetchProjectFile(item.url);if(!response.ok)throw Error('Cannot reload project layout: '+item.title);return readTemplate(await response.text());}));
+  validateRuleTemplates(project.colorRules,layouts);
+  let back=null;
+  if(project.cardBack?.svg){const response=await fetchProjectFile(project.cardBack.templateUrl);if(!response.ok)throw Error('Cannot reload the project back layout.');back=readTemplate(await response.text());}
+  return {layouts,back};
+}
+async function reloadProjectLayouts(){
+  if(!project?.editableTemplates || localBundle)return;
+  if(!confirm('Reload the project\'s current SVG layouts? This replaces the saved front and back templates. Card text, artwork, drawings, colors, and image positions stay. Cards with their own front layout keep it. Save your project first to keep any template edits.'))return;
+  await withLoading('Reloading project layouts…',async()=>{
+    // Validate every layout before changing the workspace or its saved recovery.
+    const {layouts,back}=await readHostedLayouts();
+    const index=catalog.findIndex(item=>item.id===(catalog.some(t=>t.id===state.templateId)?state.templateId:project.starter.template));
+    const selected=index<0?0:index;
+    stopDrawing();
+    catalog.forEach((item,i)=>item.source=layouts[i].source);
+    template=layouts[selected];state.templateId=catalog[selected].id;state.templateSVG=template.source;
+    backTemplate=back;
+    if(back){state.backTemplateSVG=back.source;project.cardBack.layout=back;}
+    else {delete state.backTemplateSVG;activeSide='front';}
+    save();updateSideTools();await showCard();
+    $('#project-layout-status').textContent='Project layouts reloaded. Your card text and artwork were kept. Cards with their own front layout keep it.';
+  });
+}
+$('#reload-project-layouts').onclick=()=>run(reloadProjectLayouts);
 async function startOver(){
   const hosted=Boolean(project?.csv && !localBundle);
   const message=hosted?`Restore ${project.name}? This replaces your current cards, drawings, and edited layouts with the project's starter cards, artwork, and both original layouts. Save your project first to keep your work.`:`Start over? This clears all ${state.cards.length} cards, imported images, and drawings. Your current SVG template stays; starting colors are restored. Save your project first to keep your work.`;
@@ -175,9 +201,7 @@ async function startOver(){
     stopDrawing();
     if(hosted){
       // Fetch both layouts before replacing recovery; a failed download keeps saved work.
-      const sources=await Promise.all(catalog.map(async item=>{const response=await fetchProjectFile(item.url);if(!response.ok)throw Error('Cannot restore starter template.');return readTemplate(await response.text()).source;}));
-      let restoredBack=null;
-      if(project.cardBack?.svg){const response=await fetchProjectFile(project.cardBack.templateUrl);if(!response.ok)throw Error('Cannot restore starter back.');restoredBack=readTemplate(await response.text());}
+      const {layouts,back:restoredBack}=await readHostedLayouts(),sources=layouts.map(layout=>layout.source);
       const previousSources=catalog.map(item=>item.source),previousBack=backTemplate,previousState=state;
       try{
         catalog.forEach((item,i)=>item.source=sources[i]);backTemplate=restoredBack; if(project.cardBack?.svg)project.cardBack.layout=restoredBack;
@@ -514,6 +538,7 @@ function setupProject(){
   if(project.csv && !localBundle){$('#start-over').textContent='Restore starter examples';$('#workspace-tools .hint').textContent='Reload the original cards, artwork, and layouts. Save your project first to keep your edits.';}
   if(project.id==='field-guide'){document.body.classList.add('field-guide');canvas.width=540;canvas.height=610;}
   $('#template-tools .open-project').hidden=!project.editableTemplates;
+  $('#project-layout-tools').hidden=!project.editableTemplates || Boolean(localBundle);
   $('.intro h1').textContent=project.name;$('.intro p').textContent=project.description || '';document.title=project.name+' · Classroom Cards';
   $('.custom-colors').hidden=false;
   $('#project-resources').hidden=!project.files.length && !project.expansions?.length;$('#project-files').replaceChildren();$('#project-document').hidden=true;
@@ -735,6 +760,10 @@ async function finishStart(recovered){
   else {const item=catalog.find(t=>t.id===project?.starter.template) || catalog[0], response=await fetch(item.url || 'templates/'+item.svg);if(!response.ok)throw Error('Cannot open the first template.');applyTemplate(await response.text(),item.id);}
   if(state.backTemplateSVG){backTemplate=readTemplate(state.backTemplateSVG);activeSide='front';updateSideTools();}
   else if(backTemplate)state.backTemplateSVG=backTemplate.source;
+  if(recovered && project?.editableTemplates && !localBundle){
+    const published=catalog.find(item=>item.id===state.templateId);
+    if((published && published.source!==template.source) || (project.cardBack?.layout && project.cardBack.layout.source!==backTemplate?.source))$('#project-layout-status').textContent='Your saved layouts differ from the project files. Reload project layouts to use the current SVG files while keeping your card text and artwork.';
+  }
   await openStarter(recovered);
   if(!$('#recovery-error').hidden)return;
   await document.fonts.load('7px "Liberation Sans"');await document.fonts.load('bold 11px "Liberation Sans"');await document.fonts.load('italic 7px "Liberation Sans"');

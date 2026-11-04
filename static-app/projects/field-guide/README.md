@@ -21,6 +21,8 @@ The back reference plates are colored-pencil classroom illustrations. Students c
 
 ## Restore the examples
 
+When you edit this project's SVG files on disk, refresh the local website and choose **Reload project layouts** under Template layout. This loads both current SVG files and keeps your card text, artwork, drawings, colors, and image positions. Cards imported with their own front layout keep that layout. Opening or refreshing the starter normally recovers layouts saved in this browser, so changes to the files do not automatically replace your work. **Open template SVG** also loads an edited file directly for the selected side. On a published website, upload the changed files first.
+
 Choose **Restore starter examples** below the editor to reload all four demo cards, their graphics, and both original SVG layouts. Save your project first to keep your edits. Opening the starter link normally recovers your browser workspace; it does not replace saved work. An earlier saved Field Guide shows a notice explaining how to restore the updated starter.
 
 The plant example explicitly describes growth habit, leaf arrangement, and inflorescence in the open identification notes. Students can draw these features in the unlabeled artwork area without choosing a more complex plant-only template. Example text describes the organisms rather than giving directions or asking questions. It does not claim sightings at your school.
