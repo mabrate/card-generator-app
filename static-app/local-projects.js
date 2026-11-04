@@ -82,9 +82,15 @@ export async function resolveLocalProject(entries,catalog) {
 function database(){return new Promise((resolve,reject)=>{const r=indexedDB.open('classroom-cards-local-projects',1);r.onupgradeneeded=()=>r.result.createObjectStore('projects');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 export async function storeLocalProject(bundle){const db=await database(),id=crypto.randomUUID();try{await new Promise((resolve,reject)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').put(bundle,id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});return id;}finally{db.close();}}
 export async function getLocalProject(id){const db=await database();try{return await new Promise((resolve,reject)=>{const r=db.transaction('projects').objectStore('projects').get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}finally{db.close();}}
-// Store entries without compression: portable, offline, and readable by unzip().
 export async function zipProject(entries) {
-  entries=projectFiles(entries);
+  return zipFiles(projectFiles(entries));
+}
+// Store ordinary files without compression; finished SVG sets do not need a project manifest.
+export async function zipFiles(entries) {
+  if(!entries.length || entries.length>MAX_FILES)throw Error('Choose 1–2,000 files for a ZIP.');
+  const paths=new Set();let total=0;
+  for(const {path,file} of entries){safePath(path);if(paths.has(path))throw Error('Duplicate ZIP path: '+path);paths.add(path);total+=file.size;}
+  if(total>LIMIT)throw Error('ZIP contents must total under 250 MB.');
   const chunks=[],directory=[];let offset=0;
   for(const {path,file} of entries){
     const name=new TextEncoder().encode(path),data=new Uint8Array(await file.arrayBuffer()),crc=crc32(data);

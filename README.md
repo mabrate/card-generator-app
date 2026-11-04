@@ -65,4 +65,6 @@ python3 -m venv .venv
 
 The scripts use installed Google Chrome when available, otherwise Playwright's Chromium. They start the main `run.py` server on temporary localhost ports and check layout, reference pages, static serving, template controls, project import/export, filenames, artwork, colors, drawings, quantities, card backs, printing, offline recovery, and invalid-input preservation. They do not verify physical iPad or printer behavior.
 
+The optional bulk SVG check uses Node.js with the Playwright npm package: `node scripts/bulk_svg_smoke.cjs`. It starts a temporary localhost server and checks the three export modes, numbered filenames, embedded artwork/fonts, current layouts and colors, missing-asset errors, ZIP reopening, and offline export. It uses Google Chrome by default; set `CHROME_BIN` to another Chromium executable if needed.
+
 `demo/` contains classroom content and historical source archives. It is not served by the app. `scripts/package_demo_art.mjs` is an optional archive-artwork utility, not a runtime requirement. The former server database/uploads (`data/`) and generated exports (`output/`) have been removed. Current work lives in browser storage and downloaded project ZIPs. The previous FastAPI/SQLite application, migrations, and backend-specific tests have been removed. Git history retains the earlier implementation.

@@ -9,6 +9,7 @@ import {projectId, loadProject, validateExpansionPacks, normalizeProjectPath, fe
 import {renderMarkdown} from './markdown.js';
 import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject} from './local-projects.js';
 import {loadCardBack} from './print.js';
+import {exportCardSet} from './card-export.js';
 let localBundle;
 let project, activeProjectId, KEY = 'classroom-cards.static-first.v2';
 let schemes = [{name:'Template',colors:null},...PALETTES];
@@ -158,7 +159,7 @@ function rebuildCardSelect() {
 function cardTitle(c){return c.values.common_name || c.values.element_name || Object.values(c.values).find(Boolean) || 'Untitled card';}
 function selectCard(index){return run(async()=>{stopDrawing();state.active=(index+state.cards.length)%state.cards.length;await showCard();});}
 async function pruneAssets(clear=false){
-  const retained=new Set(clear?[]:[...Object.values(state.assets),...state.cards.map(c=>c.drawingKey).filter(Boolean)]);
+  const retained=new Set(clear?[]:[...Object.values(state.assets),...state.cards.map(c=>c.drawingKey).filter(Boolean),...Object.values(importUndo?.assets || {}),...(importUndo?.cards || []).map(c=>c.drawingKey).filter(Boolean)]);
   for(const key of cache.keys())if(!retained.has(key))cache.delete(key);
   if(!db)return;
   await new Promise((resolve,reject)=>{const tx=db.transaction('assets','readwrite'),store=tx.objectStore('assets');
@@ -223,6 +224,54 @@ function rebuildAssets() {
   $('#asset-select').value=!back&&card().drawingActive?'@drawing':selected || '';
   $('#image-adjustments').hidden=!Object.keys(state.assets).length && (back || !card().drawingKey) && !selected;
 }
+function graphics(){
+  const groups=new Map();
+  for(const [name,key] of Object.entries(state.assets)){
+    if(!groups.has(key))groups.set(key,{key,names:[]});
+    groups.get(key).names.push(name);
+  }
+  for(const c of state.cards)if(c.drawingKey && !groups.has(c.drawingKey))groups.set(c.drawingKey,{key:c.drawingKey,names:[],title:'Drawing for '+cardTitle(c)});
+  return [...groups.values()].map(entry=>{
+    const names=new Set(entry.names),cards=state.cards.filter(c=>names.has(c.imageName) || names.has(c.backImageName) || c.drawingKey===entry.key);
+    const sharedBack=!backTemplate && state.cardBack===undefined && project?.cardBack?.image && names.has(project.cardBack.image);
+    const title=entry.title || [...entry.names].sort((a,b)=>Number(b.includes('/'))-Number(a.includes('/')) || a.localeCompare(b))[0];
+    const usage=cards.length?`Used by ${cards.length} card${cards.length===1?'':'s'}${sharedBack?' and the shared card back':''}.`:sharedBack?'Used as the shared card back.':'Not used by any card.';
+    return {...entry,title,cards,sharedBack,usage};
+  }).sort((a,b)=>a.title.localeCompare(b.title));
+}
+async function showGraphics(){
+  const entries=graphics(),list=$('#graphics-list');list.replaceChildren();
+  if(!entries.length){const empty=document.createElement('p');empty.textContent='No graphics in this project.';list.append(empty);return;}
+  for(const entry of entries){
+    const row=document.createElement('div');row.className='graphic-row';
+    const image=document.createElement('img');image.alt='';image.loading='lazy';
+    const data=await getAsset(entry.key);if(data)image.src=data;
+    const details=document.createElement('div');
+    const name=document.createElement('p');name.className='graphic-name';name.textContent=entry.title;
+    const usage=document.createElement('p');usage.className='hint';usage.textContent=entry.usage;
+    const button=document.createElement('button');button.type='button';button.className='button secondary danger';button.textContent='Delete graphic';button.setAttribute('aria-label','Delete '+entry.title);
+    button.onclick=()=>run(()=>deleteGraphic(entry.key));
+    details.append(name,usage,button);row.append(image,details);list.append(row);
+  }
+}
+async function deleteGraphic(key){
+  const entry=graphics().find(item=>item.key===key);if(!entry)return;
+  if(!confirm(`Delete “${entry.title}” from this project? ${entry.usage} This removes the graphic from every card using it${entry.sharedBack?' and removes the shared card back':''}. Files on your computer stay.`))return;
+  stopDrawing();
+  const names=new Set(entry.names),deleted=new Set(state.deletedGraphics || []);
+  for(const name of names){delete state.assets[name];deleted.add(name);}
+  for(const c of state.cards){
+    if(names.has(c.imageName))c.imageName='';
+    if(names.has(c.backImageName))c.backImageName='';
+    if(c.drawingKey===key){c.drawingKey=null;c.drawingActive=false;deleted.add('graphics/drawing-'+c.id+'.png');}
+  }
+  if(entry.sharedBack)state.cardBack=null;
+  state.deletedGraphics=[...deleted];save();await showCard();showCardBack();
+  if(!storageError)try{await pruneAssets();}catch{assetError='Graphic removed, but browser image storage could not be cleaned up.';save();}
+  await showGraphics();$('#graphics-status').textContent=`Deleted “${entry.title}”.`;
+  ($('#graphics-list button') || $('#graphics-dialog form button')).focus();
+}
+$('#manage-graphics').onclick=()=>run(async()=>{$('#graphics-status').textContent='';$('#graphics-dialog').showModal();await showGraphics();});
 function render() {
   updateAutomaticColors();
   rendered=renderTemplate(cardLayout(),card().values,cardColors(),imageData,cardCrop(),$('#card-preview'));
@@ -241,6 +290,7 @@ function updateActionButtons(){
   $('#print-card').disabled=rendered.issues.length>0 || busy;
   $('#delete-card').disabled=state.cards.length<=1 || busy;
   $('#delete-card').title=state.cards.length<=1?'Keep at least one card. Add or import another card first.':'Delete the selected card';
+  updateCardExportOptions();
 }
 async function showCard() {
   const seq=++generation; assetLoading=true;
@@ -253,8 +303,8 @@ async function showCard() {
   for(const key of ['x','y','zoom']) $('#crop-'+key).value=cardCrop()[key];
   ctx.clearRect(0,0,canvas.width,canvas.height);
   const current=card();
-  const back=activeSide==='back',selectedImage=back?(current.backImageName || current.imageName):current.imageName;
-  const artworkKey=back?(current.backImageName?state.assets[current.backImageName]:current.drawingActive?current.drawingKey:state.assets[current.imageName]):current.drawingActive?current.drawingKey:state.assets[current.imageName];
+  const back=activeSide==='back',ownBack=back && Object.hasOwn(current,'backImageName'),selectedImage=ownBack?current.backImageName:current.imageName;
+  const artworkKey=ownBack?state.assets[current.backImageName]:current.drawingActive?current.drawingKey:state.assets[current.imageName];
   const [pic,drawing] = await Promise.all([getAsset(artworkKey),getAsset(!back?current.drawingKey:null)]);
   if(seq!==generation)return;
   if(pic)await decodeImage(pic);
@@ -338,16 +388,18 @@ function cardCsv(imagePaths={}){
 async function exportProject(){
   clearTimeout(drawTimer);
   if(drawingPointer!==null)throw Error('Finish your drawing before saving.');
-  const files=new Map(localBundle?.files.map(e=>[e.path,e.file]) || []),missingArchives=[];
+  const deleted=new Set((state.deletedGraphics || []).filter(path=>!Object.hasOwn(state.assets,path)));
+  const files=new Map(localBundle?.files.filter(e=>!deleted.has(e.path)).map(e=>[e.path,e.file]) || []),missingArchives=[];
   let manifest={version:1,name:project?.name || 'Classroom Cards',files:[]};
   if(localBundle)manifest=JSON.parse(await files.get('manifest.json').text());
   else if(project){
     const response=await fetch(new URL('manifest.json',project.base));if(!response.ok)throw Error('Cannot save project resources.');manifest=await response.json();
-    for(const item of project.files){const r=await fetch(item.url);if(!r.ok){if(r.status===404 && item.type==='download' && /\.zip$/i.test(item.path)){missingArchives.push(item.path);continue;}throw Error('Cannot save '+item.path);}files.set(item.path,await r.blob());}
+    for(const item of project.files){if(deleted.has(item.path))continue;const r=await fetch(item.url);if(!r.ok){if(r.status===404 && item.type==='download' && /\.zip$/i.test(item.path)){missingArchives.push(item.path);continue;}throw Error('Cannot save '+item.path);}files.set(item.path,await r.blob());}
     if(missingArchives.length)manifest.files=manifest.files.filter(item=>!missingArchives.includes(item.path));
-    if(project.cardBack?.image){const r=await fetch(project.cardBack.url);if(!r.ok)throw Error('Cannot save card back.');files.set(project.cardBack.image,await r.blob());}
+    if(project.cardBack?.image && !deleted.has(project.cardBack.image)){const r=await fetch(project.cardBack.url);if(!r.ok)throw Error('Cannot save card back.');files.set(project.cardBack.image,await r.blob());}
     if(project.cardBack?.svg){const r=await fetch(project.cardBack.templateUrl);if(!r.ok)throw Error('Cannot save card-back template.');files.set(project.cardBack.svg,await r.blob());}
   }
+  if(manifest.files)manifest.files=manifest.files.filter(item=>!deleted.has(normalizeProjectPath(item.path)));
   const templates=[];
   for(const item of catalog){
     const path=normalizeProjectPath(item.svg || 'templates/'+item.id+'.svg');let source=item.id===state.templateId?state.templateSVG:item.source;
@@ -420,6 +472,7 @@ function validateState(value,context){
 
   for(const c of value.cards){c.copies ??= 1;if(!Number.isInteger(c.copies)||c.copies<1||c.copies>600)throw Error('The project contains invalid copy counts.');if(c.colors && (Object.values(c.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v))))throw Error('The project contains invalid or unavailable card colors.');if(!c.values||Object.values(c.values).some(v=>typeof v!=='string')||typeof c.id!=='string'||(c.imageName && typeof c.imageName!=='string')||(c.backImageName && typeof c.backImageName!=='string')||(c.drawingKey && typeof c.drawingKey!=='string'))throw Error('The project contains invalid card data.');c.crop={x:.5,y:.5,zoom:1,...c.crop};for(const key of ['x','y','zoom'])if(!Number.isFinite(c.crop[key]))throw Error('The project contains invalid image positioning.');if(c.backCrop && (![c.backCrop.x,c.backCrop.y,c.backCrop.zoom].every(Number.isFinite)||c.backCrop.x<0||c.backCrop.x>1||c.backCrop.y<0||c.backCrop.y>1||c.backCrop.zoom<.1||c.backCrop.zoom>4))throw Error('Invalid back image crop.');}
   if(!value.assets||Object.values(value.assets).some(v=>typeof v!=='string')||!value.colors||Object.values(value.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('The project contains invalid image or color data.');
+  if(value.deletedGraphics!==undefined){if(!Array.isArray(value.deletedGraphics))throw Error('Invalid deleted graphics list.');value.deletedGraphics=value.deletedGraphics.map(normalizeProjectPath);}
   if(value.imported && (!Array.isArray(value.imported.rows)||!Array.isArray(value.imported.headers)||!Array.isArray(value.imported.indices)||value.imported.indices.length!==value.imported.rows.length||value.imported.indices.some(i=>!Number.isInteger(i)||!value.cards[i])||!value.imported.mapping))throw Error('The saved CSV data is invalid.');
   if(value.imported)for(const i of value.imported.indices)value.cards[i].csvImportId ||= 'recovered-csv';
   if(value.expansionPacks!==undefined)validateExpansionPacks(value.expansionPacks);
@@ -518,6 +571,32 @@ async function openPrint(scope,copies,status){
 }
 $('#print-sheets').onclick=()=>run(()=>openPrint('all',1,'#print-status'));
 $('#print-card').onclick=()=>run(()=>openPrint('current',1,'#single-print-status'));
+function updateCardExportOptions(){
+  const common=!backTemplate && state.cardBack!==null && Boolean(state.cardBack || project?.cardBack?.image);
+  $('#export-pairs').disabled=busy || (!backTemplate && !common);
+  $('#export-common').disabled=busy || !common;
+  $('#export-pairs-hint').textContent=backTemplate?'A separate front and back SVG for each card.':common?'A front and a copy of the common back for each card.':'Define a card back to include backs.';
+  $('#export-common-hint').textContent=common?'All fronts, plus one common back SVG.':backTemplate?'This set has a different back for each card.':'Define a common card back to use this option.';
+}
+$('#download-set').onclick=()=>{
+  updateCardExportOptions();
+  if($('#card-export-dialog input:checked')?.disabled)$('#export-fronts').checked=true;
+  $('#card-export-summary').textContent=`${state.cards.length} card${state.cards.length===1?'':'s'}. One copy of each card, in the current order.`;
+  $('#card-export-status').textContent='';$('#card-export-dialog').showModal();
+};
+$('#download-set-zip').onclick=()=>run(async()=>{
+  const status=$('#card-export-status'),dialog=$('#card-export-dialog');
+  status.textContent='Preparing SVG files…';dialog.setAttribute('aria-busy','true');
+  try{
+    clearTimeout(drawTimer);if(drawingPointer!==null)throw Error('Finish your drawing before downloading.');
+    const snapshot=structuredClone(state);
+    const mode=$('#card-export-dialog input:checked').value;
+    const result=await exportCardSet({snapshot,getAsset,mode,project,schemes,cardBack:await currentCardBack(),onProgress:(i,total,name)=>status.textContent=`Preparing card ${i} of ${total}: ${name}…`});
+    download(slug(project?.name || 'classroom-cards')+'-'+mode+'-svg.zip','application/zip',result.blob);
+    status.textContent=`Downloaded ${result.count} SVG files. Unzip them to use in Handout Maker.`;
+  }catch(err){status.textContent='ZIP was not downloaded. '+err.message;throw err;}
+  finally{dialog.setAttribute('aria-busy','false');}
+});
 $('#download-svg').onclick=()=>run(async()=>{
   render();if(rendered.issues.length)throw Error('Complete or shorten the marked fields before exporting.');
   const svg=rendered.root.cloneNode(true);svg.setAttribute('data-card-app','finished-card');

@@ -30,6 +30,25 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 #open-project-dialog{border:1px solid #dce3dc;border-radius:14px;padding:24px;max-width:min(440px,calc(100vw - 28px));color:#18342c}
 #open-project-dialog::backdrop{background:rgba(15,35,25,.35)}
 #open-project-dialog form{margin-top:18px}
+#graphics-dialog{width:min(680px,calc(100vw - 28px));max-height:85vh;border:1px solid #dce3dc;border-radius:14px;padding:24px;color:#18342c}
+#graphics-dialog::backdrop{background:rgba(15,35,25,.35)}
+#card-export-dialog{width:min(560px,calc(100vw - 28px));max-height:90vh;border:1px solid #dce3dc;border-radius:14px;padding:24px;color:#18342c}
+#card-export-dialog::backdrop{background:rgba(15,35,25,.35)}
+#card-export-dialog h2{margin:0;font-size:22px}
+#card-export-dialog fieldset{border:0;padding:0;margin:18px 0}
+#card-export-dialog legend{font-weight:700;margin-bottom:8px}
+.export-choice{display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px;padding:12px 0;font-size:14px;font-weight:650;cursor:pointer}
+.export-choice input{width:18px;height:18px;min-height:18px;margin:2px 0}
+.export-choice .hint{display:block;margin:4px 0 0;font-weight:400}
+.export-choice:has(input:disabled){opacity:.6;cursor:default}
+#card-export-dialog>p{overflow-wrap:anywhere}
+#card-export-status{font-size:14px}
+#graphics-dialog h2{margin:0;font-size:22px}
+#graphics-dialog form{margin-top:18px}
+.graphic-row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid #dce3dc}
+.graphic-row img{width:88px;height:100px;object-fit:contain;background:#f2f4ef;border-radius:6px}
+.graphic-name{margin:0;font-size:14px;font-weight:700;overflow-wrap:anywhere}
+.graphic-row .hint{margin:6px 0 10px}
 
 .reference-links{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;margin-top:12px}
 .reference-links a{font-size:11px;color:#6e7e74;text-decoration:none}

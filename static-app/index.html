@@ -3,10 +3,29 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
-<link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=47"></script>
+<link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=49"></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><span>STUDENT STUDIO</span></header>
+<dialog id="card-export-dialog" aria-labelledby="card-export-title">
+  <h2 id="card-export-title">Download all cards</h2>
+  <p id="card-export-summary"></p>
+  <fieldset><legend>Card sides</legend>
+    <label class="export-choice"><input id="export-fronts" name="export-sides" type="radio" value="fronts" checked><span>Front only<span class="hint">One front SVG for each card.</span></span></label>
+    <label class="export-choice"><input id="export-pairs" name="export-sides" type="radio" value="pairs"><span>Front and back of each card<span id="export-pairs-hint" class="hint"></span></span></label>
+    <label class="export-choice"><input id="export-common" name="export-sides" type="radio" value="common"><span>Fronts and the common back<span id="export-common-hint" class="hint"></span></span></label>
+  </fieldset>
+  <p class="hint">Numbered, labeled SVG files with artwork and fonts included. For example: 001-ladybug-front.svg and 001-ladybug-back.svg. A single common back is named 000-common-back.svg.</p>
+  <p id="card-export-status" role="status" aria-live="polite"></p>
+  <div class="download-links"><button id="download-set-zip" class="button" type="button">Download SVG ZIP</button><form method="dialog"><button class="button secondary" type="submit">Close</button></form></div>
+</dialog>
+<dialog id="graphics-dialog" aria-labelledby="graphics-title">
+  <h2 id="graphics-title">Manage graphics</h2>
+  <p>Delete unwanted images and drawings from this project. Files on your computer stay.</p>
+  <p id="graphics-status" class="hint" role="status"></p>
+  <div id="graphics-list"></div>
+  <form method="dialog"><button class="button secondary" type="submit">Close</button></form>
+</dialog>
 <main aria-busy="true">
   <section class="intro"><h1>Make a card.</h1><p>Choose a template. Add your words and artwork.</p></section>
   <div id="app-loading" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span id="loading-message">Opening your workspace…</span></div>
@@ -31,7 +50,7 @@
         <label class="copies-label">Copies of this card<input id="card-copies" type="number" min="1" max="600" step="1" value="1"></label>
         <div id="fields" class="fields"></div>
         <div class="draw-heading"><h2>3. Add your artwork</h2></div>
-        <div class="image-inputs"><label class="button secondary open-project">Choose an image<input id="image-files" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><label class="button secondary open-project">Take a photo<input id="camera-file" type="file" accept="image/*" capture="environment"></label></div>
+        <div class="image-inputs"><label class="button secondary open-project">Choose an image<input id="image-files" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><label class="button secondary open-project">Take a photo<input id="camera-file" type="file" accept="image/*" capture="environment"></label><button id="manage-graphics" class="button secondary" type="button">Manage graphics</button></div>
         <p class="hint">Use a picture or a photo of your drawing.</p><p id="image-status" class="hint" role="status"></p>
         <details id="image-adjustments" class="student-options" hidden><summary>Adjust or switch your image</summary><label class="template-select">Image for this card<select id="asset-select"><option value="">No image</option></select></label><div class="crop-tools"><label>Zoom<input id="crop-zoom" type="range" min=".1" max="4" step=".05" value="1"></label><label>Horizontal position<input id="crop-x" type="range" min="0" max="1" step=".01" value=".5"></label><label>Vertical position<input id="crop-y" type="range" min="0" max="1" step=".01" value=".5"></label></div></details>
         <details id="drawing-tools" class="student-options"><summary>Draw here instead</summary><div class="draw-tools"><label>Ink<input id="ink-color" type="color" value="#244734"></label><label>Brush<input id="brush-size" type="range" min="2" max="24" value="7"></label><button id="clear-drawing" class="button secondary" type="button">Clear drawing</button><button id="use-drawing" class="button secondary" type="button">Use drawing</button></div><canvas id="drawing" width="900" height="540" aria-label="Drawing area"></canvas><p class="hint">Draw with a finger, stylus, or mouse.</p></details>
@@ -54,7 +73,7 @@
       <div class="card-wrap"><div id="card-preview" class="card-preview"></div></div>
       <ul id="fit-issues" class="error" aria-live="polite"></ul>
       <p id="save-state" class="save-state" role="status">Opening your card…</p>
-      <div class="actions main-actions"><button id="download-svg" class="button" type="button" disabled>Download card</button><button id="print-card" class="button secondary" type="button">Print this card</button><button id="print-sheets" class="button secondary" type="button">Print all cards</button></div>
+      <div class="actions main-actions"><button id="download-svg" class="button" type="button" disabled>Download card</button><button id="download-set" class="button secondary" type="button">Download all cards</button><button id="print-card" class="button secondary" type="button">Print this card</button><button id="print-sheets" class="button secondary" type="button">Print all cards</button></div>
       <div class="preview-card-back"><label class="button secondary open-project">Define card back<input id="card-back-file" type="file" accept="image/png,image/jpeg,image/webp"></label><button id="remove-card-back" class="button secondary" type="button" hidden>Remove card back</button><img id="card-back-preview" alt="Card back preview" hidden><p id="card-back-status" class="hint" role="status"></p></div>
   <div class="backup-actions"><button id="add-expansion" class="button secondary" type="button">Add expansion</button><button id="import-cards" class="button secondary" type="button">Import cards</button><button id="save-project" class="button secondary" type="button">Save project</button><button id="open-project" class="button secondary" type="button">Open project folder</button></div>
       <p id="local-project-status" class="hint" role="status"></p>
