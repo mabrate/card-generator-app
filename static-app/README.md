@@ -14,6 +14,8 @@ Open the two-sided [Field Guide Starter](./?project=field-guide) to explore edit
 
 Choose a starter in **Template layout**, then add words and artwork. Use **New card** to add cards and the arrows, dots, or title menu above the preview to select a card. Each card has its own copy count and colors.
 
+Choosing one image or taking a photo automatically replaces the current card side's image and resets its crop. Other cards and the opposite side keep their images. Previous images remain available in the image picker. Choosing several images adds them to the library so you can assign them to cards.
+
 Use **Manage graphics** beside Choose an image to browse image and drawing thumbnails. Each entry shows how many cards use it. **Delete graphic** asks for confirmation, then removes that graphic from the project and every card using it. Saved project ZIPs omit deleted graphics, and deletion survives refreshing the page. The original files on your computer stay. Choose **No image** in the image picker to remove an image from just the current card without deleting it from the project.
 
 The preview groups **Download card**, **Print this card**, **Print all cards**, and **Define card back**. Card-back preview and removal appear only when a back is selected. Save project and Open project folder sit below the print controls. Open project folder offers a folder picker or a saved ZIP picker. Project imports create separate browser workspaces.

@@ -359,8 +359,20 @@ async function normalizeImage(file) {
 async function uploadImages(files) {
   if(files.length>40)throw Error('Choose up to 40 images at a time.');
   if(new Set(files.map(f=>f.name)).size!==files.length)throw Error('Rename duplicate image filenames before uploading.');
-  for(const file of files){$('#image-status').textContent='Saving '+file.name+'…';const data=await normalizeImage(file);const key=state.assets[file.name] || 'image-'+blankCard().id;await putAsset(key,data);state.assets[file.name]=key;save();}
-  if(files.length===1){if(activeSide==='back'&&!card().backImageName)card().backImageName=files[0].name;else if(activeSide==='front'&&!card().imageName){card().imageName=files[0].name;card().drawingActive=false;}}
+  const uploaded=[];
+  for(const file of files){
+    $('#image-status').textContent='Saving '+file.name+'…';const data=await normalizeImage(file);let name=file.name;
+    // A replacement belongs to this card; an existing library image may be shared.
+    if(files.length===1 && Object.hasOwn(state.assets,name)){
+      const dot=name.lastIndexOf('.'),stem=dot>0?name.slice(0,dot):name,extension=dot>0?name.slice(dot):'';let index=2;
+      do{name=stem+'-'+index+extension;index++;}while(Object.hasOwn(state.assets,name));
+    }
+    const key=state.assets[name] || 'image-'+blankCard().id;await putAsset(key,data);state.assets[name]=key;uploaded.push(name);save();
+  }
+  if(files.length===1){
+    if(activeSide==='back'){card().backImageName=uploaded[0];card().backCrop={x:.5,y:.5,zoom:1};}
+    else{card().imageName=uploaded[0];card().drawingActive=false;card().crop={x:.5,y:.5,zoom:1};}
+  }
   await showCard();
   if(files.length>1)$('#image-adjustments').open=true;
 }

@@ -70,6 +70,8 @@ The optional bulk SVG check uses Node.js with the Playwright npm package: `node 
 
 `node scripts/template_builder_smoke.cjs` uses the same browser setup to check template editing, pointer and keyboard movement, text fitting/flow, inline fields, undo/redo, draft recovery, template and card downloads, front/back editing, project ZIP reopening, and narrow layouts.
 
+`node scripts/image_replacement_smoke.cjs` checks automatic image replacement on both sides, crop resets, drawing replacement, same-name shared-image isolation, invalid/cancel preservation, multi-file imports, browser recovery, and project ZIP reopening.
+
 `node scripts/template_colors_smoke.cjs` checks theme-role bindings and shared defaults, fixed colors, custom roles, transparency and gradients, and template/project round trips.
 
 `node scripts/template_badges_smoke.cjs` checks conditional groups, hidden-element editing without changing card values, badge styling and new checkboxes, saved visibility rules, checked/unchecked SVGs, printing, and ZIP/recovery round trips.
