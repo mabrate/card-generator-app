@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
-<link rel="stylesheet" href="style.css"><script type="module" src="studio.js?v=49"></script>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="template-builder.css"><script type="module" src="studio.js?v=55"></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><span>STUDENT STUDIO</span></header>
@@ -41,6 +41,7 @@
           <label class="template-select"><span id="template-layout-label">Template layout</span><select id="template-select" disabled></select></label>
           <button id="template-svg" class="button secondary icon-button" type="button" title="Download template SVG" aria-label="Download template SVG"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></button>
           <label class="button secondary open-project">Open template SVG<input id="svg-file" type="file" accept=".svg,image/svg+xml"></label>
+          <button id="build-template" class="button secondary" type="button">Edit template</button>
         </div>
         <p id="template-title" class="hint" hidden></p>
         <div id="project-layout-tools" hidden><button id="reload-project-layouts" class="button secondary" type="button">Reload project layouts</button><p id="project-layout-status" class="hint" role="status">Load the project's current SVG files while keeping your card text and artwork.</p></div>

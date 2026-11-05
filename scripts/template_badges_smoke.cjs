@@ -1,0 +1,45 @@
+// Conditional badge editing and preview overrides must not change card checkbox values.
+const {chromium,expect}=require('playwright/test');
+const assert=require('node:assert/strict'),cp=require('node:child_process'),path=require('node:path'),fs=require('node:fs'),os=require('node:os');
+const root=path.resolve(__dirname,'..'),key='classroom-cards.static-first.v2:project:field-guide';
+(async()=>{
+  let browser;const temp=fs.mkdtempSync(path.join(os.tmpdir(),'card-template-badges-'));
+  const server=cp.spawn('python3',['-u','-m','http.server','0','--bind','127.0.0.1','--directory',path.join(root,'static-app')]);
+  try{
+    const port=await new Promise((resolve,reject)=>{server.stdout.on('data',data=>{const match=String(data).match(/port (\d+)/);if(match)resolve(match[1]);});server.on('error',reject);});
+    browser=await chromium.launch({executablePath:process.env.CHROME_BIN || '/usr/bin/google-chrome',headless:true});
+    const page=await browser.newPage({serviceWorkers:'block',viewport:{width:1400,height:1000}}),errors=[];page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);
+    const ready=()=>page.waitForFunction(()=>document.querySelector('main').getAttribute('aria-busy')==='false');
+    const set=async(name,value)=>{await page.locator('#tb-prop-'+name).fill(String(value));await page.locator('#tb-prop-'+name).dispatchEvent('change');};
+    const group=field=>page.locator('#tb-elements button[data-kind=g][data-condition='+field+']');
+    const glyph=field=>page.locator('#tb-elements button[data-field='+field+']');
+    const save=async(button,name)=>{const download=page.waitForEvent('download');await page.locator(button).click();const file=path.join(temp,name);await (await download).saveAs(file);return file;};
+    const rootSVG=async(file,selector)=>page.evaluate(({source,selector})=>{const doc=new DOMParser().parseFromString(source,'image/svg+xml');return [...doc.querySelectorAll(selector)].map(el=>({text:el.textContent,condition:el.getAttribute('data-visible-if')}));},{source:fs.readFileSync(file,'utf8'),selector});
+    await page.goto('http://127.0.0.1:'+port+'/?project=field-guide');await ready();await expect(page.locator('#fields [data-field=native]')).not.toBeChecked();
+    const originalValues=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).cards.map(card=>card.values),key);
+    await page.locator('#build-template').click();await expect(group('native')).toHaveCount(1);await expect(page.locator('#tb-canvas #native-badge')).toHaveCount(0);
+    await page.locator('#tb-show-conditional').check();await expect(page.locator('#tb-canvas #native-badge')).toHaveCount(1);await page.locator('#tb-show-conditional').uncheck();await expect(page.locator('#tb-canvas #native-badge')).toHaveCount(0);
+    await group('native').click();await expect(page.locator('#tb-canvas #native-badge')).toHaveCount(1);await expect(page.locator('#tb-visibility-status')).toContainText('Card data is unchanged');await expect(page.locator('#tb-prop-data-visible-if')).toHaveValue('native');
+    const x=Number(await page.locator('#tb-prop-x').inputValue());await set('x',x-15);assert.ok(Math.abs(Number(await page.locator('#tb-prop-x').inputValue())-(x-15))<.02);await set('height',18);assert.ok(Math.abs(Number(await page.locator('#tb-prop-height').inputValue())-18)<.02);await expect(page.locator('#tb-canvas #native-badge')).toHaveAttribute('transform',/matrix/);
+    await page.locator('#tb-elements button[data-kind=circle]').first().click();await set('fill','#8844aa');await expect(page.locator('#tb-canvas #native-badge circle')).toHaveAttribute('fill','#8844aa');await expect(page.locator('#tb-edit-conditional-group')).toBeVisible();
+    await glyph('native').click();await expect(page.locator('#tb-prop-data-input')).toHaveValue('checkbox');await expect(page.locator('#tb-prop-data-checked-text')).toHaveValue('N');await set('data-checked-text','M');await set('data-field','native_marker');await set('data-label','Native marker');await expect(group('native_marker')).toHaveCount(1);await expect(page.locator('#tb-canvas [data-field=native_marker]')).toHaveText('M');
+    await page.locator('#tb-prop-data-input').selectOption('text');await expect(page.locator('#tb-error')).toContainText('controls visibility');await expect(page.locator('#tb-prop-data-input')).toHaveValue('checkbox');
+    await page.locator('#tb-delete').click();await expect(page.locator('#tb-error')).toContainText('controls another element');await expect(glyph('native_marker')).toHaveCount(1);
+    await set('data-checked-text','');await expect(page.locator('#tb-canvas [data-field=native_marker]')).toHaveText('');await page.locator('#tb-undo').click();await expect(page.locator('#tb-canvas [data-field=native_marker]')).toHaveText('M');
+    await page.locator('#tb-edit-conditional-group').click();await page.locator('#tb-prop-data-visible-if').selectOption('');await expect(group('native_marker')).toHaveCount(0);await expect(page.locator('#tb-elements button[data-kind=g]')).toHaveCount(1);await page.locator('#tb-undo').click();await expect(group('native_marker')).toHaveCount(1);
+    const templateFile=await save('#tb-download','template.svg');const templateGroups=await rootSVG(templateFile,'g#native-badge');assert.equal(templateGroups[0].condition,'native_marker');assert.ok(!fs.readFileSync(templateFile,'utf8').includes('data-builder-overlay'));
+    await page.locator('#tb-upload').setInputFiles(templateFile);await group('native_marker').click();await expect(page.locator('#tb-prop-data-visible-if')).toHaveValue('native_marker');await page.screenshot({path:'/tmp/card-template-builder-badge.png'});
+    await page.locator('#tb-apply').click();assert.deepEqual(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).cards.map(card=>card.values),key),originalValues);
+    await expect(page.locator('#fields [data-field=native_marker]')).not.toBeChecked();await expect(page.locator('#card-preview #native-badge')).toHaveCount(0);
+    const uncheckedFile=await save('#download-svg','unchecked.svg');assert.equal((await rootSVG(uncheckedFile,'g#native-badge')).length,0);
+    await page.locator('#fields [data-field=native_marker]').check();await expect(page.locator('#card-preview #native-badge')).toHaveCount(1);await expect(page.locator('#card-preview [data-field=native_marker]')).toHaveText('M');
+    const checkedFile=await save('#download-svg','checked.svg');assert.equal((await rootSVG(checkedFile,'g#native-badge')).length,1);
+    const pop=page.waitForEvent('popup');await page.locator('#print-card').click();const print=await pop;await print.waitForSelector('#print:not([disabled])');await expect(print.locator('.fronts [data-field=native_marker]')).toHaveText('M');await print.close();
+    // A new badge supplies its own checkbox and can be edited independently.
+    await page.locator('#build-template').click();await page.locator('#tb-add-badge').click();await expect(group('badge_1')).toHaveCount(1);await glyph('badge_1').click();await set('data-field','protected');await set('data-label','Protected');await set('data-checked-text','P');await page.locator('#tb-apply').click();
+    await expect(page.locator('#fields [data-field=protected]')).not.toBeChecked();await expect(page.locator('#card-preview [data-visible-if=protected]')).toHaveCount(0);await page.locator('#fields [data-field=protected]').check();await expect(page.locator('#card-preview [data-field=protected]')).toHaveText('P');await page.locator('#fields [data-field=native_marker]').uncheck();await expect(page.locator('#card-preview #native-badge')).toHaveCount(0);await expect(page.locator('#card-preview [data-field=protected]')).toHaveText('P');
+    const projectFile=await save('#save-project','project.zip');await page.locator('#open-json').setInputFiles(projectFile);await page.waitForURL('**/?local=*');await ready();await expect(page.locator('#fields [data-field=protected]')).toBeChecked();await expect(page.locator('#fields [data-field=native_marker]')).not.toBeChecked();await expect(page.locator('#card-preview #native-badge')).toHaveCount(0);await expect(page.locator('#card-preview [data-field=protected]')).toHaveText('P');
+    await page.reload();await ready();await expect(page.locator('#card-preview [data-field=protected]')).toHaveText('P');await page.locator('#build-template').click();await page.setViewportSize({width:390,height:844});await group('protected').click();assert.equal(await page.locator('#template-builder').evaluate(el=>el.scrollWidth<=el.clientWidth),true);await page.locator('#tb-close').click();
+    assert.deepEqual(errors,[]);console.log('PASS: hidden Native group selection, group positioning/resize, circle/symbol editing, checkbox/condition controls, rename/delete guards, undo, preview isolation, template upload/download, unchecked/checked SVGs, print, new independent badges, ZIP reopen, recovery and mobile layout.');
+  }finally{if(browser)await browser.close();server.kill();fs.rmSync(temp,{recursive:true,force:true});}
+})().catch(error=>{console.error(error);process.exitCode=1;});

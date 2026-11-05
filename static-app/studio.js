@@ -10,6 +10,7 @@ import {renderMarkdown} from './markdown.js';
 import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject} from './local-projects.js';
 import {loadCardBack} from './print.js';
 import {exportCardSet} from './card-export.js';
+import {openTemplateBuilder} from './template-builder.js';
 let localBundle;
 let project, activeProjectId, KEY = 'classroom-cards.static-first.v2';
 let schemes = [{name:'Template',colors:null},...PALETTES];
@@ -290,6 +291,8 @@ function updateActionButtons(){
   $('#print-card').disabled=rendered.issues.length>0 || busy;
   $('#delete-card').disabled=state.cards.length<=1 || busy;
   $('#delete-card').title=state.cards.length<=1?'Keep at least one card. Add or import another card first.':'Delete the selected card';
+  $('#build-template').disabled=busy || Boolean(project && !project.editableTemplates);
+  $('#build-template').title=project && !project.editableTemplates?'This project uses a fixed template.':'Open the visual template builder';
   updateCardExportOptions();
 }
 async function showCard() {
@@ -515,6 +518,21 @@ canvas.onpointerup=finishDrawing;canvas.onpointercancel=finishDrawing;
 $('#clear-drawing').onclick=()=>run(async()=>{ctx.clearRect(0,0,canvas.width,canvas.height);await saveDrawing(card().drawingActive);});
 $('#use-drawing').onclick=()=>run(()=>saveDrawing());
 $('#template-svg').onclick=()=>download(slug(cardLayout().title)+'-template.svg','image/svg+xml',cardLayout().source);
+$('#build-template').onclick=async()=>{
+  if(busy || project && !project.editableTemplates)return;
+  await document.fonts.ready;
+  const side=activeSide,ownLayout=side==='front'&&Boolean(card().layout);
+  openTemplateBuilder({source:cardLayout().source,values:{...card().values},imageData,crop:{...cardCrop()},storageKey:KEY,side,ownLayout,draftId:side+(ownLayout?':'+card().id:''),
+    onApply:async source=>{
+      const next=readTemplate(source);
+      if(side==='front' && !ownLayout)validateRuleTemplates(project?.colorRules,catalog.map(item=>item.id===state.templateId?next:readTemplate(item.source || state.templateSVG)));
+      if(ownLayout){checkProjectTemplate(source,'custom');card().layout=readTemplate(source).source;}
+      else{applyTemplate(source,side==='front'?state.templateId:'custom');if(side==='front'){const item=catalog.find(item=>item.id===state.templateId);if(item)item.title=next.title;}}
+      save();await showCard();
+      $('#project-layout-status').textContent='Template updated. Save project to carry the layout and card data to another device.';
+    }
+  });
+};
 $('#save-project').onclick=()=>run(exportProject);
 $('#open-project').onclick=()=>$('#open-project-dialog').showModal();
 $('#open-json').onchange=e=>{if($('#open-project-dialog').open)$('#open-project-dialog').close();const f=e.target.files[0];e.target.value='';if(f)run(()=>importProject(f));};

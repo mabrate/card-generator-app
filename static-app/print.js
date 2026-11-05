@@ -15,7 +15,8 @@ function isolateIds(root, prefix) {
   for(const el of nodes)if(el.id){const old=el.id;ids.set(old,prefix+old);el.id=prefix+old;}
   for(const el of nodes)for(const attr of [...el.attributes]){
     const value=attr.value.replace(/url\(\s*(['"]?)#([\w.-]+)\1\s*\)/g,(_,quote,id)=>`url(#${ids.get(id)||id})`);
-    if(attr.localName==='href'&&value.startsWith('#')&&ids.has(value.slice(1)))attr.value='#'+ids.get(value.slice(1));
+    if(attr.localName==='data-relative-to'&&ids.has(value))attr.value=ids.get(value);
+    else if(attr.localName==='href'&&value.startsWith('#')&&ids.has(value.slice(1)))attr.value='#'+ids.get(value.slice(1));
     else if(attr.localName!=='id')attr.value=value;
   }
 }

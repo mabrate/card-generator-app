@@ -54,7 +54,7 @@ with zipfile.ZipFile(sys.argv[1]) as z:
 import json,sys,zipfile
 r=Path(sys.argv[1])/'static-app';m={'version':1,'name':'Common backs','templates':[{'id':'front','title':'Front','svg':'front.svg'}],'colorSchemes':['Template'],'starter':{'template':'front'},'csv':'cards.csv','cardBack':{'image':'back.png'}}
 with zipfile.ZipFile(sys.argv[2],'w') as z:
- z.writestr('manifest.json',json.dumps(m));z.writestr('front.svg',(r/'projects/field-guide/templates/field-guide-front.svg').read_bytes());z.writestr('back.png',(r/'projects/field-guide/graphics/ladybug-reference.png').read_bytes());z.writestr('cards.csv','card_id,common_name,copies\\na,Same name,3\\nb,Same name,2\\n')`,[root,fixture]);
+ z.writestr('manifest.json',json.dumps(m));z.writestr('front.svg',(r/'projects/field-guide/templates/field-guide-front.svg').read_bytes());z.writestr('back.png',(r/'projects/field-guide/graphics/ladybug-reference.png').read_bytes());z.writestr('cards.csv','card_id,common_name,scientific_name,copies\\na,Same name,Testus example,3\\nb,Same name,Testus example,2\\n')`,[root,fixture]);
   await page.locator('#open-json').setInputFiles(fixture);await expect(page.locator('.intro h1')).toHaveText('Common backs');await ready();
   const common=inspect(await save('common','common.zip'));assert.deepEqual(common.map(e=>e.name),['001-same-name-front.svg','002-same-name-front.svg','000-common-back.svg']);assert.match(common[2].images[0],/^data:image\/png;base64,/);
   const repeated=inspect(await save('pairs','repeated.zip'));assert.equal(repeated.length,4);assert.equal(repeated[1].images[0],repeated[3].images[0]);assert.equal(repeated[1].title,'1 — Same name — Back');

@@ -23,6 +23,7 @@ Open `http://<the server computer's LAN IP>:8765/` on each device. The app does 
 ## Make and save cards
 
 1. In **Template layout**, choose a default template layout. The adjacent download icon saves its template SVG; hover for **Download template SVG**. Use **Open template SVG** for your own edited layout where project restrictions allow it.
+   **Edit template** opens the visual builder: drag/resize elements, set fonts and colors, add fields and labels, and configure wrapping, shrinking, or text that follows the field above. Upload/download a reusable template SVG in the builder, then apply it to the selected front or back. Unapplied work is recovered as a separate browser draft.
 2. Add text, artwork, colors, and copy quantities. Use New card and the card selector for multiple cards.
 3. The preview contains Download card, Print this card, Print all cards, and Define card back. Print sheets use saved quantities and include backs when selected. Save as PDF through the browser print dialog.
 4. **Save project** creates an editable ZIP. **Open project folder** opens a dialog with a folder picker and a ZIP picker. Importing opens a separate browser workspace and does not overwrite the original folder.
@@ -66,5 +67,15 @@ python3 -m venv .venv
 The scripts use installed Google Chrome when available, otherwise Playwright's Chromium. They start the main `run.py` server on temporary localhost ports and check layout, reference pages, static serving, template controls, project import/export, filenames, artwork, colors, drawings, quantities, card backs, printing, offline recovery, and invalid-input preservation. They do not verify physical iPad or printer behavior.
 
 The optional bulk SVG check uses Node.js with the Playwright npm package: `node scripts/bulk_svg_smoke.cjs`. It starts a temporary localhost server and checks the three export modes, numbered filenames, embedded artwork/fonts, current layouts and colors, missing-asset errors, ZIP reopening, and offline export. It uses Google Chrome by default; set `CHROME_BIN` to another Chromium executable if needed.
+
+`node scripts/template_builder_smoke.cjs` uses the same browser setup to check template editing, pointer and keyboard movement, text fitting/flow, inline fields, undo/redo, draft recovery, template and card downloads, front/back editing, project ZIP reopening, and narrow layouts.
+
+`node scripts/template_colors_smoke.cjs` checks theme-role bindings and shared defaults, fixed colors, custom roles, transparency and gradients, and template/project round trips.
+
+`node scripts/template_badges_smoke.cjs` checks conditional groups, hidden-element editing without changing card values, badge styling and new checkboxes, saved visibility rules, checked/unchecked SVGs, printing, and ZIP/recovery round trips.
+
+`node scripts/template_labels_resize_smoke.cjs` checks fields appended to labels, shared field bindings, empty values, proportional Shift/Ctrl resizing, point units, and SVG/print/project round trips.
+
+`node scripts/template_relative_style_smoke.cjs` checks relative placements and wrapped-text chains, transformed targets, dependency guards, separate appended typography/theme colors, and SVG/print/project round trips.
 
 `demo/` contains classroom content and historical source archives. It is not served by the app. `scripts/package_demo_art.mjs` is an optional archive-artwork utility, not a runtime requirement. The former server database/uploads (`data/`) and generated exports (`output/`) have been removed. Current work lives in browser storage and downloaded project ZIPs. The previous FastAPI/SQLite application, migrations, and backend-specific tests have been removed. Git history retains the earlier implementation.
