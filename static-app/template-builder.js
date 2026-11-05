@@ -121,7 +121,7 @@ class TemplateBuilder{
     const ids=new Set([el,...el.querySelectorAll('[id]')].map(node=>node.id).filter(Boolean));
     for(const node of this.root.querySelectorAll('[data-relative-to]'))if(!el.contains(node)&&ids.has(node.getAttribute('data-relative-to')))throw Error('Another label is positioned relative to this element. Set its Relative to option to Fixed position before deleting.');
     for(const node of this.root.querySelectorAll('[data-flow-after],[data-after-field],[data-visible-if]'))if(!el.contains(node))for(const attr of ['data-flow-after','data-after-field','data-visible-if']){
-      if(keys.has(node.getAttribute(attr)))throw Error(attr==='data-visible-if'?'This checkbox controls another element. Set that element’s “Show when” to Always before deleting.':'Another field follows this one. Set its “Place below” option to Fixed before deleting.');
+      if(keys.has(node.getAttribute(attr)))throw Error(attr==='data-visible-if'?'This checkbox controls another element. Set that element’s “Show when” to Always before deleting.':'Another field follows this one. Set its “Relative to” option to Fixed position before deleting.');
     }
     el.remove();this.selected='';
   });}
@@ -352,10 +352,8 @@ class TemplateBuilder{
         control('Line spacing (× font size)','data-line-spacing',Math.round(spacing*1000)/1000,value=>{el.setAttribute('data-line-spacing',value);el.removeAttribute('data-line-height');},{type:'number',min:.1,max:10,step:.05});
         attr('Bottom limit (optional)','data-bottom',el.getAttribute('data-bottom') || '');
         if(field){
-        section('Flow & combined text');
+        section('Combined text');
         const others=[...this.root.querySelectorAll('text[data-field]')].filter(node=>node!==el);
-        control('Place below','data-flow-after',el.getAttribute('data-flow-after') || '',value=>{if(value){this.detach();el.setAttribute('data-flow-after',value);el.removeAttribute('data-after-field');}else{this.detach();el.removeAttribute('data-flow-after');}},{options:[['Fixed position',''],...others.map(node=>[title(node),node.getAttribute('data-field')])]});
-        attr('Gap below previous field','data-gap',el.getAttribute('data-gap') || 3,{type:'number',min:0,max:252,step:.5});
         const inline=el.getAttribute('data-inline-field') || '',keys=[...new Set([...readTemplate(this.source()).fields.map(f=>f.key),...Object.keys(this.options.values)])].filter(key=>key!==el.getAttribute('data-field')&&!['card_id','image_filename','back_image_filename','copies','theme'].includes(key));
         control('Append field','data-inline-field',inline,value=>{
           if(!value){el.removeAttribute('data-inline-field');return;}
@@ -385,13 +383,15 @@ class TemplateBuilder{
     const live=this.live();if(!live)return;
     this.$('#tb-canvas').focus({preventScroll:true});
     const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(this.rendered.getScreenCTM().inverse());
-    this.drag={id:event.pointerId,point,source:this.source(),resize,box:this.bounds(live),localHeight:Math.max(live.getBBox().height,Number(live.getAttribute('data-height')) || 0,4),moved:false};
+    this.drag={id:event.pointerId,point,clientX:event.clientX,clientY:event.clientY,source:this.source(),resize,box:this.bounds(live),localHeight:Math.max(live.getBBox().height,Number(live.getAttribute('data-height')) || 0,4),moved:false};
     this.$('#tb-canvas').setPointerCapture(event.pointerId);
   }
   pointerMove(event){
     const drag=this.drag;if(!drag||event.pointerId!==drag.id)return;
     const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(this.rendered.getScreenCTM().inverse()),dx=point.x-drag.point.x,dy=point.y-drag.point.y;
-    if(Math.abs(dx)+Math.abs(dy)<.2&&!drag.moved)return;
+    // Selecting an element must not detach its layout because of pointer jitter.
+    // Use screen pixels so the drag threshold stays consistent at any zoom.
+    if(!drag.moved&&Math.hypot(event.clientX-drag.clientX,event.clientY-drag.clientY)<4)return;
     drag.moved=true;
     // Re-render the original snapshot to resolve flow before detaching or transforming it.
     this.load(drag.source);this.draw();

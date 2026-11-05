@@ -23,8 +23,8 @@ const fixture=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 252" dat
     await expect(page.locator('#tb-elements button').filter({hasText:/^Family$/})).toHaveCount(0);
     await expect(page.locator('#tb-canvas [data-field=scientific_name]')).toContainText('Coccinellidae');
     assert.equal(await page.locator('#tb-canvas [data-field=scientific_name] tspan[font-style=normal]').count()>0,true);
-    await page.locator('#tb-prop-data-flow-after').selectOption('common_name');await set('data-gap',4);
-    await layer('Category');await page.locator('#tb-prop-data-flow-after').selectOption('scientific_name');await set('data-gap',3);
+    await page.locator('#tb-prop-data-relative-to').selectOption({label:'Common name'});await set('data-relative-gap',4);
+    await layer('Category');await page.locator('#tb-prop-data-relative-to').selectOption({label:'Scientific name'});await set('data-relative-gap',3);
     const before=await page.locator('#tb-canvas [data-field=category]').getAttribute('y');
     await layer('Common name');await set('data-width',65);
     const after=await page.locator('#tb-canvas [data-field=category]').getAttribute('y');
@@ -33,7 +33,7 @@ const fixture=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 252" dat
     await page.locator('#tb-prop-data-fit').selectOption('shrink');await set('data-min-font-size',4);await set('data-width',30);
     assert.ok(await page.locator('#tb-canvas [data-field=common_name]').evaluate(el=>parseFloat(el.style.fontSize))<12);
     // Flow cycles are rejected without losing the valid draft.
-    await page.locator('#tb-prop-data-flow-after').selectOption('category');await expect(page.locator('#tb-error')).toContainText('circular');await expect(page.locator('#tb-prop-data-flow-after')).toHaveValue('');
+    await page.locator('#tb-prop-data-relative-to').selectOption({label:'Category'});await expect(page.locator('#tb-error')).toContainText('circular');await expect(page.locator('#tb-prop-data-relative-to')).toHaveValue('');
     await page.locator('#tb-prop-fill').fill('#123456');await page.locator('#tb-prop-fill').dispatchEvent('change');
     await expect(page.locator('#tb-canvas [data-field=common_name]')).toHaveAttribute('fill','#123456');
     // Undo/redo, pointer movement, resize, and keyboard movement.
@@ -46,7 +46,7 @@ const fixture=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 252" dat
     // Cancel/close preserves the workspace, and the saved draft can be restored.
     await page.locator('#tb-close').click();assert.equal(await page.evaluate(()=>localStorage.getItem('classroom-cards.static-first.v2:project:field-guide')),initial);
     await page.reload();await ready();await page.locator('#build-template').click();await expect(page.locator('#tb-draft')).toBeVisible();await page.locator('#tb-restore').click();await expect(page.locator('#tb-name')).toHaveValue('Builder test');
-    const downloaded=page.waitForEvent('download');await page.locator('#tb-download').click();const templateFile=path.join(temp,'template.svg');await (await downloaded).saveAs(templateFile);const saved=fs.readFileSync(templateFile,'utf8');assert.match(saved,/data-inline-field="family"/);assert.match(saved,/data-flow-after="scientific_name"/);assert.match(saved,/data-line-spacing="1.5"/);assert.ok(!saved.includes('data-builder-overlay'));
+    const downloaded=page.waitForEvent('download');await page.locator('#tb-download').click();const templateFile=path.join(temp,'template.svg');await (await downloaded).saveAs(templateFile);const saved=fs.readFileSync(templateFile,'utf8');assert.match(saved,/data-inline-field="family"/);assert.match(saved,/data-relative-to="layout-/);assert.match(saved,/data-line-spacing="1.5"/);assert.ok(!saved.includes('data-builder-overlay'));
     await page.locator('#tb-upload').setInputFiles({name:'invalid.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg/>')});await expect(page.locator('#tb-error')).not.toBeEmpty();await expect(page.locator('#tb-name')).toHaveValue('Builder test');
     await page.locator('#tb-upload').setInputFiles(templateFile);await page.locator('#tb-apply').click();await expect(page.locator('#template-builder')).toHaveCount(0);
     await expect(page.locator('#fields [data-field=family]')).toHaveCount(1);

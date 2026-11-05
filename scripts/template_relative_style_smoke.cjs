@@ -30,6 +30,16 @@ const fixture=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 252" dat
     await page.locator('#tb-prop-inline-color-source').selectOption('@new');await set('inline-new-role','detail_text');await set('data-inline-fill','#445566');
     const customFile=await save('#tb-download','custom.svg');const role=await page.evaluate(async source=>(await import('./template.js')).readTemplate(source).colors.detail_text,fs.readFileSync(customFile,'utf8'));assert.equal(role,'#445566');
     await page.locator('#tb-prop-inline-color-source').selectOption('@inherit');await expect(page.locator('#tb-prop-data-inline-fill')).toBeDisabled();await page.locator('#tb-prop-inline-color-source').selectOption('accent');
+    await expect(page.locator('#tb-prop-data-flow-after,#tb-prop-data-gap')).toHaveCount(0);
+    // Slight movement while selecting must preserve anchors and create no undo entry.
+    const savedBeforeSelection=await save('#tb-download','before-selection.svg');
+    const labelBox=await page.locator('#tb-canvas #family-label').boundingBox(),x=labelBox.x+labelBox.width/2,y=labelBox.y+labelBox.height/2;
+    await layer('Details');await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+1,y+1);await page.mouse.up();
+    await expect(page.locator('#tb-prop-data-relative-to option:checked')).toHaveText('Common name');
+    const savedAfterSelection=await save('#tb-download','after-selection.svg');assert.equal(fs.readFileSync(savedAfterSelection,'utf8'),fs.readFileSync(savedBeforeSelection,'utf8'));
+    // An intentional drag still detaches; Undo restores the relative layout.
+    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+15,y+10,{steps:3});await page.mouse.up();
+    await expect(page.locator('#tb-prop-data-relative-to')).toHaveValue('');await page.locator('#tb-undo').click();await expect(page.locator('#tb-prop-data-relative-to option:checked')).toHaveText('Common name');
     let m=await metrics('#tb-canvas');close(m['family-label'].y,m.name.y+m.name.height+4);close(m['family-label'].x,m.name.x+2);
     await layer('Details');await relative('Family:');await set('data-relative-gap',3);m=await metrics('#tb-canvas');close(m.details.y,m['family-label'].y+m['family-label'].height+3);
     // References to groups use transformed visual geometry, in card points.
