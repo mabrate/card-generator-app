@@ -1,14 +1,14 @@
 <svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" width="2.5in" height="3.5in" viewBox="0 0 180 252" data-title="Field Guide — Back" data-template-version="6" font-family="Liberation Sans, sans-serif" version="1.1" id="svg4" sodipodi:docname="field-guide-back.svg" inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)">
   <defs id="defs4"/>
-  
+
   <title id="title1">Field Guide — Back</title>
   <desc id="desc1">Three open fields for campus observations and an unlabeled identification graphic.</desc>
   <rect id="background" width="180" height="252" fill="#ffffff" data-builder-id="element-1-cev7xe"/>
   <rect id="border" x="2.834646" y="2.834646" width="174.330708" height="246.330708" fill="none" stroke="#668256" data-color-stroke="accent" stroke-width="5.669291" data-builder-id="element-2-zcsiwv"/>
-  
+
   <text id="common_name" data-field="common_name" data-label="Common name" data-width="140" data-lines="1" data-max-chars="50" data-required="true" x="16" y="30" font-size="9" font-weight="bold" fill="#244734" data-color-fill="text" style="font-size:14px" data-builder-id="element-4-tqfvta" transform="matrix(1 0 0 1 -1 -7.5)" data-fit="shrink">{{common_name}}</text>
   <text x="16" y="42" font-size="8" font-weight="bold" fill="#668256" data-color-fill="accent" id="text2" style="font-size: 8px; font-weight: bold;" data-builder-id="element-5-9bkdyz" transform="matrix(1 0 0 1 -1 0)" data-label-text="ADULT SIZE:" data-inline-field="size" data-inline-label="Adult size" data-inline-prefix=" " data-inline-suffix="" data-width="152" data-lines="2" data-max-chars="70" data-line-spacing="1.2" data-fit="fit-box" data-flow-after="common_name">ADULT SIZE:</text>
-  
+
   <text x="16" y="55.5" font-size="5" font-weight="bold" fill="#668256" data-color-fill="accent" id="text3" style="font-size:8px" data-builder-id="element-7-kxmd1b" data-relative-gap="6" data-relative-to="text2" data-relative-position="below">IDENTIFICATION CLUES</text>
   <text id="identification_clues" data-field="identification_clues" data-label="Identification clues" data-width="148" data-lines="5" data-max-chars="210" data-line-height="8.1" x="16" y="64.5" font-size="8" fill="#244734" data-color-fill="text" style="font-size:8px" data-builder-id="element-8-v9ms72" data-relative-gap="3" data-relative-to="text3" data-relative-position="below">{{identification_clues}}</text>
   <text x="16" y="112.5" font-size="5" font-weight="bold" fill="#668256" data-color-fill="accent" id="text4" style="font-size:8px" data-builder-id="element-9-1xg4pp" data-relative-gap="6" data-relative-to="identification_clues" data-relative-position="below">ADAPTATIONS &amp; ECOLOGY</text>

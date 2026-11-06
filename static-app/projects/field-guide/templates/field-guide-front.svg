@@ -1,14 +1,14 @@
 <svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" width="2.5in" height="3.5in" viewBox="0 0 180 252" data-title="Field Guide — Front" data-template-version="5" font-family="Liberation Sans, sans-serif" version="1.1" id="svg1" sodipodi:docname="field-guide-front.svg" inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)">
   <defs id="defs1"/>
-  
+
   <title id="title1">Field Guide — Front</title>
   <desc id="desc1">Unlabeled student identification drawing area. Keep data-field and data-image tags when editing in Inkscape.</desc>
   <rect id="background" width="180" height="252" fill="#ffffff" data-builder-id="element-1-967m1y"/>
   <rect id="border" x="2.834646" y="2.834646" width="174.330708" height="246.330708" fill="none" stroke="#668256" data-color-stroke="accent" stroke-width="5.669291" data-builder-id="element-2-6qbgt4"/>
-  
+
   <text data-width="150" data-lines="1" data-max-chars="40" data-required="true" x="16" y="34" font-size="18" font-weight="bold" fill="#244734" data-color-fill="text" style="font-size: 18px;" data-label="Common name" data-field="common_name" id="common_name" data-builder-id="element-4-rrv4v9" data-fit="shrink" transform="matrix(1 0 0 1 -1 -7.5)" data-line-spacing="1">{{common_name}}</text>
   <text id="scientific_name" data-field="scientific_name" data-label="Genus and species" data-width="150" data-lines="1" data-max-chars="52" data-required="true" x="16" y="39" font-size="9" font-style="italic" fill="#244734" data-color-fill="text" data-builder-id="element-5-p8b0u8" data-inline-field="family" data-gap="2" transform="matrix(1 0 0 1 -1 0)" data-line-spacing="1.2" style="font-size: 9px;" data-fit="shrink" data-flow-after="common_name">{{scientific_name}}</text>
-  
+
   <text id="category" data-field="category" data-label="Group" data-width="150" data-lines="1" data-max-chars="44" data-required="false" x="16" y="55.79999923706055" font-size="7" font-weight="bold" fill="#668256" data-color-fill="accent" data-builder-id="element-7-ox195q" data-gap="3" data-fit="shrink" transform="matrix(1 0 0 1 -1 0)" data-line-spacing="1.2727272727272727" style="font-size: 7px;" data-flow-after="scientific_name">{{category}}</text>
   <rect id="artwork" data-image="artwork" x="5.669291" y="62" width="168.661418" height="184.330709" fill="#ffffff" data-builder-id="element-8-xelqy7"/>
   <g id="native-badge" data-visible-if="native" aria-label="Native organism" data-builder-id="element-1-lb0n7i" data-builder-group="true" transform="matrix(1 0 0 1 0 34.5)" data-label="Native Badge">
