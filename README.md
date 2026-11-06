@@ -29,6 +29,8 @@ Open `http://<the server computer's LAN IP>:8765/` on each device. The app does 
 4. **Save project** creates an editable ZIP. **Open project folder** opens a dialog with a folder picker and a ZIP picker. Importing opens a separate browser workspace and does not overwrite the original folder.
 5. **Start fresh** is a separate button at the page bottom and asks for confirmation.
 
+To use a photograph of paper artwork, choose **Take a photo** or upload an image and select **Straighten photo**. Drag the four corner handles onto the artwork, check the rectangular preview, choose the paper's proportions if needed, and select **Apply rectangle**. Perspective correction runs on your device and works offline. The original remains in the image library; **Undo straighten** restores the previous image and crop until the page is reloaded.
+
 The project CSV is canonical for card data. Saves preserve its imported filename/path; a new workspace uses `cards.csv`. The manifest identifies the CSV, templates, documents, and card back. `workspace.json` stores crop/drawing settings and the active card. New artwork goes under `graphics/`; imported folder paths are retained without duplicate files from short-name aliases. No images or SVG XML are embedded in the settings JSON.
 
 Open `http://127.0.0.1:8765/?project=houston-food-web` to automatically load the base deck and artwork (22 card types, 48 copies). Published projects opt into loading with a manifest `csv` path and optional `imageDirectory`. Existing browser edits are preserved.
@@ -71,6 +73,8 @@ The optional bulk SVG check uses Node.js with the Playwright npm package: `node 
 `node scripts/template_builder_smoke.cjs` uses the same browser setup to check template editing, pointer and keyboard movement, text fitting/flow, inline fields, undo/redo, draft recovery, template and card downloads, front/back editing, project ZIP reopening, and narrow layouts.
 
 `node scripts/image_replacement_smoke.cjs` checks automatic image replacement on both sides, crop resets, drawing replacement, same-name shared-image isolation, invalid/cancel preservation, multi-file imports, browser recovery, and project ZIP reopening.
+
+`node scripts/photo_straighten_smoke.cjs` checks perspective-corrected grid pixels, four-corner mouse/keyboard/touch controls, proportions, invalid selections, reset/cancel, camera capture, original-image preservation, undo, separate card sides, SVG/print/ZIP/browser recovery, mobile layout, and offline correction.
 
 `node scripts/template_colors_smoke.cjs` checks theme-role bindings and shared defaults, fixed colors, custom roles, transparency and gradients, and template/project round trips.
 

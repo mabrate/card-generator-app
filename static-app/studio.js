@@ -11,6 +11,7 @@ import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject
 import {loadCardBack} from './print.js';
 import {exportCardSet} from './card-export.js';
 import {openTemplateBuilder} from './template-builder.js';
+import {openPhotoStraightener} from './photo-straighten.js';
 let localBundle;
 let project, activeProjectId, KEY = 'classroom-cards.static-first.v2';
 let schemes = [{name:'Template',colors:null},...PALETTES];
@@ -18,6 +19,7 @@ const canvas = $('#drawing'), ctx = canvas.getContext('2d');
 const cache = new Map();
 let db, template, backTemplate=null, activeSide='front', rendered, catalog = [], assetLoading = false, imageData = null, generation = 0, storageError = '', assetError = '', busy = false, drawTimer;
 let state;
+let lastStraighten=null;
 state = {version:2, templateId:'field-guide', templateSVG:'', colors:{}, cards:[blankCard()], active:0, assets:{}, imported:null};
 function blankCard() { return {id:uniqueId(new Set(state?.cards?.map(c=>c.id) || [])), values:{...project?.starter.values}, copies:1, imageName:'', drawingKey:null, drawingActive:false, crop:{x:.5,y:.5,zoom:1}}; }
 const card = () => state.cards[state.active];
@@ -293,6 +295,8 @@ function updateActionButtons(){
   $('#delete-card').title=state.cards.length<=1?'Keep at least one card. Add or import another card first.':'Delete the selected card';
   $('#build-template').disabled=busy || Boolean(project && !project.editableTemplates);
   $('#build-template').title=project && !project.editableTemplates?'This project uses a fixed template.':'Open the visual template builder';
+  $('#straighten-photo').disabled=busy || assetLoading || !imageData;
+  $('#undo-straighten').hidden=!canUndoStraighten();
   updateCardExportOptions();
 }
 async function showCard() {
@@ -376,6 +380,35 @@ async function uploadImages(files) {
   await showCard();
   if(files.length>1)$('#image-adjustments').open=true;
 }
+function canUndoStraighten(){
+  return lastStraighten && lastStraighten.workspace===KEY && lastStraighten.cardId===card().id && lastStraighten.side===activeSide &&
+    (activeSide==='back'?card().backImageName:card().drawingActive?'':card().imageName)===lastStraighten.name;
+}
+async function straightenPhoto(){
+  if(busy || assetLoading || !imageData)return;
+  const current=card(),side=activeSide,workspace=KEY,back=side==='back';
+  const originalName=back?(current.backImageName || current.imageName):current.imageName;
+  await openPhotoStraightener({source:imageData,onApply:async data=>{
+    if(card()!==current || activeSide!==side || KEY!==workspace)throw Error('Open the photo again for the current card.');
+    const previous={};for(const key of back?['backImageName','backCrop']:['imageName','crop','drawingActive'])if(Object.hasOwn(current,key))previous[key]=structuredClone(current[key]);
+    const stem=(originalName || 'artwork').split('/').at(-1).replace(/\.[^.]+$/,'')+'-straightened';let name=stem+'.png',index=2;
+    while(Object.hasOwn(state.assets,name)){name=stem+'-'+index+'.png';index++;}
+    const key='image-'+blankCard().id;await putAsset(key,data);state.assets[name]=key;
+    if(back){current.backImageName=name;current.backCrop={x:.5,y:.5,zoom:1};}
+    else{current.imageName=name;current.drawingActive=false;current.crop={x:.5,y:.5,zoom:1};}
+    lastStraighten={workspace,cardId:current.id,side,name,previous};save();await showCard();
+    $('#image-status').textContent='Photo straightened. Your original is still available in the image picker.';
+  }});
+}
+$('#straighten-photo').onclick=()=>straightenPhoto().catch(error);
+$('#undo-straighten').onclick=()=>run(async()=>{
+  if(!canUndoStraighten())return;
+  const {previous,side}=lastStraighten,current=card();
+  for(const key of side==='back'?['backImageName','backCrop']:['imageName','crop','drawingActive']){
+    if(Object.hasOwn(previous,key))current[key]=previous[key];else delete current[key];
+  }
+  lastStraighten=null;save();await showCard();
+});
 async function saveDrawing(use=true) {
   const current=card(),key=current.drawingKey || 'drawing-'+current.id;
   await putAsset(key,canvas.toDataURL('image/png'));
@@ -518,7 +551,11 @@ $('#delete-card').onclick=()=>run(async()=>{
 });
 $('#new-card').onclick=()=>run(async()=>{if(state.cards.length>=500)throw Error('Save this project and start another before adding more cards.');insertCard(state.cards,blankCard());state.active=state.cards.length-1;await showCard();});
 $('#start-over').onclick=()=>run(startOver);
-for(const id of ['image-files','camera-file'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';if(files.length)run(()=>uploadImages(files));};
+for(const id of ['image-files','camera-file'])$('#'+id).onchange=async e=>{
+  const files=[...e.target.files];e.target.value='';if(!files.length)return;
+  let uploaded=false;await run(async()=>{await uploadImages(files);uploaded=true;});
+  if(uploaded && id==='camera-file')straightenPhoto().catch(error);
+};
 $('#asset-select').onchange=()=>run(async()=>{const name=$('#asset-select').value;if(activeSide==='back')card().backImageName=name;else{card().drawingActive=name==='@drawing';if(!card().drawingActive)card().imageName=name;}if(activeSide==='back')card().backCrop={x:.5,y:.5,zoom:1};else card().crop={x:.5,y:.5,zoom:1};await showCard();});
 for(const key of ['x','y','zoom'])$('#crop-'+key).oninput=e=>{cardCrop()[key]=Number(e.target.value);render();save();};
 let drawingPointer=null;

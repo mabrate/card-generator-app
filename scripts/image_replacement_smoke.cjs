@@ -11,7 +11,7 @@ const root=path.resolve(__dirname,'..'),key='classroom-cards.static-first.v2:pro
     const ready=async()=>{await page.waitForFunction(()=>document.querySelector('main').getAttribute('aria-busy')==='false');await expect(page.locator('#build-template')).toBeEnabled();};
     const state=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key);
     const image=()=>page.locator('#card-preview image[data-card-artwork]');
-    const upload=async(name,data,input='#image-files')=>{await page.locator(input).setInputFiles({name,mimeType:'image/png',buffer:Buffer.from(data.split(',')[1],'base64')});await ready();};
+    const upload=async(name,data,input='#image-files')=>{await page.locator(input).setInputFiles({name,mimeType:'image/png',buffer:Buffer.from(data.split(',')[1],'base64')});await ready();if(input==='#camera-file'){await expect(page.locator('#photo-straightener')).toBeVisible();await page.locator('#photo-cancel').click();}};
     const crop=async()=>{await page.locator('#image-adjustments').evaluate(el=>el.open=true);await page.locator('#crop-zoom').fill('2');await page.locator('#crop-zoom').dispatchEvent('input');};
     const centered={x:.5,y:.5,zoom:1};
     await page.goto(`http://127.0.0.1:${port}/?project=field-guide`);await ready();const original=await state();
