@@ -12,6 +12,8 @@ import {loadCardBack} from './print.js';
 import {exportCardSet} from './card-export.js';
 import {openTemplateBuilder} from './template-builder.js';
 import {openPhotoStraightener} from './photo-straighten.js';
+import {openPhotoAdjuster,openPhotoTips} from './photo-adjust.js';
+import {photoSettings} from './photo-color.js';
 let localBundle;
 let project, activeProjectId, KEY = 'classroom-cards.static-first.v2';
 let schemes = [{name:'Template',colors:null},...PALETTES];
@@ -20,6 +22,7 @@ const cache = new Map();
 let db, template, backTemplate=null, activeSide='front', rendered, catalog = [], assetLoading = false, imageData = null, generation = 0, storageError = '', assetError = '', busy = false, drawTimer;
 let state;
 let lastStraighten=null;
+let lastPhotoAdjustment=null;
 state = {version:2, templateId:'field-guide', templateSVG:'', colors:{}, cards:[blankCard()], active:0, assets:{}, imported:null};
 function blankCard() { return {id:uniqueId(new Set(state?.cards?.map(c=>c.id) || [])), values:{...project?.starter.values}, copies:1, imageName:'', drawingKey:null, drawingActive:false, crop:{x:.5,y:.5,zoom:1}}; }
 const card = () => state.cards[state.active];
@@ -263,6 +266,7 @@ async function deleteGraphic(key){
   stopDrawing();
   const names=new Set(entry.names),deleted=new Set(state.deletedGraphics || []);
   for(const name of names){delete state.assets[name];deleted.add(name);}
+  for(const [name,recipe] of Object.entries(state.photoAdjustments || {}))if(names.has(name)||names.has(recipe.sourceName))delete state.photoAdjustments[name];
   for(const c of state.cards){
     if(names.has(c.imageName))c.imageName='';
     if(names.has(c.backImageName))c.backImageName='';
@@ -296,6 +300,8 @@ function updateActionButtons(){
   $('#build-template').disabled=busy || Boolean(project && !project.editableTemplates);
   $('#build-template').title=project && !project.editableTemplates?'This project uses a fixed template.':'Open the visual template builder';
   $('#straighten-photo').disabled=busy || assetLoading || !imageData;
+  $('#adjust-photo').disabled=busy || assetLoading || !imageData;
+  $('#undo-photo-adjustment').hidden=!canUndoPhotoAdjustment();
   $('#undo-straighten').hidden=!canUndoStraighten();
   updateCardExportOptions();
 }
@@ -409,6 +415,45 @@ $('#undo-straighten').onclick=()=>run(async()=>{
   }
   lastStraighten=null;save();await showCard();
 });
+function displayedPhotoName(){
+  if(activeSide==='back' && Object.hasOwn(card(),'backImageName'))return card().backImageName;
+  return card().drawingActive?'':card().imageName;
+}
+function canUndoPhotoAdjustment(){
+  return lastPhotoAdjustment && lastPhotoAdjustment.workspace===KEY && lastPhotoAdjustment.cardId===card().id && lastPhotoAdjustment.side===activeSide && displayedPhotoName()===lastPhotoAdjustment.name;
+}
+async function adjustPhoto(){
+  if(busy || assetLoading || !imageData)return;
+  const current=card(),side=activeSide,workspace=KEY,back=side==='back',selected=displayedPhotoName();
+  const recipe=Object.hasOwn(state.photoAdjustments || {},selected)?state.photoAdjustments[selected]:null;
+  let sourceName=recipe?.sourceName || selected;
+  const source=recipe?await getAsset(state.assets[sourceName]):imageData;
+  if(!source)throw Error('The source photo is missing. Choose the original image again.');
+  await openPhotoAdjuster({source,settings:recipe?.settings,onApply:async(data,settings)=>{
+    if(card()!==current || activeSide!==side || KEY!==workspace)throw Error('Open the photo again for the current card.');
+    const previous={};for(const key of back?['backImageName','backCrop']:['imageName','crop','drawingActive'])if(Object.hasOwn(current,key))previous[key]=structuredClone(current[key]);
+    const uniqueName=stem=>{let name=stem+'.png',i=2;while(Object.hasOwn(state.assets,name))name=stem+'-'+(i++)+'.png';return name;};
+    // A drawing can also be adjusted; save an immutable source snapshot first.
+    if(!sourceName){sourceName=uniqueName('artwork-original');const key='image-'+crypto.randomUUID();await putAsset(key,source);state.assets[sourceName]=key;}
+    const name=uniqueName(sourceName.split('/').at(-1).replace(/\.[^.]+$/,'')+'-adjusted'),key='image-'+crypto.randomUUID();
+    await putAsset(key,data);state.assets[name]=key;
+    state.photoAdjustments={...state.photoAdjustments,[name]:{sourceName,settings:photoSettings(settings)}};
+    if(back){const crop=structuredClone(cardCrop());current.backImageName=name;current.backCrop=crop;}
+    else{current.imageName=name;current.drawingActive=false;}
+    lastPhotoAdjustment={workspace,cardId:current.id,side,name,previous};save();await showCard();
+    $('#image-status').textContent='Photo adjusted. Your crop is unchanged and the source stays in the image picker.';
+  }});
+}
+$('#adjust-photo').onclick=()=>adjustPhoto().catch(error);
+$('#photo-tips-button').onclick=openPhotoTips;
+$('#undo-photo-adjustment').onclick=()=>run(async()=>{
+  if(!canUndoPhotoAdjustment())return;
+  const {previous,side}=lastPhotoAdjustment,current=card();
+  for(const key of side==='back'?['backImageName','backCrop']:['imageName','crop','drawingActive']){
+    if(Object.hasOwn(previous,key))current[key]=previous[key];else delete current[key];
+  }
+  lastPhotoAdjustment=null;save();await showCard();
+});
 async function saveDrawing(use=true) {
   const current=card(),key=current.drawingKey || 'drawing-'+current.id;
   await putAsset(key,canvas.toDataURL('image/png'));
@@ -477,6 +522,7 @@ async function exportProject(){
   if(manifest.cardBack?.image && imagePaths[normalizeProjectPath(manifest.cardBack.image)])manifest.cardBack.image=imagePaths[normalizeProjectPath(manifest.cardBack.image)];
   if(manifest.files)manifest.files=manifest.files.map(item=>({...item,path:imagePaths[normalizeProjectPath(item.path)] || item.path}));
   const workspace={version:1,expansionPacks:state.expansionPacks || {},activeCardId:card().id,cards:Object.create(null),workspaceColors:Object.fromEntries(Object.keys(template.colors).map(k=>[k,state.colors[k] || template.colors[k]])),workspaceScheme:state.colorScheme || ''};
+  workspace.photoAdjustments=Object.fromEntries(Object.entries(state.photoAdjustments || {}).filter(([name,recipe])=>imagePaths[name] && imagePaths[recipe.sourceName]).map(([name,recipe])=>[imagePaths[name],{sourceName:imagePaths[recipe.sourceName],settings:photoSettings(recipe.settings)}]));
   for(const c of state.cards){
     const settings={sourceProjectId:c.sourceProjectId || null,colors:c.colors || (project?.colorRules?.length?undefined:state.colors),colorScheme:c.colorScheme || '',crop:c.crop,backCrop:c.backCrop,drawingActive:c.drawingActive,csvImportId:c.csvImportId || null,expansion:c.expansion || '',attribution:c.attribution || ''};
     if(c.layout){settings.layoutFile='templates/card-'+c.id+'.svg';files.set(settings.layoutFile,new Blob([c.layout],{type:'image/svg+xml'}));}
@@ -780,6 +826,15 @@ function loadingStatus(message){$('#loading-message').textContent=message;}
 async function restoreWorkspace(next,workspace,layout,readFile,loadImage){
       if(workspace.expansionPacks!==undefined)next.expansionPacks=validateExpansionPacks(workspace.expansionPacks);
       if(workspace.version!==1 || !workspace.cards || typeof workspace.cards!=='object')throw Error('Invalid workspace settings.');
+      if(workspace.photoAdjustments){
+        if(typeof workspace.photoAdjustments!=='object' || Array.isArray(workspace.photoAdjustments))throw Error('Invalid photo adjustment settings.');
+        next.photoAdjustments=Object.create(null);
+        for(const [name,recipe] of Object.entries(workspace.photoAdjustments)){
+          if(!recipe || typeof recipe.sourceName!=='string')throw Error('Invalid photo adjustment source.');
+          const output=normalizeProjectPath(name),sourceName=normalizeProjectPath(recipe.sourceName);
+          if(next.assets[output] && next.assets[sourceName])next.photoAdjustments[output]={sourceName,settings:photoSettings(recipe.settings)};
+        }
+      }
       for(const c of next.cards){
         const settings=workspace.cards[c.id];if(!settings)continue;
         const crop=settings.crop || {x:.5,y:.5,zoom:1};
