@@ -18,7 +18,7 @@ try:
    assert page.locator('#card-preview image').count()==1
    expect(page.locator('#card-preview #border')).to_have_attribute('stroke-width','5.669291')
    expect(page.locator('#card-preview')).to_contain_text('The Village School Field Guide')
-   assert page.locator('#card-preview [data-field=family]').text_content().strip().startswith('(')
+   assert page.locator('#card-preview [data-appended-field=family]').text_content().strip().startswith('(')
    checkbox=page.locator('#fields [data-field=native]');expect(checkbox).to_have_attribute('type','checkbox')
    assert checkbox.is_checked()==(i in [1,2])
    assert page.locator('#card-preview #native-badge').count()==int(i in [1,2])
@@ -33,7 +33,7 @@ try:
    assert not page.locator('#fit-issues').inner_text().strip(),(name,page.locator('#fit-issues').inner_text())
    assert page.locator('#card-preview image').count()==1
    expect(page.locator('#card-preview #border')).to_have_attribute('stroke-width','5.669291')
-   expect(page.locator('#card-preview')).to_contain_text('The Village School Field Guide')
+   expect(page.locator('#card-preview')).to_contain_text('IDENTIFICATION CLUES')
    page.locator('#card-preview').screenshot(path=f'/tmp/field-guide-{i}-back.png')
    page.locator('#preview-front').click()
   expect(page.locator('#fields [data-field=common_name]')).to_be_enabled()

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "field-guide",
-  "packageVersion": "1.6.1",
+  "packageVersion": "1.6.2",
   "name": "Field Guide Starter",
   "description": "A two-sided field-guide card starter. Edit the front and back SVG layouts, then add observations on both sides.",
   "editableTemplates": true,
