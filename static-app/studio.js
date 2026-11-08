@@ -492,7 +492,11 @@ async function buildProject(settings){
   if(localBundle)manifest=JSON.parse(await files.get('manifest.json').text());
   else if(project){
     const response=await fetch(new URL('manifest.json',project.base));if(!response.ok)throw Error('Cannot save project resources.');manifest=await response.json();
-    for(const item of project.files){if(deleted.has(item.path))continue;const r=await fetch(item.url);if(!r.ok){if(r.status===404 && item.type==='download' && /\.zip$/i.test(item.path)){missingArchives.push(item.path);continue;}throw Error('Cannot save '+item.path);}files.set(item.path,await r.blob());}
+    for(const item of project.files){
+      if(deleted.has(item.path))continue;
+      const r=await fetch(item.url);if(!r.ok){if(r.status===404 && item.type==='download' && /\.zip$/i.test(item.path)){missingArchives.push(item.path);continue;}throw Error('Cannot save '+item.path);}files.set(item.path,await r.blob());
+      for(const path of item.assets || []){const response=await fetch(new URL(path,project.base));if(!response.ok)throw Error('Cannot save document image '+path);files.set(path,await response.blob());}
+    }
     if(missingArchives.length)manifest.files=manifest.files.filter(item=>!missingArchives.includes(item.path));
     if(project.cardBack?.image && !deleted.has(project.cardBack.image)){const r=await fetch(project.cardBack.url);if(!r.ok)throw Error('Cannot save card back.');files.set(project.cardBack.image,await r.blob());}
     if(project.cardBack?.svg){const r=await fetch(project.cardBack.templateUrl);if(!r.ok)throw Error('Cannot save card-back template.');files.set(project.cardBack.svg,await r.blob());}
@@ -965,7 +969,8 @@ async function prepareLocalProject(entries,asExpansion=false){
     let next={version:2,templateId:item.id,templateSVG:item.source,...(p.cardBack?.layout?{backTemplateSVG:p.cardBack.layout.source}:{}),colors:{...layout.colors,...scheme.colors},colorScheme:scheme.name,cards:[],active:0,assets:{},imported:null};
     const images={};
     // Full relative paths always work; unique basenames are convenient CSV aliases.
-    const imageEntries=files.filter(e=>/\.(png|jpe?g|webp)$/i.test(e.path));
+    const documentAssets=new Set(p.files.flatMap(f=>f.assets || []));
+    const imageEntries=files.filter(e=>/\.(png|jpe?g|webp)$/i.test(e.path) && !documentAssets.has(e.path));
     for(const {path,file} of imageEntries){$('#local-project-status').textContent='Checking '+path+'…';const key='image-'+crypto.randomUUID();images[key]=await normalizeImage(file);next.assets[path]=key;}
     for(const {path} of imageEntries){const name=path.split('/').pop();if(imageEntries.filter(e=>e.path.split('/').pop()===name).length===1 && !Object.hasOwn(next.assets,name))next.assets[name]=next.assets[path];}
     const csvs=files.filter(e=>/\.csv$/i.test(e.path));

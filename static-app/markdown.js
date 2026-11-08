@@ -1,15 +1,16 @@
 // Render a deliberately small Markdown subset using DOM nodes; HTML stays text.
 function inline(text, host, base, resolveLink) {
-  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|!?\[[^\]]+\]\([^)]+\))/g;
   let last=0;
   for (const match of text.matchAll(pattern)) {
     host.append(document.createTextNode(text.slice(last,match.index)));
     const token=match[0]; let node;
-    if(token.startsWith('[')) {
-      const [,label,path]=token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if(token.startsWith('[') || token.startsWith('![')) {
+      const isImage=token.startsWith('!['),[,label,path]=token.match(/^!?\[([^\]]+)\]\(([^)]+)\)$/);
       let url;try{url=new URL(path,base);}catch{}
       const href=resolveLink?resolveLink(path,base):url && ['http:','https:'].includes(url.protocol)?url.href:null;
-      if(href) {node=document.createElement('a');node.href=href;node.textContent=label;node.target='_blank';node.rel='noopener noreferrer';}
+      if(href && isImage && ['http:','https:','blob:'].includes(new URL(href,base).protocol)){node=document.createElement('img');node.src=href;node.alt=label;node.loading='lazy';node.decoding='async';}
+      else if(href && !isImage) {node=document.createElement('a');node.href=href;node.textContent=label;node.target='_blank';node.rel='noopener noreferrer';}
       else {node=document.createTextNode(label);}
     } else {const marker=token.startsWith('**')?'**':token[0];node=document.createElement(marker==='`'?'code':marker==='**'?'strong':'em');node.textContent=token.slice(marker.length,-marker.length);}
     host.append(node);last=match.index+token.length;

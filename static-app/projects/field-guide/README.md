@@ -1,38 +1,96 @@
-# Field Guide Starter
+# DOWNLOAD YOUR WORK TO KEEP IT
 
-This starter uses one simple layout for all organisms. Each demo has a replaceable artistic colored-pencil scene on the front and a separate, simple identification sketch on the back. Both use a deliberately loose middle-school drawing style: uneven outlines, scribbly coloring, and simplified shapes. The drawings are observation models, not precise scientific diagrams. The front has a large, unlabeled drawing space for a student's identification sketch. The back has a colored-pencil reference plate plus three open fields: Adult Size, Identification clues, and Adaptations & Ecology. The examples model descriptive writing about identifying features, adaptations, habitat, and ecosystem roles.
+**YOUR WORK MAY NOT SAVE UNLESS YOU DOWNLOAD IT. Do not rely on this browser to remember your cards. Before you leave, choose Save project and check that the ZIP file has downloaded.**
 
-## Make a card
+**Download again after making changes.** Switching iPads, clearing browser data, or using a private tab can leave you without your work. A link to this page is not a backup.
 
-1. Choose **Front** to edit the example artwork, draw the organism, or add a photo. The binomial name and family appear together as *Genus species* (Family).
-2. Choose **Back** to study the reference plate and add your field notes. Each card has its own back graphic; changing it does not replace the front drawing.
-3. Use **Edit template** to change the selected layout in the app. To edit it in Inkscape, use **Download template SVG**, preserve the `data-field`, `data-inline-field`, `data-image`, and positioning attributes, then use **Open template SVG** while that side is selected.
-4. Save the project ZIP to keep the CSV, both layouts, reference art, and edits together. Print double-sided, landscape, and flip on the short edge.
+## 1. Write a small, useful field guide
 
-The usual Classroom Cards workflow remains unchanged: projects without an SVG `cardBack` continue to use one shared back image, or no back. The Field Guide manifest opts into editable per-card back fields with `cardBack.svg` and separate back graphics with the CSV's `back_image_filename` column.
+Your card is only **2.5 × 3.5 inches**. Help someone recognize your organism and understand how it lives. Choose **Front** for its names, group, and main drawing; choose **Back** for notes and a second identification drawing.
 
-## Demo organisms and reference sources
+| Field | What to write | Space to aim for |
+| --- | --- | --- |
+| Common name | The organism's usual name. | One short line; up to 40 characters on the front. |
+| Genus and species | The scientific name, spelled carefully. Capitalize the genus; use lowercase for the species. | Genus + species; up to 52 characters. |
+| family | Its scientific family name. | Just the name; it shares the scientific-name line. |
+| Group | A useful group, such as insect, lizard, or wildflower. | A short phrase; up to 44 characters. |
+| Adult size | A typical adult length or plant height, with units. Say whether a tail is included. | A phrase such as “5–8 mm long”; up to 70 characters. |
+| Identification clues | Two or three visible details that separate it from similar organisms. | About 20–30 words; five lines, up to 210 characters. |
+| Adaptations & Ecology | Where it lives, what it eats or its ecosystem role, and how a feature helps it survive. | About 25–35 words; five lines, up to 230 characters. |
 
-- Ladybug (`Coccinella septempunctata`): the adult back pattern and dark, orange-marked larva are shown together. Adults and larvae prey on aphids and other small insects. [NC State Extension](https://entomology.ces.ncsu.edu/biological-control-information-center/beneficial-predators/c-7-ladybeetle/)
-- Green anole (`Anolis carolinensis`): the plate highlights the male's pink throat fan (dewlap). [Davidson College](https://bio.davidson.edu/herpcons/herps_of_NC/lizards/Anocar/Ano_car.html)
-- Texas bluebonnet (`Lupinus texensis`): the plate shows the upright growth habit, palmately divided leaf, and alternate leaf arrangement, and pea-shaped flowers in a raceme. [University of Texas at Austin](https://w3.biosci.utexas.edu/prc/K12/pages/Lupinus%20texensis.html)
+**Character counts include spaces and punctuation. These are limits, not targets.** Long words may fill a line sooner. Check both card previews and shorten text if it overflows or becomes hard to read.
 
-The back reference plates are colored-pencil classroom illustrations. Students can replace them with their own reference graphic, while the front drawing area stays independent.
+Only check **Native** if you have verified that the species is native to our Texas region. Seeing it nearby does not prove that it is native.
 
-## Restore the examples
+![Back fields showing the Adult size, Identification clues, and Adaptations & Ecology spaces and character counters.](guide-images/back-fields.png)
 
-When you edit this project's SVG files on disk, refresh the local website and choose **Reload project layouts** under Template layout. This loads both current SVG files and keeps your card text, artwork, drawings, colors, and image positions. Cards imported with their own front layout keep that layout. Opening or refreshing the starter normally recovers layouts saved in this browser, so changes to the files do not automatically replace your work. **Open template SVG** also loads an edited file directly for the selected side. On a published website, upload the changed files first.
+## 2. Find facts, then cut extra words
 
-Choose **Restore starter examples** below the editor to reload all four demo cards, their graphics, and both original SVG layouts. Save your project first to keep your edits. Opening the starter link normally recovers your browser workspace; it does not replace saved work. An earlier saved Field Guide shows a notice explaining how to restore the updated starter.
+1. **Confirm the organism.** Match its scientific name and several features to your observation. Compare similar species. Ask your teacher if the identification is uncertain.
+2. **Find a dependable source.** Try a museum, university or extension service, government nature page, or a field guide. Search the scientific name with “identification,” “size,” “habitat,” or “diet.” Read the page, not just a search snippet.
+3. **Keep a few useful facts.** Write notes in your own words. Keep the source title and link in your research notes for your teacher; long URLs use up card space.
+4. **Choose distinguishing details.** Look for leaf arrangement, flower shape, body markings, number of parts, or a distinctive body shape. “Green plant” is less useful than “leaves in whorls of four to six.” Choose details someone could check in your drawing or in the field.
+5. **Cut introductions and repetition.** Delete “This organism is,” “It is interesting that,” “very,” and repeated names. Use specific nouns and verbs. Short phrases and semicolons are fine if the meaning stays clear.
 
-The plant example explicitly describes growth habit, leaf arrangement, and inflorescence in the open identification notes. Students can draw these features in the unlabeled artwork area without choosing a more complex plant-only template. Example text describes the organisms rather than giving directions or asking questions. It does not claim sightings at your school.
+**Identification example — field madder:** “Low, spreading plant; pointed leaves in whorls of four to six; tiny pink-lilac flowers with four lobes.”
 
-Both layouts have white backgrounds, sharp corners, and a 2 mm border. The front image meets the inner left, right, and bottom card border; the back reference image is inset below the notes. Images have no separate outline and fill their area by default; open image adjustments and reduce Zoom to show more of the original. Front and back image positions are saved separately in workspace.json.
+**Ecology example:** “An introduced annual of lawns and disturbed ground. Spreading stems form low patches among grass; its life cycle finishes within one year.”
 
-The manifest selects the front layout through `templates` and the back through `cardBack.svg`. Keep the CSV columns `common_name`, `scientific_name`, `family`, `category`, `native`, `size`, `identification_clues`, and `adaptations_ecology` when editing the data. Family is appended to the scientific name on the front, and Adult Size is an appended field on the back; both use `data-inline-field` rather than a separate text placeholder. `image_filename` and `back_image_filename` select each card's separate graphics. The starter's empty `workspace.json` uses the default image positions and Template colors.
+Keep visible identification details in **Identification clues**. Use **Adaptations & Ecology** to explain habitat, food, or how a feature helps. Do not invent a sighting, diet, or adaptation to fill the box.
 
-- Field madder (`Sherardia arvensis`, Rubiaceae): a low spreading annual with whorled leaves and small pink-lilac flowers. [UC IPM identification guide](https://ipm.ucanr.edu/weeds-identification-gallery/field-madder/). Native Plant Society of Texas lists it as a naturalized annual in the [Garey Park species list](https://cms3.revize.com/revize/georgetowntx/Documents/Parks/Garey%20Park/Visit/Garey%20Park%20Species%20List/Species-List-for-Garey-Park-Plants.pdf).
+## 3. Photograph your artwork with an iPad
 
-## Native marker
+1. **Select the correct card and Front or Back first.** A photo replaces the artwork on the selected side.
+2. Flatten your drawing. Clean the rear camera lens. Find bright, even light, away from direct sun, glare, and shadows from your hands or iPad.
+3. Tap **Take a photo**. Hold the iPad parallel to the paper, with its camera over the middle. Include **all four corners** and a small margin; move closer instead of zooming.
+4. Tap the drawing to focus and hold still. Check that pale pencil lines remain visible. Retake a blurry, shadowy, or washed-out photo; editing cannot restore missing detail.
+5. Accept the photo. If it is already in Photos, use **Choose an image** and select one picture instead. **iPad photo tips** gives extra help.
 
-The Native checkbox controls a fixed green N badge on the right of the front header and at the upper right of the back. It means native to our Texas campus region. The starter checks green anole and Texas bluebonnet, and leaves the introduced seven-spotted ladybug and field madder unchecked. CSV stores this as a `native` column with `true` or `false`; imports also recognize yes/no and 1/0. SVG templates keep the checkbox definition on a text element with `data-input="checkbox"`, `data-checked-text="N"`, and a wrapping group with `data-visible-if="native"`. All badge artwork stays editable in the SVG.
+![Artwork controls: Choose an image, Take a photo, Straighten photo, Adjust color, and iPad photo tips.](guide-images/photo-tools.png)
+
+## 4. Straighten the paper
+
+The straightening window opens after a camera photo. For an existing image, tap **Straighten photo**.
+
+1. Drag the **four numbered corners** onto the corners of your paper or rectangular artwork. Keep them in order around its edges; do not cross them.
+2. Check the corrected rectangle. If it looks stretched, choose the matching **Artwork proportions**, such as **Letter paper · 8.5:11**. Match the paper you photographed, not the card shape.
+3. Tap **Apply rectangle**. Use **Cancel** to keep the original instead, or **Undo straighten** immediately afterward if needed.
+4. Open **Adjust or switch your image**. Use **Zoom**, **Horizontal position**, and **Vertical position** to fit the drawing inside the card without cutting off identifying details.
+
+![Straighten photo: numbered corner handles, artwork proportions, corrected preview, and Apply rectangle.](guide-images/straighten-photo.png)
+
+## 5. Make small color corrections
+
+Tap **Adjust color**. Aim to match the real drawing, rather than making the colors stronger.
+
+1. If the paper is white, choose **Pick white paper**, then tap a blank, uncolored area in the preview. Do not sample a pencil mark, shadow, or colored paper.
+2. Adjust **Brightness** a little if needed. Use a small amount of **Contrast** for clarity and **Vibrance** only if colors look dull.
+3. Under **More adjustments**, **Paper brightness** can lighten the background. Keep faint lines and light shading visible. For cream or colored paper, use **Warmth** and **Tint** instead of Pick white paper. Leave **Curves** alone unless you need them.
+4. Use **Show original** to compare. If the photo needs a large correction, retake it in better light.
+5. Tap **Apply adjustments**, or **Cancel**. Use **Undo photo adjustment** immediately afterward if you need to go back.
+
+Repeat the photo steps on the other side if it needs different artwork. Check **Front** and **Back** before downloading.
+
+![Adjust color: artwork preview, Pick white paper, Brightness, Contrast, Vibrance, and Apply adjustments.](guide-images/adjust-color.png)
+
+## 6. Download one card or several cards
+
+**One card:** Select it, tap **Download card**, leave **Front and back** selected, then tap **Download**. You get one ZIP with a front SVG and a back SVG. Choose **Front only** or **Back only** if your teacher needs just one side.
+
+![Download card with Front and back selected; Front only and Back only are also available.](guide-images/download-card.png)
+
+**Several cards:** Tap **Download all cards**, choose **Front and back of each card**, then **Download SVG ZIP**. This includes every card in the current workspace, once each, in the current order. It does not download just a selected few. Use **Front only** if your teacher asks for fronts.
+
+![Download all cards with Front and back of each card selected and the Download SVG ZIP button.](guide-images/download-all-cards.png)
+
+ZIP files are folders packed into one file. Unzip them to use the SVG images. If a download reports missing artwork or text that will not fit, fix the named card and side, then try again.
+
+## 7. Save an editable copy before you leave
+
+**Tap Save project.** This ZIP keeps your cards, both layouts, artwork, and editing settings together. To continue later, use **Open project folder → Choose ZIP** and select that saved project ZIP. Finished card SVGs and SVG ZIPs are useful for submitting images; **Save project is the complete editing backup.**
+
+Check the iPad's downloaded files and confirm that your new ZIP is there. Keep it somewhere you can find again, following your teacher's instructions. Save a new copy after your next editing session.
+
+# BEFORE YOU LEAVE: DOWNLOAD. CHECK THE FILE.
+
+**YOUR WORK MAY NOT SAVE IN THIS BROWSER. Save project, then verify the downloaded ZIP. Do this even if the app says your cards are saved in this browser.**

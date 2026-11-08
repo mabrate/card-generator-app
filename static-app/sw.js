@@ -1,4 +1,4 @@
-const CACHE = 'classroom-cards-static-first-v69';
+const CACHE = 'classroom-cards-static-first-v70';
 const base = new URL('./', self.location.href);
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
@@ -7,7 +7,7 @@ self.addEventListener('install', event => event.waitUntil((async () => {
   if (!response.ok) throw Error('Template catalog unavailable.');
   const catalog = await response.json();
 
-  await cache.addAll(['./','index.html','reference.html','reference.js','README.md','PROJECTS.md','TEMPLATES.md','projects/field-guide/README.md','projects/element-explorer/README.md','projects/houston-food-web/README.md','projects/houston-food-web/campus-food-web-turn-guide.md','projects/houston-food-web-expansion/README.md','projects/houston-food-web-expansion/game-rules.md','projects/houston-food-web/card-back-artwork.md','style.css','project-dashboard.js','project-dashboard.css','studio.js','studio.js?v=69','template-builder.js','template-builder.css','photo-straighten.js','photo-straighten.css','photo-adjust.js','photo-adjust.css','photo-color.js','template-text.js','template-position.js','card-transfer.js','card-export.js','template.js','palettes.js','print.js','links.js','projects.js','color-rules.js','local-projects.js','markdown.js','templates/catalog.json',
+  await cache.addAll(['./','index.html','reference.html','reference.js','README.md','PROJECTS.md','TEMPLATES.md','projects/field-guide/README.md','projects/field-guide/guide-images/back-fields.png','projects/field-guide/guide-images/photo-tools.png','projects/field-guide/guide-images/straighten-photo.png','projects/field-guide/guide-images/adjust-color.png','projects/field-guide/guide-images/download-card.png','projects/field-guide/guide-images/download-all-cards.png','projects/element-explorer/README.md','projects/houston-food-web/README.md','projects/houston-food-web/campus-food-web-turn-guide.md','projects/houston-food-web-expansion/README.md','projects/houston-food-web-expansion/game-rules.md','projects/houston-food-web/card-back-artwork.md','style.css','project-dashboard.js','project-dashboard.css','studio.js','studio.js?v=70','template-builder.js','template-builder.css','photo-straighten.js','photo-straighten.css','photo-adjust.js','photo-adjust.css','photo-color.js','template-text.js','template-position.js','card-transfer.js','card-export.js','template.js','palettes.js','print.js','links.js','projects.js','color-rules.js','local-projects.js','markdown.js','templates/catalog.json',
 
     'fonts/LiberationSans-Regular.ttf','fonts/LiberationSans-Bold.ttf','fonts/LiberationSans-Italic.ttf','projects/element-explorer/templates/element-explorer-v1.svg',
     ...catalog.map(t=>'templates/'+t.svg)].map(p=>new URL(p,base)));

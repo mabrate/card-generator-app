@@ -71,7 +71,7 @@ export async function resolveLocalProject(entries,catalog) {
   function url(path){safePath(path);if(!files.has(path))throw Error('Missing project file: '+path);if(!urls.has(path))urls.set(path,URL.createObjectURL(files.get(path)));return urls.get(path);}
   try{
     for(const item of project.templates)if(typeof (manifest.templates || []).find(t=>t?.id===item.id)==='object')item.url=url(item.svg);
-    for(const item of project.files){item.base=new URL(item.path,base).href;item.url=url(item.path);}
+    for(const item of project.files){item.base=new URL(item.path,base).href;item.url=url(item.path);for(const asset of item.assets || [])url(asset);}
     if(project.cardBack?.image)project.cardBack.url=url(project.cardBack.image);
     if(project.cardBack?.svg)project.cardBack.templateUrl=url(project.cardBack.svg);
     // Resolve Markdown links only against selected local files, never the host.

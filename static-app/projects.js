@@ -49,7 +49,7 @@ export function readManifest(value, base, catalog) {
   if (typeof starter !== 'object' || Array.isArray(starter)) throw Error('Invalid project starter.');
   if ((starter.template && !templates.some(t=>t.id===starter.template)) || (starter.scheme && !schemes.some(s=>s.name===starter.scheme))) throw Error('Starter template or scheme is not allowed.');
   for (const values of [starter.values || {},value.placeholders || {}]) if (typeof values !== 'object' || Array.isArray(values) || Object.values(values).some(v=>typeof v !== 'string')) throw Error('Starter values and placeholders must contain text.');
-  const files = (value.files || []).map(f=>{if (!f || typeof f.title !== 'string' || (f.type === 'markdown' && !/\.md$/i.test(f.path))) throw Error('Invalid project file.'); return {...f,path:normalizeProjectPath(f.path),url:localFile(f.path,base)};});
+  const files = (value.files || []).map(f=>{if (!f || typeof f.title !== 'string' || (f.type === 'markdown' && !/\.md$/i.test(f.path)) || (f.assets!==undefined && (!Array.isArray(f.assets) || f.assets.length>40))) throw Error('Invalid project file.'); return {...f,...(f.assets?{assets:f.assets.map(normalizeProjectPath)}:{}),path:normalizeProjectPath(f.path),url:localFile(f.path,base)};});
   let cardBack;
   if(value.cardBack !== undefined){
     if(!value.cardBack || typeof value.cardBack !== 'object' || (value.cardBack.image && value.cardBack.svg) || (value.cardBack.image && !/\.(png|jpe?g|webp)$/i.test(value.cardBack.image)) || (value.cardBack.svg && !/\.svg$/i.test(value.cardBack.svg)) || (value.cardBack.description !== undefined && typeof value.cardBack.description !== 'string') || (!value.cardBack.image && !value.cardBack.svg))throw Error('Card back needs either an image or an SVG template path.');

@@ -45,7 +45,15 @@
     {
       "type": "markdown",
       "title": "Field Guide project guide",
-      "path": "README.md"
+      "path": "README.md",
+      "assets": [
+        "guide-images/back-fields.png",
+        "guide-images/photo-tools.png",
+        "guide-images/straighten-photo.png",
+        "guide-images/adjust-color.png",
+        "guide-images/download-card.png",
+        "guide-images/download-all-cards.png"
+      ]
     },
     {
       "type": "download",

@@ -78,3 +78,5 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 #single-card-export-dialog fieldset{border:0;padding:0;margin:18px 0}
 #single-card-export-dialog legend{font-weight:700;margin-bottom:8px}
 #single-card-export-dialog p{overflow-wrap:anywhere}
+
+.markdown-document img{display:block;max-width:100%;height:auto;margin:14px 0;border:1px solid #dce3dc;border-radius:8px}
