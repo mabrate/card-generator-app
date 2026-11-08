@@ -25,7 +25,12 @@ try:
    checkbox.set_checked(i not in [1,2]);assert page.locator('#card-preview #native-badge').count()==int(i not in [1,2])
    checkbox.set_checked(i in [1,2])
    if i==2:
-    with page.expect_download() as exported:page.locator('#download-svg').click()
+    with page.expect_download() as exported:
+     page.locator('#download-svg').click()
+     if page.locator('#single-card-export-dialog').is_visible():
+      page.locator('#single-card-front').check()
+      page.locator('#download-single-card').click()
+      page.locator('#single-card-export-dialog form button').click()
     exported.value.save_as('/tmp/bluebonnet-native.svg');assert 'id="native-badge"' in Path('/tmp/bluebonnet-native.svg').read_text()
    page.locator('#card-preview').screenshot(path=f'/tmp/field-guide-{i}-front.png')
    page.locator('#preview-back').click();expect(page.locator('#fields [data-field=size]')).to_be_visible()

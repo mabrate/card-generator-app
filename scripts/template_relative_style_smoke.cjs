@@ -20,7 +20,7 @@ const fixture=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 252" dat
       if(style===null)root.removeAttribute('style');else root.setAttribute('style',style);return result;
     },host);
     const close=(actual,expected)=>assert.ok(Math.abs(actual-expected)<.05,`${actual} != ${expected}`);
-    const save=async(button,name)=>{const download=page.waitForEvent('download');await page.locator(button).click();const file=path.join(temp,name);await (await download).saveAs(file);return file;};
+    const save=async(button,name)=>{const download=page.waitForEvent('download');await page.locator(button).click();if(button==='#download-svg'){if(await page.locator('#single-card-export-dialog').isVisible()){await page.locator('#single-card-front').check();await page.locator('#download-single-card').click();await page.locator('#single-card-export-dialog form button').click();}}const file=path.join(temp,name);await (await download).saveAs(file);return file;};
     await page.goto('http://127.0.0.1:'+port+'/?project=field-guide');await ready();await page.locator('#build-template').click();await page.locator('#tb-upload').setInputFiles({name:'relative.svg',mimeType:'image/svg+xml',buffer:Buffer.from(fixture)});await expect(page.locator('#tb-name')).toHaveValue('Relative labels');
     await layer('Family:');await page.locator('#tb-prop-data-inline-field').selectOption('family');await relative('Common name');await set('data-relative-gap',4);await set('data-relative-x',2);
     await page.locator('#tb-prop-data-inline-font-family').selectOption('Liberation Sans, sans-serif');await set('data-inline-font-size',13);await page.locator('#tb-prop-data-inline-font-weight').check();await page.locator('#tb-prop-data-inline-font-style').check();

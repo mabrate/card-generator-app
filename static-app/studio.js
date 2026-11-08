@@ -7,9 +7,9 @@ import {readStarter, consumeStarter} from './links.js';
 const $ = selector => document.querySelector(selector);
 import {projectId, loadProject, readManifest, canEditTemplates, validateExpansionPacks, normalizeProjectPath, fetchProjectFile} from './projects.js';
 import {renderMarkdown} from './markdown.js';
-import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject} from './local-projects.js';
+import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject, zipFiles} from './local-projects.js';
 import {loadCardBack} from './print.js';
-import {exportCardSet} from './card-export.js';
+import {exportCardSet,exportCardFiles} from './card-export.js';
 import {openTemplateBuilder} from './template-builder.js';
 import {openPhotoStraightener} from './photo-straighten.js';
 import {openPhotoAdjuster,openPhotoTips} from './photo-adjust.js';
@@ -296,7 +296,7 @@ function render() {
 }
 function updateActionButtons(){
   if(!rendered)return;
-  $('#download-svg').disabled=rendered.issues.length>0 || busy;
+  $('#download-svg').disabled=busy || (!hasCardBack() && rendered.issues.length>0);
   $('#print-card').disabled=rendered.issues.length>0 || busy;
   $('#delete-card').disabled=state.cards.length<=1 || busy;
   $('#delete-card').title=state.cards.length<=1?'Keep at least one card. Add or import another card first.':'Delete the selected card';
@@ -709,6 +709,7 @@ async function openStarter(recovered){
   }catch(err){error(err);}
 }
 async function currentCardBack(){return state.cardBack===null?undefined:state.cardBack?{image:'images/card-back.png',url:state.cardBack}:project?.cardBack?.image?project.cardBack:undefined;}
+function hasCardBack(){return Boolean(backTemplate || state.cardBack!==null && (state.cardBack || project?.cardBack?.image));}
 function showCardBack(){
   const dual=Boolean(backTemplate),url=state.cardBack===null?'':state.cardBack || project?.cardBack?.url || '';
   $('#card-back-file').parentElement.hidden=dual;$('#card-back-preview').hidden=dual||!url;$('#remove-card-back').hidden=dual||!url;
@@ -760,13 +761,35 @@ $('#download-set-zip').onclick=()=>run(async()=>{
   }catch(err){status.textContent='ZIP was not downloaded. '+err.message;throw err;}
   finally{dialog.setAttribute('aria-busy','false');}
 });
-$('#download-svg').onclick=()=>run(async()=>{
+async function downloadFrontSVG(){
   render();if(rendered.issues.length)throw Error('Complete or shorten the marked fields before exporting.');
   const svg=rendered.root.cloneNode(true);svg.setAttribute('data-card-app','finished-card');
   const style=document.createElementNS('http://www.w3.org/2000/svg','style');style.textContent=await fontStyles();svg.prepend(style);
   state.projectIdentity ||= crypto.randomUUID();save();
   const metadata=document.createElementNS('http://www.w3.org/2000/svg','metadata');metadata.setAttribute('data-card-format',FORMAT);metadata.textContent=JSON.stringify(await serializeCard({...card(),colors:cardColors()},state,getAsset,activeProjectId));svg.prepend(metadata);
   download(slug(cardTitle(card()))+'.svg','image/svg+xml',new XMLSerializer().serializeToString(svg));
+}
+$('#download-svg').onclick=()=>{
+  if(!hasCardBack())return run(downloadFrontSVG);
+  $('#single-card-summary').textContent=cardTitle(card());
+  $('#single-card-both').checked=true;$('#single-card-export-status').textContent='';
+  $('#single-card-export-dialog').showModal();
+};
+$('#download-single-card').onclick=()=>run(async()=>{
+  const status=$('#single-card-export-status');status.textContent='Preparing card…';
+  try{
+    clearTimeout(drawTimer);if(drawingPointer!==null)throw Error('Finish your drawing before downloading.');
+    const snapshot=structuredClone(state);snapshot.cards=[snapshot.cards[snapshot.active]];snapshot.active=0;snapshot.projectIdentity ||= crypto.randomUUID();
+    const mode=$('#single-card-export-dialog input:checked').value;
+    const entries=await exportCardFiles({snapshot,getAsset,mode,project,schemes,cardBack:await currentCardBack(),getFrontMetadata:c=>{
+      const layout=readTemplate(c.layout || snapshot.templateSVG),colors=resolveCardColors(layout,c,snapshot.colors,project?.colorRules,schemes);
+      return serializeCard({...c,colors},snapshot,getAsset,activeProjectId);
+    }});
+    const files=entries.map(entry=>({...entry,path:entry.path.replace(/^001-/, '')}));
+    if(files.length===1)download(files[0].path,'image/svg+xml',files[0].file);
+    else download(slug(cardTitle(snapshot.cards[0]))+'-front-back.zip','application/zip',await zipFiles(files));
+    status.textContent=files.length===1?'Card SVG downloaded.':'Front and back downloaded in one ZIP. Unzip it to use the two SVG files.';
+  }catch(err){status.textContent='Card was not downloaded. '+err.message;}
 });
 function checkProjectTemplate(source,id){
   if(!templatesEditable() && !catalog.some(t=>t.id===id && t.source===source))throw projectConstraint('This template is not allowed in the current project. Save your project before starting a different layout.');

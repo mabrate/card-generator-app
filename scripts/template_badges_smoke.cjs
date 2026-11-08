@@ -13,7 +13,7 @@ const root=path.resolve(__dirname,'..'),key='classroom-cards.static-first.v2:pro
     const set=async(name,value)=>{await page.locator('#tb-prop-'+name).fill(String(value));await page.locator('#tb-prop-'+name).dispatchEvent('change');};
     const group=field=>page.locator('#tb-elements button[data-kind=g][data-condition='+field+']');
     const glyph=field=>page.locator('#tb-elements button[data-field='+field+']');
-    const save=async(button,name)=>{const download=page.waitForEvent('download');await page.locator(button).click();const file=path.join(temp,name);await (await download).saveAs(file);return file;};
+    const save=async(button,name)=>{const download=page.waitForEvent('download');await page.locator(button).click();if(button==='#download-svg'){if(await page.locator('#single-card-export-dialog').isVisible()){await page.locator('#single-card-front').check();await page.locator('#download-single-card').click();await page.locator('#single-card-export-dialog form button').click();}}const file=path.join(temp,name);await (await download).saveAs(file);return file;};
     const rootSVG=async(file,selector)=>page.evaluate(({source,selector})=>{const doc=new DOMParser().parseFromString(source,'image/svg+xml');return [...doc.querySelectorAll(selector)].map(el=>({text:el.textContent,condition:el.getAttribute('data-visible-if')}));},{source:fs.readFileSync(file,'utf8'),selector});
     await page.goto('http://127.0.0.1:'+port+'/?project=field-guide');await ready();await expect(page.locator('#fields [data-field=native]')).not.toBeChecked();
     const originalValues=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).cards.map(card=>card.values),key);

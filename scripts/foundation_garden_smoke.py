@@ -77,7 +77,12 @@ try:
     expect(printed.locator('.sheet')).to_have_count(14)
     printed.close()
     page.locator('#preview-card-select').select_option('1')
-    with page.expect_download() as d:page.locator('#download-svg').click()
+    with page.expect_download() as d:
+     page.locator('#download-svg').click()
+     if page.locator('#single-card-export-dialog').is_visible():
+      page.locator('#single-card-front').check()
+      page.locator('#download-single-card').click()
+      page.locator('#single-card-export-dialog form button').click()
     card_xml=ET.fromstring(Path(d.value.path()).read_text())
     metadata=json.loads(card_xml.find('{http://www.w3.org/2000/svg}metadata').text)
     assert metadata['card']['id']==rows[1]['card_id']

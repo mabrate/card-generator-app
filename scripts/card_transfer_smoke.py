@@ -16,7 +16,12 @@ try:
   expect(page.locator('#preview-card-select option')).to_have_count(22,timeout=60000)
   page.locator('#fields [data-field="common_name"]').fill('Tropical sage')
   page.locator('#crop-zoom').evaluate("el=>{el.value='1.5';el.dispatchEvent(new Event('input',{bubbles:true}));}")
-  with page.expect_download() as d:page.locator('#download-svg').click()
+  with page.expect_download() as d:
+   page.locator('#download-svg').click()
+   if page.locator('#single-card-export-dialog').is_visible():
+    page.locator('#single-card-front').check()
+    page.locator('#download-single-card').click()
+    page.locator('#single-card-export-dialog form button').click()
   original_picture=page.locator('#card-preview').screenshot();svg=Path(d.value.path()).read_text();fixture=Path(directory)/'sage.svg';fixture.write_text(svg)
   # Module-level tests run in the browser's actual XML/image environment.
   result=page.evaluate('''async svg=>{
@@ -64,7 +69,12 @@ try:
   page.locator('#open-json').set_input_files(archive)
   expect(page.locator('#fields [data-field="common_name"]')).to_have_value('Edited sage')
   expect(page.locator('#card-position')).to_contain_text('Sage expansion')
-  with page.expect_download() as d:page.locator('#download-svg').click()
+  with page.expect_download() as d:
+   page.locator('#download-svg').click()
+   if page.locator('#single-card-export-dialog').is_visible():
+    page.locator('#single-card-front').check()
+    page.locator('#download-single-card').click()
+    page.locator('#single-card-export-dialog form button').click()
   again=Path(d.value.path()).read_text()
   differences=page.evaluate('''async ([before,after])=>{const m=await import('./card-transfer.js');const a=await m.parseCard(new File([before],'before.svg')),b=await m.parseCard(new File([after],'after.svg'));a.card.values.common_name='Edited sage';const x=JSON.parse(m.normalized(a)),y=JSON.parse(m.normalized(b));const diff=(a,b,path='')=>{if(JSON.stringify(a)===JSON.stringify(b))return [];if(a&&b&&typeof a==='object'&&typeof b==='object')return [...new Set([...Object.keys(a),...Object.keys(b)])].flatMap(k=>diff(a[k],b[k],path+'.'+k));return [path];};return diff(x,y);}''',[svg,again])
   assert not differences, differences

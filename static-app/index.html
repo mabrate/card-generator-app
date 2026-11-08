@@ -3,10 +3,21 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173c32"><title>Classroom Cards</title>
-<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="project-dashboard.css"><link rel="stylesheet" href="template-builder.css"><link rel="stylesheet" href="photo-straighten.css"><link rel="stylesheet" href="photo-adjust.css"><script type="module" src="studio.js?v=68"></script>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="project-dashboard.css"><link rel="stylesheet" href="template-builder.css"><link rel="stylesheet" href="photo-straighten.css"><link rel="stylesheet" href="photo-adjust.css"><script type="module" src="studio.js?v=69"></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="./">▧ Classroom Cards</a><button id="project-dashboard-button" class="button dashboard-button" type="button" hidden>Project dashboard</button><span>STUDENT STUDIO</span></header>
+<dialog id="single-card-export-dialog" aria-labelledby="single-card-export-title">
+  <h2 id="single-card-export-title">Download card</h2>
+  <p id="single-card-summary"></p>
+  <fieldset><legend>Card sides</legend>
+    <label class="export-choice"><input id="single-card-both" name="single-card-sides" type="radio" value="pairs" checked><span>Front and back<span class="hint">One ZIP containing two SVG files.</span></span></label>
+    <label class="export-choice"><input id="single-card-front" name="single-card-sides" type="radio" value="fronts"><span>Front only<span class="hint">One SVG file.</span></span></label>
+    <label class="export-choice"><input id="single-card-back" name="single-card-sides" type="radio" value="backs"><span>Back only<span class="hint">One SVG file.</span></span></label>
+  </fieldset>
+  <p id="single-card-export-status" role="status" aria-live="polite"></p>
+  <div class="download-links"><button id="download-single-card" class="button" type="button">Download</button><form method="dialog"><button class="button secondary" type="submit">Close</button></form></div>
+</dialog>
 <dialog id="card-export-dialog" aria-labelledby="card-export-title">
   <h2 id="card-export-title">Download all cards</h2>
   <p id="card-export-summary"></p>

@@ -7,20 +7,21 @@ const NS='http://www.w3.org/2000/svg';
 const cardName=card=>card.values.common_name || card.values.element_name || Object.values(card.values).find(Boolean) || 'Untitled card';
 const filename=name=>name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,90) || 'card';
 
-function finishedSVG(root,title,fonts=''){
+function finishedSVG(root,title,fonts='',metadata=null){
   root.setAttribute('xmlns',NS);root.setAttribute('width','2.5in');root.setAttribute('height','3.5in');root.setAttribute('data-card-app','finished-card');
   let heading=root.querySelector(':scope > title');
   if(!heading){heading=document.createElementNS(NS,'title');root.prepend(heading);}
   heading.textContent=title;
   if(fonts){const style=document.createElementNS(NS,'style');style.textContent=fonts;root.prepend(style);}
+  if(metadata){const node=document.createElementNS(NS,'metadata');node.setAttribute('data-card-format',metadata.format);node.textContent=JSON.stringify(metadata);root.prepend(node);}
   return new XMLSerializer().serializeToString(root);
 }
 
 // Render a frozen workspace without changing the editor's selected card or side.
-export async function exportCardSet({snapshot,getAsset,mode,project,schemes=[],cardBack=null,onProgress=()=>{}}){
-  if(!['fronts','pairs','common'].includes(mode))throw Error('Choose which card sides to download.');
+export async function exportCardFiles({snapshot,getAsset,mode,project,schemes=[],cardBack=null,onProgress=()=>{},getFrontMetadata=null}){
+  if(!['fronts','backs','pairs','common'].includes(mode))throw Error('Choose which card sides to download.');
   const front=readTemplate(snapshot.templateSVG),back=snapshot.backTemplateSVG?readTemplate(snapshot.backTemplateSVG):null;
-  if(mode==='pairs' && !back && !cardBack)throw Error('This set has no back. Choose Front only or define a card back first.');
+  if(['pairs','backs'].includes(mode) && !back && !cardBack)throw Error('This set has no back. Choose Front only or define a card back first.');
   if(mode==='common' && (!cardBack || back))throw Error('Choose a set with a common card back for this option.');
   if(!snapshot.cards.length)throw Error('Add a card before downloading the set.');
   const fonts=await fontStyles();
@@ -51,18 +52,22 @@ export async function exportCardSet({snapshot,getAsset,mode,project,schemes=[],c
     const result=renderTemplate(layout,card.values,colors,image,crop,host);
     if((drawing || imageName) && !image)result.issues.push(drawing?'The saved drawing is missing.':`Choose the image file “${imageName}”.`);
     if(result.issues.length)throw Error(`Card ${index+1} (“${cardName(card)}”), ${side}: ${result.issues.join(' ')}`);
-    return finishedSVG(result.root,`${index+1} — ${cardName(card)} — ${side==='front'?'Front':'Back'}`,fonts);
+    return finishedSVG(result.root,`${index+1} — ${cardName(card)} — ${side==='front'?'Front':'Back'}`,fonts,side==='front' && getFrontMetadata?await getFrontMetadata(card):null);
   }
   try{
     const digits=Math.max(3,String(snapshot.cards.length).length);
     for(const [index,card] of snapshot.cards.entries()){
       onProgress(index+1,snapshot.cards.length,cardName(card));
       const prefix=String(index+1).padStart(digits,'0')+'-'+filename(cardName(card));
-      add(prefix+'-front.svg',await render(card,index,'front'));
-      if(mode==='pairs')add(prefix+'-back.svg',back?await render(card,index,'back'):finishedSVG(commonRoot.cloneNode(true),`${index+1} — ${cardName(card)} — Back`));
+      if(mode!=='backs')add(prefix+'-front.svg',await render(card,index,'front'));
+      if(['pairs','backs'].includes(mode))add(prefix+'-back.svg',back?await render(card,index,'back'):finishedSVG(commonRoot.cloneNode(true),`${index+1} — ${cardName(card)} — Back`));
       if(index%10===0)await new Promise(resolve=>setTimeout(resolve,0));
     }
     if(mode==='common')add('000-common-back.svg',finishedSVG(commonRoot,'Common card back'));
-    return {blob:await zipFiles(entries),count:entries.length};
+    return entries;
   }finally{host.remove();}
+}
+export async function exportCardSet(options){
+  const entries=await exportCardFiles(options);
+  return {blob:await zipFiles(entries),count:entries.length};
 }

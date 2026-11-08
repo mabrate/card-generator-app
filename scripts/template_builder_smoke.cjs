@@ -51,7 +51,7 @@ const fixture=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 252" dat
     await page.locator('#tb-upload').setInputFiles(templateFile);await page.locator('#tb-apply').click();await expect(page.locator('#template-builder')).toHaveCount(0);
     await expect(page.locator('#fields [data-field=family]')).toHaveCount(1);
     await page.locator('#fields [data-field=common_name]').fill('Ladybug study');
-    const single=page.waitForEvent('download');await page.locator('#download-svg').click();const cardFile=path.join(temp,'card.svg');await (await single).saveAs(cardFile);const cardSVG=fs.readFileSync(cardFile,'utf8');assert.match(cardSVG,/Coccinellidae/);assert.ok(!cardSVG.includes('data-builder-overlay'));
+    const single=page.waitForEvent('download');await page.locator('#download-svg').click();if(await page.locator('#single-card-export-dialog').isVisible()){await page.locator('#single-card-front').check();await page.locator('#download-single-card').click();await page.locator('#single-card-export-dialog form button').click();}const cardFile=path.join(temp,'card.svg');await (await single).saveAs(cardFile);const cardSVG=fs.readFileSync(cardFile,'utf8');assert.match(cardSVG,/Coccinellidae/);assert.ok(!cardSVG.includes('data-builder-overlay'));
     await page.reload();await ready();await expect(page.locator('#card-preview [data-field=scientific_name]')).toContainText('Coccinellidae');
     const previewMetrics=await page.locator('#card-preview [data-field=scientific_name]').evaluate(el=>({x:Number(el.getAttribute('x')),y:Number(el.getAttribute('y')),text:el.textContent}));
     const printPopup=page.waitForEvent('popup');await page.locator('#print-card').click();const sheet=await printPopup;await sheet.waitForSelector('#print:not([disabled])');

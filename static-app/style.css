@@ -71,3 +71,10 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 #import-cards-dialog{width:min(900px,95vw)}#card-import-drop{border:2px dashed #789;padding:16px}.card-import-row{border-bottom:1px solid #ccc;padding:10px;display:flex;gap:16px;align-items:center}.card-import-row p{flex:1}.import-thumbnail{width:90px;height:126px;flex-shrink:0}.import-thumbnail svg{width:90px;height:126px}
 
 .fields .checkbox-field{display:flex;align-items:center;gap:8px}.fields .checkbox-field input[type=checkbox]{width:20px;height:20px;min-height:20px;margin:0;accent-color:#228b22}
+
+#single-card-export-dialog{width:min(480px,calc(100vw - 28px));box-sizing:border-box;max-height:90dvh;overflow:auto;border:1px solid #dce3dc;border-radius:14px;padding:24px;color:#18342c}
+#single-card-export-dialog::backdrop{background:rgba(15,35,25,.35)}
+#single-card-export-dialog h2{margin:0;font-size:22px}
+#single-card-export-dialog fieldset{border:0;padding:0;margin:18px 0}
+#single-card-export-dialog legend{font-weight:700;margin-bottom:8px}
+#single-card-export-dialog p{overflow-wrap:anywhere}
