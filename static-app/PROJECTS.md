@@ -37,7 +37,7 @@ Publish each project in `projects/<slug>/manifest.json` under the static site's 
 - `starter`: initial template, scheme, and text values. Defaults are applied on first opening; values also populate new cards and Start fresh. The first allowed template/scheme is used when unspecified. Defaults never replace recovered student edits.
 - `placeholders`: input hints keyed by the SVG's `data-field` names. Hints are not card text and are not exported.
 - `cardBack`: optional object with either a project-relative `image` path (PNG, JPG, or WebP; under 12 MB and 25 megapixels) or an editable `svg` template path. An image gives every card the same back. An SVG opts that project into **Front / Back** editing: its `data-field` entries become per-card back fields, the student studio shows side controls, and each card's rendered back is printed in mirrored duplex position. An SVG `data-image="artwork"` uses the card's `back_image_filename` CSV column when present, and falls back to the front image otherwise. Keep SVG field keys unique across front and back (a shared `common_name` field is supported). Omit this option for front-only sheets. Projects without an SVG back keep their existing shared-image workflow.
-- `editableTemplates`: optional boolean, default `false`. When `true`, students can download, edit, and reopen the project's front and back SVG templates in the studio. Saving a project ZIP includes those edited templates.
+- `editableTemplates`: optional `false` (default), `true`, or `"url"`. `false` keeps template editing disabled; `true` enables it for everyone. `"url"` disables editing on the ordinary project link and enables it only when the URL includes `editTemplates=1`. Saving a project ZIP preserves this setting and includes edited front/back templates.
 - `files`: an extensible resource list. The Project documents and files section is hidden when this list is empty. Markdown entries render inside the editor; other types download their file. Paths stay inside the project folder. Subfolders work. Additional descriptor metadata and additional manifest keys are preserved for future consumers, and unlisted files may live alongside these resources.
 
 Markdown supports headings, paragraphs, ordered/unordered lists, tables, bold, italics, inline code, fenced code, links relative to the document, and `:::pagebreak` as a divider. Raw HTML renders as text; active link protocols are restricted to HTTP/HTTPS. This is a small built-in renderer with no CDN dependency. Documents load when opened; download entries do not automatically import cards or images.
@@ -45,6 +45,32 @@ Markdown supports headings, paragraphs, ordered/unordered lists, tables, bold, i
 Projects use separate localStorage checkpoints and IndexedDB image databases. Normal editor recovery keeps its original keys. Saved editable ZIPs open as separate local projects. Shared starter links must use an allowed template and scheme when opened within a project. Starter links preserve the `project` query parameter. Missing or invalid projects show an error rather than loading unrelated defaults. If browser recovery is incompatible with the current project or damaged, the editor offers **Download saved work** and **Start fresh**. The saved checkpoint stays untouched until Start fresh initializes the current project defaults. Other workspaces are unaffected.
 
 The service worker caches project manifests, templates, and resources as they are fetched. Open needed documents and download resources while connected before expecting them offline; copying a folder to the host does not pre-cache every file in it.
+
+## Template editing links
+
+Set `"editableTemplates": "url"` in a project's manifest to distribute separate links:
+
+- Student link: `?project=my-project`
+- Template editing link: `?project=my-project&editTemplates=1`
+
+The same parameter works with `?local=<id>&editTemplates=1` after opening a project ZIP in this browser. Removing the parameter disables template editing again, including the visual builder, SVG upload, and hosted-layout reload. Card text and artwork remain editable. Previously saved layout changes remain visible and are kept in recovery and exported ZIPs. Opening a ZIP starts with editing disabled unless the manifest enables it for everyone; append the parameter to edit a `"url"` project's templates.
+
+Only the exact value `1` enables editing. The parameter does not override `editableTemplates: false`, and the app does not turn a link override into `true` when saving a project. Existing manifests using booleans keep their behavior.
+
+This is a classroom workflow control, not password protection: anyone who knows the parameter can use it, and project files are readable. Share the ordinary link with students and keep the template editing link for teacher use.
+
+## Project dashboard
+
+Use **Project dashboard** in the top bar to prepare a project copy. The button appears only when template editing is enabled, including in the unrestricted studio. For any project, open the teacher setup link `?project=<slug>&dashboard=1` (or `?local=<id>&dashboard=1`) to open the dashboard directly, including projects with fixed templates. Keep this setup link for authoring; ordinary locked student links show neither the dashboard nor a settings button. The dashboard parameter does not itself enable template editing or reveal the dashboard button in the studio.
+
+The dashboard edits the project name, ID, package version, description, template-editing mode, starter front template/color scheme, new-card field defaults, and input hints. Existing cards, artwork, front/back layouts, documents, color rules, and additional manifest metadata are carried into the copy. Defaults do not replace existing card text. Closing the dashboard discards its settings; the current workspace and hosted source files stay unchanged.
+
+- **Download project ZIP** produces a complete project package with those settings. Open its folder/ZIP on another device, or publish its contents under `projects/<id>/` on your static site.
+- **Open project copy** validates the package and creates a separate local workspace in this browser, then opens its dashboard. It retains all current cards and artwork. The original workspace remains at its previous link. Use **New card** in the copy to add cards using the new defaults, or **Start fresh** to begin a blank set after saving any cards you want to keep.
+
+Sharing links in the dashboard are for the published project ID. They become usable after the ZIP contents are hosted in the matching project folder; creating a local copy does not publish it. Local workspace links work only in the browser that created them. After the app is cached, the dashboard also works offline with local projects.
+
+For example, open `?project=field-guide&dashboard=1`, set a new project name and ID, choose **Only with the template editing link**, and download a ZIP. After publishing it, give students the displayed student link and retain the displayed template editing link for authoring.
 
 ## Private folder and ZIP imports
 

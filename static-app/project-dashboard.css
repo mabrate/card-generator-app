@@ -1,0 +1,26 @@
+#project-dashboard{width:min(820px,calc(100vw - 28px));max-height:92dvh;box-sizing:border-box;overflow:auto;border:1px solid #ccd8cd;border-radius:16px;padding:28px;color:#18342c;background:#fff}
+#project-dashboard::backdrop{background:rgba(15,35,25,.45)}
+#project-dashboard .pd-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}
+#project-dashboard h2{margin:0;font-size:26px}
+#project-dashboard .pd-eyebrow{font-size:10px;font-weight:700;letter-spacing:.12em;color:#59705f;margin:0 0 6px}
+#project-dashboard .pd-summary{background:#f0f5ee;padding:12px 14px;border-radius:8px;font-size:13px}
+#project-dashboard fieldset{margin:24px 0;padding:0;border:0}
+#project-dashboard legend{font-size:17px;font-weight:700;margin-bottom:14px}
+#project-dashboard .pd-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#project-dashboard .pd-wide{grid-column:1/-1}
+#project-dashboard label{display:grid;gap:7px;font-size:12px;font-weight:650;min-width:0}
+#project-dashboard input,#project-dashboard select,#project-dashboard textarea{box-sizing:border-box;width:100%;min-width:0;font:inherit;font-weight:400;padding:10px 12px;border:1px solid #c6d4c8;border-radius:7px;background:white;color:#18342c}
+#project-dashboard input[readonly]{background:#f6f8f4;font-size:12px}
+#project-dashboard .hint{font-weight:400;line-height:1.5;margin:0;font-size:12px}
+#project-dashboard #pd-fields{border-top:1px solid #dce3dc;border-bottom:1px solid #dce3dc;padding:16px 0}
+#project-dashboard summary{font-weight:700}
+#project-dashboard #pd-fields>p{margin-top:12px}
+#project-dashboard .pd-field{display:grid;grid-template-columns:minmax(100px,.7fr) 1fr 1fr;align-items:start;gap:14px;padding-top:16px}
+#project-dashboard h4{font-size:12px;margin:0;padding-top:3px;overflow-wrap:anywhere}
+#project-dashboard h4 span{display:block;margin-top:5px}
+#project-dashboard .pd-links{display:grid;gap:14px;margin-top:24px}
+#project-dashboard .pd-links h3{margin:0;font-size:17px}
+#project-dashboard .pd-actions{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0;padding:18px 0 0;border-top:1px solid #dce3dc;text-align:left}
+#project-dashboard #pd-status{font-size:13px}
+.topbar .dashboard-button{background:#fff;color:#244734;border:0;font-size:12px;padding:8px 12px;min-height:36px;margin-left:auto;margin-right:16px}
+@media(max-width:600px){#project-dashboard{padding:20px}#project-dashboard .pd-grid{grid-template-columns:1fr}#project-dashboard .pd-field{grid-template-columns:1fr;gap:10px}#project-dashboard .pd-actions .button{width:100%}.topbar .dashboard-button{margin-right:0}.topbar:has(.dashboard-button:not([hidden]))>span{display:none}}

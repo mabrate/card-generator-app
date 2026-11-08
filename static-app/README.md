@@ -42,6 +42,8 @@ The preview groups **Download card**, **Print this card**, **Print all cards**, 
 
 CSV is the canonical card data file. Edit it in the project folder and reopen the folder or ZIP through **Open project folder**. Changes made in the editor are saved in browser recovery immediately; **Save project** writes those current values into the downloaded CSV. Opening a folder does not write changes back to your original files. There are no standalone CSV import/export controls. Save project writes all current edits to the project's CSV. Images referenced by the CSV must be included in the folder or ZIP.
 
+**Project dashboard** in the top bar prepares project copies with a new name/ID, version, description, template access, starter settings, field defaults, and hints. Download a complete ZIP or open an independent local copy. For a locked project, open `?project=<slug>&dashboard=1` to access teacher setup. The normal student link keeps these authoring controls hidden. Sharing links shown in the dashboard work after publishing the package; local copies remain in this browser. See [Project dashboard](PROJECTS.md#project-dashboard).
+
 ## Card print sheets
 
 Use **Print this card** for the current card using its saved quantity, or use **Print all cards** directly below it to print the whole workspace using each card’s saved quantity. The button opens a new browser tab containing the card SVGs, images, and fonts. Choose **Print / Save as PDF** in that tab. No HTML download is needed, and the editor stays open in its original tab. This also works offline after the app has been cached. If the browser blocks the new tab, allow pop-ups for the site and try again.

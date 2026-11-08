@@ -22,7 +22,7 @@ try:
         expect(tools.locator('#template-select')).to_be_visible()
         expect(tools.locator('#template-svg')).to_be_visible()
         expect(tools.locator('#svg-file')).to_be_attached()
-        assert tools.locator('button').count() == 1
+        expect(tools.locator('#build-template')).to_be_visible()
         expect(tools.locator('#template-svg')).to_have_attribute('title', 'Download template SVG')
         expect(page.locator('#open-project')).to_have_text('Open project folder')
         page.locator('#open-project').click()
