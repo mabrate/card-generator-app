@@ -1,9 +1,9 @@
 {
   "version": 1,
   "id": "element-explorer",
-  "packageVersion": "1.0.0",
+  "packageVersion": "1.2.0",
   "name": "Element Explorer",
-  "description": "The first 20 elements, with family-colored strips and an Ink card body.",
+  "description": "Hydrogen and Ytterbium examples, with family-colored strips, an Ink card body, and photographs of real uses.",
   "csv": "cards.csv",
   "imageDirectory": "graphics",
   "templates": [
@@ -104,5 +104,6 @@
       "title": "Element card data",
       "path": "cards.csv"
     }
-  ]
+  ],
+  "workspace": "workspace.json"
 }

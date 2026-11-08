@@ -107,7 +107,7 @@ Named palettes and custom per-card colors are stored in the CSV `theme` column. 
 
 Choose **Element Explorer** in the Template layout picker for periodic-table cards. Atomic number, chemical symbol, and element name are required. Optional fields are atomic mass, element family, group, period, state at room temperature, everyday use, and a short fun fact. The image frame is for a familiar object or illustration connected to the element.
 
-Use the accent color for element families and write the family name in the strip, so meaning remains clear in grayscale. Keep everyday uses to three short lines and fun facts to two. Group may be left blank when it does not apply. Image filename, copies, and theme are supplied by the app when saving the project CSV.
+Use the accent color for element families and write the family name in the strip, so meaning remains clear in grayscale. Everyday uses have five short lines beside the photo; fun facts have two full-width lines below it. The upper identity and properties sections are compact to make room for both. Group may be left blank when it does not apply. Image filename, copies, and theme are supplied by the app when saving the project CSV.
 
 ## Two-sided Field Guide
 

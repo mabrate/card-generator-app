@@ -146,4 +146,4 @@ A project can declare `colorRules` in its manifest. Each rule matches one text f
 
 The theme must be present in `colorSchemes`; fields and color roles must exist in the project's templates. Rules affect supported roles of the current card layout. Unmatched values retain base colors. Explicit CSV themes and per-card manual colors override rules. The editor's **Use automatic colors** button removes a manual override. A blank CSV theme preserves automatic behavior when saving/reopening a project, rather than freezing the evaluated colors. Rules remain in `manifest.json`; finished SVGs and print sheets contain the evaluated colors.
 
-The `element-explorer` starter project includes elements 1–20, with an Ink card body and conditional family-strip colors. Open it with `?project=element-explorer`.
+The `element-explorer` starter project includes Hydrogen (1) and Ytterbium (70) examples, with an Ink card body, conditional family-strip colors, and locally bundled photographs of real uses. Its `workspace.json` supplies the artwork crops and photo credits. Open it with `?project=element-explorer`.

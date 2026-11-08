@@ -1,6 +1,8 @@
 # Element Explorer
 
-Twenty editable cards for elements 1–20. Each card has an Ink body with a family-colored strip and an original grayscale everyday-object pictogram. The first card starts with Hydrogen. Use the card arrows or title picker to explore the set.
+Two editable example cards: **Hydrogen (1)** and **Ytterbium (70)**. Each card has an Ink body, a family-colored strip, and a photograph of a real use. Hydrogen starts first; use the card arrows or title picker to switch examples. Use **New card** to research another element, or **Import cards** to collect classmates' SVGs into a printable set.
+
+If this browser still shows the older examples, save any work you want to keep, then choose **Restore starter examples** to load these two cards and their photos. Saved student work is not replaced automatically.
 
 ## Automatic family colors
 
@@ -17,7 +19,7 @@ Editing **Element family** changes the strip immediately. The rest of the card s
 - Lanthanide: `#6f577d`
 - Actinide: `#814447`
 
-The list includes rules for families beyond this starter set, so you can add more elements. These are broad classroom categories; the numeric Group field still gives the actual periodic-table column. Hydrogen is classified as a nonmetal even though it is in group 1.
+The list includes rules for families beyond these examples, so you can add more elements. These are broad classroom categories; the Group field gives the numbered periodic-table column where applicable. Hydrogen is classified as a nonmetal even though it is in group 1. Ytterbium is a lanthanide in period 6; its Group is shown as “—” because it has no standard numbered group.
 
 Open **Change colors** to see whether automatic colors or a manual override is active. Choosing a theme or an individual color creates a manual override. **Use automatic colors** restores the project rules. Blank/unrecognized families use the gray default strip. Matching ignores capitalization and surrounding whitespace.
 
@@ -30,32 +32,21 @@ Open **Change colors** to see whether automatic colors or a manual override is a
 - Arrange cards by atomic number, then by group and period.
 - Sort by family or room-temperature state.
 - Compare neighbors and explain which properties repeat.
-- Match the everyday-object pictograms to uses, including uses of compounds.
+- Add a photograph that clearly shows one use of each researched element.
 
 ## Data and artwork
 
-Atomic numbers, rounded relative atomic masses, groups, periods, states at 20°C, and short uses/facts were checked against the Royal Society of Chemistry periodic table. Atomic mass is not the mass number of one isotope. Everyday uses sometimes refer to compounds or alloys rather than the pure element. Aluminum uses the US spelling. The broad family categories are the project's classroom convention.
+Atomic numbers, rounded relative atomic masses, groups, periods, states at 20°C, and short facts were checked against the Royal Society of Chemistry periodic table. Atomic mass is not the mass number of one isotope. Uses include specialized technology: ytterbium's photograph shows an experimental atomic clock, not an ordinary household clock. The broad family categories are the project's classroom convention.
 
 Source pages:
 - [Hydrogen](https://periodic-table.rsc.org/element/1/hydrogen)
-- [Helium](https://periodic-table.rsc.org/element/2/helium)
-- [Lithium](https://periodic-table.rsc.org/element/3/lithium)
-- [Beryllium](https://periodic-table.rsc.org/element/4/beryllium)
-- [Boron](https://periodic-table.rsc.org/element/5/boron)
-- [Carbon](https://periodic-table.rsc.org/element/6/carbon)
-- [Nitrogen](https://periodic-table.rsc.org/element/7/nitrogen)
-- [Oxygen](https://periodic-table.rsc.org/element/8/oxygen)
-- [Fluorine](https://periodic-table.rsc.org/element/9/fluorine)
-- [Neon](https://periodic-table.rsc.org/element/10/neon)
-- [Sodium](https://periodic-table.rsc.org/element/11/sodium)
-- [Magnesium](https://periodic-table.rsc.org/element/12/magnesium)
-- [Aluminum](https://periodic-table.rsc.org/element/13/aluminium)
-- [Silicon](https://periodic-table.rsc.org/element/14/silicon)
-- [Phosphorus](https://periodic-table.rsc.org/element/15/phosphorus)
-- [Sulfur](https://periodic-table.rsc.org/element/16/sulfur)
-- [Chlorine](https://periodic-table.rsc.org/element/17/chlorine)
-- [Argon](https://periodic-table.rsc.org/element/18/argon)
-- [Potassium](https://periodic-table.rsc.org/element/19/potassium)
-- [Calcium](https://periodic-table.rsc.org/element/20/calcium)
+- [Ytterbium](https://periodic-table.rsc.org/element/70/ytterbium)
+- [Fuel-cell vehicles — U.S. Department of Energy](https://www.fueleconomy.gov/feg/fuelcell.shtml)
+- [Ytterbium optical lattice clocks — NIST](https://www.nist.gov/programs-projects/yb-optical-lattice-clock)
 
-The PNG pictograms are original local drawings, not photographs of pure samples. They use black, white, and gray and require no network services.
+### Photo credits
+
+- **Hydrogen:** [Toyota Mirai 140054.jpg](https://commons.wikimedia.org/wiki/File:Toyota_Mirai_140054.jpg), photographed by **Trop86**, 22 June 2025. [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). The Toyota Mirai is a hydrogen fuel-cell car.
+- **Ytterbium:** [Ytterbium Clock](https://www.nist.gov/image/16pml015ytterbiumclocknphillipshrjpeg), **N. Phillips/NIST**, 2016. U.S. government work, public domain. NIST describes this as a composite of photographs that reveal the laser paths in an experimental ytterbium lattice atomic clock.
+
+Both photographs are included locally in `graphics/`. The saved crops in `workspace.json` frame the car and the clock's central apparatus in the small 48 × 53 artwork box. The original photos remain available for adjusting the crop. Photo credits also travel in each card's SVG metadata and saved project. No online image service is needed to edit, share, or print the cards.

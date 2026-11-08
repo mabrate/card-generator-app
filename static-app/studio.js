@@ -527,6 +527,16 @@ function validateState(value,context){
   assertCards(value.cards);for(const c of value.cards)if(c.layout)c.layout=readTemplate(c.layout).source;
   return value;
 }
+async function upgradePublishedElementLayout(value){
+  if(localBundle || project?.id!=='element-explorer' || project.editableTemplates || value?.templateId!=='element-explorer' || typeof value.templateSVG!=='string')return;
+  const published=catalog.find(item=>item.id===value.templateId);
+  if(!published || readTemplate(published.source).root.getAttribute('data-template-version')!=='2')return;
+  // Upgrade only the exact original fixed layout; keep all saved card data and artwork.
+  const old=readTemplate(value.templateSVG);
+  if(old.root.getAttribute('data-template-version')!=='1')return;
+  const response=await fetchProjectFile(new URL('templates/element-explorer-v1.svg',project.base));
+  if(response.ok && old.source===readTemplate(await response.text()).source)value.templateSVG=published.source;
+}
 async function importProject(file){try{await importLocalFiles(await unzip(file));}catch(err){$('#local-project-status').textContent='Project was not imported. '+err.message;throw err;}}
 async function run(action){if(busy)return;busy=true;$('#page-error').textContent='';document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=true);try{await action();}catch(err){error(err);}finally{busy=false;document.querySelectorAll('button,select,input,textarea').forEach(el=>el.disabled=false);$('#template-select').disabled=activeSide==='back';if(template && $('#recovery-error').hidden)updateActionButtons();}}
 $('#template-select').onchange=()=>run(async()=>{const item=catalog.find(c=>c.id===$('#template-select').value);if(!item)return;const r=await fetch(item.url || 'templates/'+item.svg,{cache:'no-cache'});if(!r.ok)throw Error('Cannot open that built-in template.');applyTemplate(await r.text(),item.id);if(card().layout)card().layout=state.templateSVG;await showCard();});
@@ -891,7 +901,7 @@ async function start(){
   }
   let saved;try{saved=localStorage.getItem(KEY);}catch{storageError='Browser recovery is unavailable. Save a project file while you work.';}
   if(!saved && localBundle){state=validateState(structuredClone(localBundle.state));for(const [key,data] of Object.entries(localBundle.images))await putAsset(key,data);}
-  if(saved){try{state=validateState(JSON.parse(saved));}catch(err){offerRecoveryReset(saved,err);return;}}
+  if(saved){try{const recovered=JSON.parse(saved);await upgradePublishedElementLayout(recovered);state=validateState(recovered);}catch(err){offerRecoveryReset(saved,err);return;}}
   if(!localId && project?.csv){
     const untouched=state.cards.length===1 && (state.cards[0].copies ?? 1)===1 && !state.cards[0].colors && !Object.hasOwn(state,'cardBack') && (!state.colorScheme || state.colorScheme===(project.starter.scheme || schemes[0].name)) && !state.imported && !Object.keys(state.assets).length && !Object.values(state.cards[0].values).some(Boolean) && !state.cards[0].imageName && !state.cards[0].drawingKey;
     if(!saved || (!state.projectDataInitialized && untouched))await loadHostedCards();

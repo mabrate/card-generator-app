@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2.5in" height="3.5in" viewBox="0 0 180 252" data-title="Element Explorer — Ink" data-template-version="1" font-family="Liberation Sans, sans-serif">
+<title>Element Explorer</title>
+<desc>Periodic-table element card. Editable identity, family, properties, everyday use, and fun fact. State is at room temperature. Keep text data attributes when editing in Inkscape.</desc>
+<rect id="background" width="180" height="252" rx="8" fill="#ffffff" data-color-fill="background"/>
+<rect id="border" x="4" y="4" width="172" height="244" rx="6" fill="none" stroke="#555555" data-color-stroke="accent" stroke-width="1.2"/>
+<rect x="10" y="114" width="160" height="19" rx="3" fill="#555555" data-color-fill="family_strip"/>
+<rect x="10" y="138" width="160" height="36" rx="3" fill="#f1f1f1" data-color-fill="panel"/>
+<rect id="artwork" data-image="artwork" x="12" y="183" width="48" height="53" rx="3" fill="#f1f1f1" data-color-fill="picture"/>
+<text data-placeholder="true" x="36" y="212" text-anchor="middle" font-size="6" fill="#555555">{{image}}</text>
+<text x="13" y="17" font-size="5.5" font-weight="bold" fill="#222222" data-color-fill="text">ATOMIC NUMBER</text>
+<text id="atomic_number" data-field="atomic_number" data-label="Atomic number" data-width="43" data-lines="1" data-max-chars="3" data-line-height="20.0" data-required="true" x="13" y="34" font-size="16" font-weight="bold" fill="#222222" data-color-fill="text">{{atomic_number}}</text>
+<text id="symbol" data-field="symbol" data-label="Chemical symbol" data-width="150" data-lines="1" data-max-chars="3" data-line-height="47.5" data-required="true" x="90" y="72" font-size="38" text-anchor="middle" font-weight="bold" fill="#222222" data-color-fill="text">{{symbol}}</text>
+<text id="element_name" data-field="element_name" data-label="Element name" data-width="154" data-lines="1" data-max-chars="24" data-line-height="15.0" data-required="true" x="90" y="91" font-size="12" text-anchor="middle" font-weight="bold" fill="#222222" data-color-fill="text">{{element_name}}</text>
+<text x="13" y="105" font-size="5" font-weight="bold" fill="#222222" data-color-fill="text">ATOMIC MASS</text>
+<text id="atomic_mass" data-field="atomic_mass" data-label="Atomic mass" data-width="88" data-lines="1" data-max-chars="16" data-line-height="8.75" data-required="false" x="167" y="105" font-size="7" text-anchor="end" fill="#222222" data-color-fill="text">{{atomic_mass}}</text>
+<text id="family" data-field="family" data-label="Element family" data-width="148" data-lines="1" data-max-chars="32" data-line-height="10.0" data-required="false" x="90" y="126" font-size="8" text-anchor="middle" font-weight="bold" fill="#ffffff" data-color-fill="family_text">{{family}}</text>
+<text x="14" y="149" font-size="5.5" font-weight="bold" fill="#222222" data-color-fill="text">GROUP</text>
+<text x="57" y="149" font-size="5.5" font-weight="bold" fill="#222222" data-color-fill="text">PERIOD</text>
+<text x="102" y="149" font-size="4.8" font-weight="bold" fill="#222222" data-color-fill="text">STATE (ROOM TEMP.)</text>
+<text id="group" data-field="group" data-label="Group" data-width="35" data-lines="1" data-max-chars="8" data-line-height="12.5" data-required="false" x="14" y="165" font-size="10" fill="#222222" data-color-fill="text">{{group}}</text>
+<text id="period" data-field="period" data-label="Period" data-width="35" data-lines="1" data-max-chars="2" data-line-height="12.5" data-required="false" x="57" y="165" font-size="10" fill="#222222" data-color-fill="text">{{period}}</text>
+<text id="state" data-field="state" data-label="State at room temperature" data-width="63" data-lines="1" data-max-chars="12" data-line-height="8.75" data-required="false" x="102" y="164" font-size="7" fill="#222222" data-color-fill="text">{{state}}</text>
+<text x="67" y="186" font-size="5.5" font-weight="bold" fill="#222222" data-color-fill="text">EVERYDAY USE</text>
+<text id="everyday_use" data-field="everyday_use" data-label="Everyday use" data-width="99" data-lines="3" data-max-chars="80" data-line-height="8.75" data-required="false" x="67" y="197" font-size="7" fill="#222222" data-color-fill="text">{{everyday_use}}</text>
+<text x="67" y="225" font-size="5.5" font-weight="bold" fill="#222222" data-color-fill="text">DID YOU KNOW?</text>
+<text id="fun_fact" data-field="fun_fact" data-label="Fun fact" data-width="99" data-lines="2" data-max-chars="65" data-line-height="8.125" data-required="false" x="67" y="236" font-size="6.5" fill="#222222" data-color-fill="text">{{fun_fact}}</text>
+</svg>

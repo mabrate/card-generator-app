@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parent.parent
 PACK=ROOT/'static-app/projects/element-explorer'
 manifest=json.loads((PACK/'manifest.json').read_text())
 rows=list(csv.DictReader((PACK/'cards.csv').open()))
-assert len(rows)==20 and len({r['card_id'] for r in rows})==20
+assert [r['atomic_number'] for r in rows]==['1','70'] and len({r['card_id'] for r in rows})==2
 assert all((PACK/'graphics'/r['image_filename']).is_file() for r in rows)
 family_colors={r['equals']:r['colors']['family_strip'] for r in manifest['colorRules']}
 with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
@@ -20,7 +20,7 @@ try:
   def ready(pg):pg.wait_for_function("document.querySelector('main').getAttribute('aria-busy')==='false'")
   def strip(pg):return pg.locator('#card-preview rect[data-color-fill=family_strip]').get_attribute('fill')
   page.goto(origin+'/?project=element-explorer');ready(page)
-  expect(page.locator('#preview-card-select option')).to_have_count(20)
+  expect(page.locator('#preview-card-select option')).to_have_count(2)
   assert 'Hydrogen' in page.locator('#preview-card-select option').first.inner_text()
   for i,row in enumerate(rows):
    page.locator('#preview-card-select').select_option(str(i));ready(page)
@@ -30,7 +30,7 @@ try:
    assert page.locator('#card-preview #border').get_attribute('stroke')=='#555555'
    assert page.locator('#card-preview [data-field=element_name]').get_attribute('fill')=='#222222'
    assert page.locator('#card-preview image').count()==1
-  print('Checked 20 cards',flush=True)
+  print('Checked Hydrogen and Ytterbium',flush=True)
   page.locator('#preview-card-select').select_option('0');ready(page)
   page.locator('#fields [data-field=family]').fill('  NOBLE GAS  ')
   assert strip(page)=='#70448c'
@@ -47,7 +47,7 @@ try:
   with page.expect_popup() as popup:page.locator('#print-sheets').click()
   sheet=popup.value;expect(sheet.locator('#print')).to_be_enabled(timeout=30000)
   strips=sheet.locator('rect[data-color-fill=family_strip]')
-  assert strips.count()==20 and strips.first.get_attribute('fill')=='#a23860'
+  assert strips.count()==2 and strips.first.get_attribute('fill')=='#a23860'
   assert sheet.locator('rect[data-color-fill=background]').first.get_attribute('fill')=='#ffffff';sheet.close()
   with page.expect_download() as dl:page.locator('#download-svg').click()
   svg=Path(dl.value.path()).read_text();assert '#a23860' in svg and 'finished-card' in svg
@@ -80,10 +80,10 @@ try:
   offline_page.evaluate('async()=>{await navigator.serviceWorker.ready;}')
   offline_page.wait_for_function('navigator.serviceWorker.controller!==null')
   offline.set_offline(True);offline_page.reload();ready(offline_page)
-  expect(offline_page.locator('#preview-card-select option')).to_have_count(20)
+  expect(offline_page.locator('#preview-card-select option')).to_have_count(2)
   offline_page.locator('#fields [data-field=family]').fill('Noble gas');assert strip(offline_page)=='#70448c'
   assert offline_page.locator('#card-preview image').count()==1
   assert not errors,errors
-  print('PASS: 20 cards, Ink body, automatic edits/fallback, manual reset, reload, 20-card print, SVG export, automatic and manual ZIP round trips, offline reload.')
+  print('PASS: 2 example cards, Ink body, automatic edits/fallback, manual reset, reload, 2-card print, SVG export, automatic and manual ZIP round trips, offline reload.')
   browser.close()
 finally:server.terminate();server.wait()
