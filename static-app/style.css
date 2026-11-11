@@ -68,7 +68,7 @@ main{padding-top:28px}.intro{margin-bottom:24px}.intro h1{font-size:34px;margin-
 .side-toggle{display:flex;gap:8px;margin:10px 0}.side-toggle[hidden]{display:none}.side-toggle .button[aria-pressed=true]{background:#244734;color:#fff;border-color:#244734}.side-toggle button{flex:1}
 .field-guide #drawing{aspect-ratio:156/176}
 
-#import-cards-dialog{width:min(900px,95vw)}#card-import-drop{border:2px dashed #789;padding:16px}.card-import-row{border-bottom:1px solid #ccc;padding:10px;display:flex;gap:16px;align-items:center}.card-import-row p{flex:1}.import-thumbnail{width:90px;height:126px;flex-shrink:0}.import-thumbnail svg{width:90px;height:126px}
+#import-cards-dialog{width:min(900px,95vw)}#card-import-drop{border:2px dashed #789;padding:16px}.card-import-row{border-bottom:1px solid #ccc;padding:10px;display:flex;gap:16px;align-items:center}.card-import-row p{flex:1;min-width:140px;overflow-wrap:anywhere}.card-import-row{flex-wrap:wrap}.card-import-row select{max-width:100%}.import-thumbnail{width:90px;height:126px;flex-shrink:0}.import-thumbnail svg{width:90px;height:126px}
 
 .fields .checkbox-field{display:flex;align-items:center;gap:8px}.fields .checkbox-field input[type=checkbox]{width:20px;height:20px;min-height:20px;margin:0;accent-color:#228b22}
 

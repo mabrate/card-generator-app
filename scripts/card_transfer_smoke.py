@@ -92,10 +92,10 @@ try:
   files=[]
   for i in range(40):
    f=Path(directory)/f'card-{i}.svg';f.write_text(again);files.append(f)
-  page.locator('#card-svg-files').set_input_files(files);expect(page.locator('.card-import-row')).to_have_count(40,timeout=60000)
+  page.locator('#card-svg-files').set_input_files(files);expect(page.locator('.card-import-row select')).to_have_count(40,timeout=60000)
   page.locator('#confirm-card-import').click();expect(page.locator('#card-import-result')).to_contain_text('40 skipped')
   # Accept a full batch as new UUIDs, then undo it.
-  page.locator('#card-svg-files').set_input_files(files);expect(page.locator('.card-import-row')).to_have_count(40,timeout=60000)
+  page.locator('#card-svg-files').set_input_files(files);expect(page.locator('.card-import-row select')).to_have_count(40,timeout=60000)
   page.locator('.card-import-row select').evaluate_all("els=>els.forEach(el=>{el.value='add';el.dispatchEvent(new Event('change'));})")
   page.locator('#confirm-card-import').click();expect(page.locator('#card-import-result')).to_contain_text('40 added',timeout=60000)
   page.locator('#undo-card-import').click();expect(page.locator('#card-import-result')).to_contain_text('undone')

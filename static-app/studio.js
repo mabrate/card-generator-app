@@ -1,5 +1,5 @@
 import {resolveCardColors, matchingColorRule, validateRuleTemplates} from './color-rules.js';
-import {serializeCard,parseCard,validateCard,normalized,uniqueId,assertCards,insertCard,FORMAT} from './card-transfer.js';
+import {serializeCard,validateCard,normalized,uniqueId,assertCards,insertCard,FORMAT} from './card-transfer.js';
 import {readTemplate, renderTemplate, parseCsv, csvCell, checkedValue} from './template.js';
 import {PALETTES} from './palettes.js';
 import {fontStyles, printDocument} from './print.js';
@@ -10,6 +10,7 @@ import {renderMarkdown} from './markdown.js';
 import {folderFiles, unzip, projectFiles, resolveLocalProject, storeLocalProject, getLocalProject, zipProject, zipFiles} from './local-projects.js';
 import {loadCardBack} from './print.js';
 import {exportCardSet,exportCardFiles} from './card-export.js';
+import {cardImportEntries} from './card-import.js';
 import {openTemplateBuilder} from './template-builder.js';
 import {openPhotoStraightener} from './photo-straighten.js';
 import {openPhotoAdjuster,openPhotoTips} from './photo-adjust.js';
@@ -30,11 +31,12 @@ const templatesEditable = () => canEditTemplates(project,location.search);
 const dashboardAvailable = () => !project || templatesEditable() || new URLSearchParams(location.search).get('dashboard')==='1';
 const card = () => state.cards[state.active];
 const cardCrop = () => activeSide==='back' && card().backImageName ? (card().backCrop ||= {x:.5,y:.5,zoom:1}) : card().crop;
-const cardLayout = () => activeSide==='back' && backTemplate ? backTemplate : card().layout ? readTemplate(card().layout) : template;
-const resolvedColors = (c, snapshot=state, context=project) => resolveCardColors(activeSide==='back'&&backTemplate?backTemplate:c.layout?readTemplate(c.layout):snapshot.templateSVG===state.templateSVG?template:readTemplate(snapshot.templateSVG),c,snapshot.colors,context?.colorRules,context?.schemes || schemes);
-const cardColors = () => resolvedColors(card());
+const cardBackLayout = (c=card()) => c.backLayout?readTemplate(c.backLayout):backTemplate;
+const cardLayout = () => activeSide==='back' && cardBackLayout() ? cardBackLayout() : card().layout ? readTemplate(card().layout) : template;
+const resolvedColors = (c, snapshot=state, context=project) => resolveCardColors(activeSide==='back'&&cardBackLayout(c)?cardBackLayout(c):c.layout?readTemplate(c.layout):snapshot.templateSVG===state.templateSVG?template:readTemplate(snapshot.templateSVG),c,snapshot.colors,context?.colorRules,context?.schemes || schemes);
+const cardColors = () => activeSide==='back' && card().backColors?{...cardLayout().colors,...card().backColors}:resolvedColors(card());
 const cardScheme = () => card().colors ? card().colorScheme : state.colorScheme;
-const csvFields = () => [...new Map([...template.fields,...(backTemplate?.fields || [])].map(f=>[f.key,f])).values()].map(f=>({key:f.key,label:f.label})).concat([{key:'image_filename',label:'Front image filename'},...(backTemplate?[{key:'back_image_filename',label:'Back graphic filename'}]:[]),{key:'copies',label:'Copies / card count'},{key:'theme',label:'Color theme'}]);
+const csvFields = () => [...new Map([...template.fields,...(backTemplate?.fields || [])].map(f=>[f.key,f])).values()].map(f=>({key:f.key,label:f.label})).concat([{key:'image_filename',label:'Front image filename'},...(backTemplate || state.cards.some(c=>c.backLayout)?[{key:'back_image_filename',label:'Back graphic filename'}]:[]),{key:'copies',label:'Copies / card count'},{key:'theme',label:'Color theme'}]);
 function csvSettings(row,mapping,index,allowedSchemes=schemes,layout=template){
   const raw=(row[mapping.copies] || '').trim(), copies=raw?Number(raw):1;
   if(!Number.isInteger(copies)||copies<1||copies>600)throw Error(`CSV row ${index+2}: copies must be a whole number from 1 to 600.`);
@@ -124,12 +126,12 @@ function buildColors() {
     const button=document.createElement('button');button.type='button';button.className='scheme-button';button.dataset.scheme=palette.name;
     const swatch=document.createElement('span');swatch.className='scheme-swatch';swatch.style.background=palette.colors.background || '#ffffff';swatch.style.borderColor=palette.colors.accent || '#555555';
     button.append(swatch,document.createTextNode(palette.name));
-    button.onclick=()=>{card().colors={...cardLayout().colors,...palette.colors};card().colorScheme=palette.name;buildColors();render();save();};return button;
+    button.onclick=()=>{card()[activeSide==='back' && card().backLayout?'backColors':'colors']={...cardLayout().colors,...palette.colors};card().colorScheme=palette.name;buildColors();render();save();};return button;
   }));
   $('#colors').replaceChildren(...Object.keys(cardLayout().colors).map(key => {
     const label=document.createElement('label'); label.textContent=key.replaceAll('-',' ');
     const input=document.createElement('input'); input.type='color'; input.value=cardColors()[key] || cardLayout().colors[key]; input.dataset.color=key;
-    input.addEventListener('input',()=>{card().colors={...cardColors(),[key]:input.value};card().colorScheme='';updateSchemes();render();save();}); label.append(input);return label;
+    input.addEventListener('input',()=>{card()[activeSide==='back' && card().backLayout?'backColors':'colors']={...cardColors(),[key]:input.value};card().colorScheme='';updateSchemes();render();save();}); label.append(input);return label;
   }));
   updateSchemes();
 }
@@ -308,12 +310,14 @@ function updateActionButtons(){
   $('#adjust-photo').disabled=busy || assetLoading || !imageData;
   $('#undo-photo-adjustment').hidden=!canUndoPhotoAdjustment();
   $('#undo-straighten').hidden=!canUndoStraighten();
+  $('#confirm-card-import').disabled=busy || !cardBatch.length;
   updateCardExportOptions();
 }
 async function showCard() {
+  if(activeSide==='back' && !cardBackLayout())activeSide='front';
   const seq=++generation; assetLoading=true;
   updateTemplateSelect();buildFields(); buildColors(); rebuildCardSelect(); rebuildAssets();$('#card-copies').value=card().copies ?? 1;
-  $('#side-toggle').hidden=!backTemplate;$('#preview-side-toggle').hidden=!backTemplate;
+  $('#side-toggle').hidden=!cardBackLayout();$('#preview-side-toggle').hidden=!cardBackLayout();
   $('#drawing-tools').hidden=activeSide==='back';$('.draw-heading h2').textContent=activeSide==='back'?'Back reference graphic':'Add identification artwork';
   $('.crop-tools').hidden=false;
   $('#edit-front').setAttribute('aria-pressed',String(activeSide==='front'));$('#edit-back').setAttribute('aria-pressed',String(activeSide==='back'));
@@ -330,12 +334,12 @@ async function showCard() {
   if(drawing){const img=await decodeImage(drawing);if(seq!==generation)return;ctx.drawImage(img,0,0,canvas.width,canvas.height);}
   imageData=pic; assetLoading=false;
   $('#image-status').textContent=!back&&current.drawingActive?'Using your drawing.':selectedImage?`Image: ${selectedImage}`:back?'Choose a back reference graphic.':'Choose an image or draw below.';
-  render(); save();
+  render(); save();showCardBack();
 }
 function applyTemplate(source,id) {
   const next=readTemplate(source);
   if(activeSide==='back'){
-    backTemplate=next;state.backTemplateSVG=next.source;
+    if(card().backLayout)card().backLayout=next.source;else{backTemplate=next;state.backTemplateSVG=next.source;}
     updateSideTools();buildFields();buildColors();$('#template-title').textContent=next.title;
     return;
   }
@@ -352,14 +356,14 @@ function updateTemplateSelect() {
   if(card().layout){const match=catalog.find(t=>t.source===card().layout);if(match)$('#template-select').value=match.id;else{$('#template-select').add(new Option(readTemplate(card().layout).title+' (this card)','@card-layout'));$('#template-select').value='@card-layout';}}else $('#template-select').value=state.templateId;$('#template-select').disabled=false;
 }
 function updateSideTools(){
-  const enabled=Boolean(backTemplate);$('#side-toggle').hidden=!enabled;$('#preview-side-toggle').hidden=!enabled;
+  const enabled=Boolean(cardBackLayout());$('#side-toggle').hidden=!enabled;$('#preview-side-toggle').hidden=!enabled;
   $('#template-select').disabled=activeSide==='back';
   $('#template-layout-label').textContent=activeSide==='back'?'Back template':'Front template';
   $('#edit-front').setAttribute('aria-pressed',String(activeSide==='front'));$('#edit-back').setAttribute('aria-pressed',String(activeSide==='back'));
   $('#preview-front').setAttribute('aria-pressed',String(activeSide==='front'));$('#preview-back').setAttribute('aria-pressed',String(activeSide==='back'));
   $('#template-title').hidden=false;$('#template-title').textContent=cardLayout().title;
 }
-async function setSide(side){if(side==='back'&&!backTemplate)return;stopDrawing();activeSide=side;updateSideTools();await showCard();}
+async function setSide(side){if(side==='back'&&!cardBackLayout())return;stopDrawing();activeSide=side;updateSideTools();await showCard();}
 for(const id of ['edit-front','preview-front'])$('#'+id).onclick=()=>run(()=>setSide('front'));
 for(const id of ['edit-back','preview-back'])$('#'+id).onclick=()=>run(()=>setSide('back'));
 function decodeImage(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('This image could not be opened.'));img.src=src;});}
@@ -533,7 +537,8 @@ async function buildProject(settings){
   const workspace={version:1,expansionPacks:state.expansionPacks || {},activeCardId:card().id,cards:Object.create(null),workspaceColors:Object.fromEntries(Object.keys(template.colors).map(k=>[k,state.colors[k] || template.colors[k]])),workspaceScheme:state.colorScheme || ''};
   workspace.photoAdjustments=Object.fromEntries(Object.entries(state.photoAdjustments || {}).filter(([name,recipe])=>imagePaths[name] && imagePaths[recipe.sourceName]).map(([name,recipe])=>[imagePaths[name],{sourceName:imagePaths[recipe.sourceName],settings:photoSettings(recipe.settings)}]));
   for(const c of state.cards){
-    const settings={sourceProjectId:c.sourceProjectId || null,colors:c.colors || (project?.colorRules?.length?undefined:state.colors),colorScheme:c.colorScheme || '',crop:c.crop,backCrop:c.backCrop,drawingActive:c.drawingActive,csvImportId:c.csvImportId || null,expansion:c.expansion || '',attribution:c.attribution || ''};
+    const settings={sourceProjectId:c.sourceProjectId || null,colors:c.colors || (project?.colorRules?.length?undefined:state.colors),colorScheme:c.colorScheme || '',crop:c.crop,backCrop:c.backCrop,backColors:c.backColors,drawingActive:c.drawingActive,csvImportId:c.csvImportId || null,expansion:c.expansion || '',attribution:c.attribution || ''};
+    if(c.backLayout){settings.backLayoutFile='templates/card-'+c.id+'-back.svg';files.set(settings.backLayoutFile,new Blob([c.backLayout],{type:'image/svg+xml'}));}
     if(c.layout){settings.layoutFile='templates/card-'+c.id+'.svg';files.set(settings.layoutFile,new Blob([c.layout],{type:'image/svg+xml'}));}
     if(c.drawingKey){const data=await getAsset(c.drawingKey);if(!data)throw Error('A saved drawing is missing.');settings.drawingFile='graphics/drawing-'+c.id+'.png';files.set(settings.drawingFile,await (await fetch(data)).blob());}
     workspace.cards[c.id]=settings;
@@ -614,7 +619,7 @@ function validateState(value,context){
   if(value.imported && (!Array.isArray(value.imported.rows)||!Array.isArray(value.imported.headers)||!Array.isArray(value.imported.indices)||value.imported.indices.length!==value.imported.rows.length||value.imported.indices.some(i=>!Number.isInteger(i)||!value.cards[i])||!value.imported.mapping))throw Error('The saved CSV data is invalid.');
   if(value.imported)for(const i of value.imported.indices)value.cards[i].csvImportId ||= 'recovered-csv';
   if(value.expansionPacks!==undefined)validateExpansionPacks(value.expansionPacks);
-  assertCards(value.cards);for(const c of value.cards)if(c.layout)c.layout=readTemplate(c.layout).source;
+  assertCards(value.cards);for(const c of value.cards){if(c.layout)c.layout=readTemplate(c.layout).source;if(c.backLayout)c.backLayout=readTemplate(c.backLayout).source;if(c.backColors && Object.values(c.backColors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid saved back colors.');}
   return value;
 }
 async function upgradePublishedElementLayout(value){
@@ -713,9 +718,9 @@ async function openStarter(recovered){
   }catch(err){error(err);}
 }
 async function currentCardBack(){return state.cardBack===null?undefined:state.cardBack?{image:'images/card-back.png',url:state.cardBack}:project?.cardBack?.image?project.cardBack:undefined;}
-function hasCardBack(){return Boolean(backTemplate || state.cardBack!==null && (state.cardBack || project?.cardBack?.image));}
+function hasCardBack(){return Boolean(cardBackLayout() || state.cardBack!==null && (state.cardBack || project?.cardBack?.image));}
 function showCardBack(){
-  const dual=Boolean(backTemplate),url=state.cardBack===null?'':state.cardBack || project?.cardBack?.url || '';
+  const dual=Boolean(cardBackLayout()),url=state.cardBack===null?'':state.cardBack || project?.cardBack?.url || '';
   $('#card-back-file').parentElement.hidden=dual;$('#card-back-preview').hidden=dual||!url;$('#remove-card-back').hidden=dual||!url;
   if(!dual)$('#card-back-preview').src=url;
   $('#card-back-status').textContent=dual?'This project has editable fields on both sides. Print double-sided and flip on the short edge.':url?'Card back included in print sheets and project ZIP. Print double-sided, flip on the short edge.':'No card back selected.';
@@ -740,11 +745,12 @@ async function openPrint(scope,copies,status){
 $('#print-sheets').onclick=()=>run(()=>openPrint('all',1,'#print-status'));
 $('#print-card').onclick=()=>run(()=>openPrint('current',1,'#single-print-status'));
 function updateCardExportOptions(){
-  const common=!backTemplate && state.cardBack!==null && Boolean(state.cardBack || project?.cardBack?.image);
-  $('#export-pairs').disabled=busy || (!backTemplate && !common);
+  const dual=Boolean(backTemplate || state.cards.some(c=>c.backLayout));
+  const common=!dual && state.cardBack!==null && Boolean(state.cardBack || project?.cardBack?.image);
+  $('#export-pairs').disabled=busy || (!dual && !common);
   $('#export-common').disabled=busy || !common;
-  $('#export-pairs-hint').textContent=backTemplate?'A separate front and back SVG for each card.':common?'A front and a copy of the common back for each card.':'Define a card back to include backs.';
-  $('#export-common-hint').textContent=common?'All fronts, plus one common back SVG.':backTemplate?'This set has a different back for each card.':'Define a common card back to use this option.';
+  $('#export-pairs-hint').textContent=dual?'A separate front and back SVG for each card.':common?'A front and a copy of the common back for each card.':'Define a card back to include backs.';
+  $('#export-common-hint').textContent=common?'All fronts, plus one common back SVG.':dual?'This set has a different back for each card.':'Define a common card back to use this option.';
 }
 $('#download-set').onclick=()=>{
   updateCardExportOptions();
@@ -759,7 +765,7 @@ $('#download-set-zip').onclick=()=>run(async()=>{
     clearTimeout(drawTimer);if(drawingPointer!==null)throw Error('Finish your drawing before downloading.');
     const snapshot=structuredClone(state);
     const mode=$('#card-export-dialog input:checked').value;
-    const result=await exportCardSet({snapshot,getAsset,mode,project,schemes,cardBack:await currentCardBack(),onProgress:(i,total,name)=>status.textContent=`Preparing card ${i} of ${total}: ${name}…`});
+    const result=await exportCardSet({snapshot,getAsset,mode,project,schemes,cardBack:await currentCardBack(),getFrontMetadata:(c,commonBack)=>serializeCard({...c,colors:resolveCardColors(readTemplate(c.layout || snapshot.templateSVG),c,snapshot.colors,project?.colorRules,schemes)},snapshot,getAsset,activeProjectId,{includeBack:mode!=='fronts',commonBack}),onProgress:(i,total,name)=>status.textContent=`Preparing card ${i} of ${total}: ${name}…`});
     download(slug(project?.name || 'classroom-cards')+'-'+mode+'-svg.zip','application/zip',result.blob);
     status.textContent=`Downloaded ${result.count} SVG files. Unzip them to use in Handout Maker.`;
   }catch(err){status.textContent='ZIP was not downloaded. '+err.message;throw err;}
@@ -785,9 +791,9 @@ $('#download-single-card').onclick=()=>run(async()=>{
     clearTimeout(drawTimer);if(drawingPointer!==null)throw Error('Finish your drawing before downloading.');
     const snapshot=structuredClone(state);snapshot.cards=[snapshot.cards[snapshot.active]];snapshot.active=0;snapshot.projectIdentity ||= crypto.randomUUID();
     const mode=$('#single-card-export-dialog input:checked').value;
-    const entries=await exportCardFiles({snapshot,getAsset,mode,project,schemes,cardBack:await currentCardBack(),getFrontMetadata:c=>{
+    const entries=await exportCardFiles({snapshot,getAsset,mode,project,schemes,cardBack:await currentCardBack(),getFrontMetadata:(c,commonBack)=>{
       const layout=readTemplate(c.layout || snapshot.templateSVG),colors=resolveCardColors(layout,c,snapshot.colors,project?.colorRules,schemes);
-      return serializeCard({...c,colors},snapshot,getAsset,activeProjectId);
+      return serializeCard({...c,colors},snapshot,getAsset,activeProjectId,{includeBack:mode!=='fronts',commonBack});
     }});
     const files=entries.map(entry=>({...entry,path:entry.path.replace(/^001-/, '')}));
     if(files.length===1)download(files[0].path,'image/svg+xml',files[0].file);
@@ -908,6 +914,8 @@ async function restoreWorkspace(next,workspace,layout,readFile,loadImage){
         if(![crop.x,crop.y,crop.zoom].every(Number.isFinite) || crop.x<0 || crop.x>1 || crop.y<0 || crop.y>1 || crop.zoom<.1 || crop.zoom>4)throw Error('Invalid image crop.');
         if(settings.colors){if(Object.values(settings.colors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid saved card colors.');c.colors=settings.colors;c.colorScheme=settings.colorScheme || '';}
         c.sourceProjectId=typeof settings.sourceProjectId==='string'?settings.sourceProjectId:undefined;c.expansion=settings.expansion || '';c.attribution=settings.attribution || '';
+        if(settings.backLayoutFile){const file=await readFile(normalizeProjectPath(settings.backLayoutFile));if(!file)throw Error('Missing card back layout.');c.backLayout=readTemplate(await file.text()).source;}
+        if(settings.backColors){if(Object.values(settings.backColors).some(v=>!/^#[0-9a-f]{6}$/i.test(v)))throw Error('Invalid saved back colors.');c.backColors=settings.backColors;}
         if(settings.layoutFile){const file=await readFile(normalizeProjectPath(settings.layoutFile));if(!file)throw Error('Missing card layout.');c.layout=readTemplate(await file.text()).source;}
         if(settings.backCrop){const b=settings.backCrop;if(![b.x,b.y,b.zoom].every(Number.isFinite)||b.x<0||b.x>1||b.y<0||b.y>1||b.zoom<.1||b.zoom>4)throw Error('Invalid back image crop.');c.backCrop=b;}
         c.crop=crop;c.drawingActive=settings.drawingActive===true;c.csvImportId=typeof settings.csvImportId==='string'?settings.csvImportId:undefined;
@@ -1055,10 +1063,10 @@ run(async()=>{try{await start();}finally{$('#app-loading').hidden=true;$('main')
 let cardBatch=[],importUndo,invalidCardFiles=0,pendingExpansion=null;
 $('#import-cards').onclick=()=>{ $('#import-cards-title').textContent='Import cards'; $('#expansion-names').replaceChildren(...[...new Set(state.cards.map(c=>c.expansion).filter(Boolean))].map(x=>new Option(x,x)));$('#import-cards-dialog').showModal();};
 async function reviewCards(files){
- if(files.length>40)throw Error('Choose up to 40 SVG cards at a time.');
- if(files.reduce((n,f)=>n+f.size,0)>640_000_000)throw Error('Keep each batch under 640 MB.');
+ cardBatch=[];$('#card-import-review').replaceChildren();$('#card-import-result').textContent='Reading card ZIPs and SVGs…';
+ const entries=await cardImportEntries(files);
  pendingExpansion=null;$('#card-import-notice').textContent='';$('#import-cards-title').textContent='Import cards';
- return reviewPayloads(files.map(file=>({name:file.name,load:()=>parseCard(file)})));
+ return reviewPayloads(entries);
 }
 async function reviewPayloads(entries){
  cardBatch=[];invalidCardFiles=0;$('#card-import-review').replaceChildren();$('#card-import-result').textContent='';
@@ -1069,8 +1077,10 @@ async function reviewPayloads(entries){
    const payload=await file.load(),c=payload.card,signature=normalized(payload),prior=known.get(c.id),present=known.has(c.id),status=prior===signature?'Already present':present?'ID conflict':'New card';
    const entry={payload,signature,choice:present?'skip':'add'};cardBatch.push(entry);
    label.textContent=file.name+' · '+cardTitle(c)+' · '+status+(state.cards.some(x=>cardTitle(x)===cardTitle(c))?' · Matching name':'');
+   if(!c.backLayout)label.append(document.createTextNode(' · Front only: include its matching back SVG to restore back artwork.'));
    const thumb=document.createElement('div');thumb.className='import-thumbnail';row.append(thumb);const result=renderTemplate(readTemplate(c.layout),c.values,c.colors,c.drawingActive?payload.assets.drawing:payload.assets.image,c.crop,thumb);
    if(result.issues.length)throw Error(result.issues.join(' '));
+   if(c.backLayout){const backThumb=document.createElement('div');backThumb.className='import-thumbnail';backThumb.setAttribute('aria-label','Back preview');row.append(backThumb);const result=renderTemplate(readTemplate(c.backLayout),c.values,c.backColors,payload.assets.backImage,c.backCrop,backThumb);if(result.issues.length)throw Error('Back: '+result.issues.join(' '));}
    const select=document.createElement('select');select.setAttribute('aria-label','Import choice for '+file.name);
    for(const [value,title] of [['skip','Skip'],['add','Add as new'],['replace','Replace existing']])select.add(new Option(title,value));
    if(!present)select.add(new Option('Keep original ID','keep'));entry.choice=present?'skip':'keep';select.value=entry.choice;select.onchange=()=>entry.choice=select.value;row.append(select);
@@ -1079,7 +1089,7 @@ async function reviewPayloads(entries){
  }
  $('#confirm-card-import').disabled=!cardBatch.length;
 }
-for(const id of ['card-svg-files','card-svg-folder'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';run(()=>reviewCards(files));};
+for(const id of ['card-svg-files','card-zip-files','card-svg-folder'])$('#'+id).onchange=e=>{const files=[...e.target.files];e.target.value='';run(()=>reviewCards(files));};
 const drop=$('#card-import-drop');drop.ondragover=e=>{e.preventDefault();};drop.ondrop=e=>{e.preventDefault();run(()=>reviewCards([...e.dataTransfer.files]));};
 $('#confirm-card-import').onclick=()=>run(async()=>{
  const next=structuredClone(state),ids=new Set(next.cards.map(c=>c.id));let added=0,replaced=0,skipped=0;
@@ -1088,9 +1098,10 @@ $('#confirm-card-import').onclick=()=>run(async()=>{
   const p=entry.payload,c=structuredClone(p.card),existing=next.cards.find(x=>x.id===c.id);
   if(entry.choice!=='add'&&existing){let signature;try{signature=normalized(await serializeCard(existing,next,getAsset));}catch{signature=null;}if(signature===entry.signature){skipped++;continue;}if(entry.choice!=='replace')throw Error('A batch ID conflict needs Replace existing, Add as new, or Skip.');}
   if(entry.choice==='add'){c.id=uniqueId(ids);}ids.add(c.id);
-  c.sourceProjectId=typeof p.sourceProjectId==='string'?p.sourceProjectId:undefined;delete c.values.card_id;delete c.values.image_filename;
+  c.sourceProjectId=typeof p.sourceProjectId==='string'?p.sourceProjectId:undefined;delete c.values.card_id;delete c.values.image_filename;delete c.values.back_image_filename;
   c.imageName='';c.drawingKey=null;
   if(p.assets.image){const key='image-'+crypto.randomUUID(),name='graphics/import-'+c.id+'-'+crypto.randomUUID()+'.'+(/^data:image\/jpeg/.test(p.assets.image)?'jpg':/^data:image\/webp/.test(p.assets.image)?'webp':'png');await putAsset(key,p.assets.image);next.assets[name]=key;c.imageName=name;}
+  if(c.backLayout){c.backImageName='';if(p.assets.backImage){const key='image-'+crypto.randomUUID(),name='graphics/import-back-'+c.id+'-'+crypto.randomUUID()+'.'+(/^data:image\/jpeg/.test(p.assets.backImage)?'jpg':/^data:image\/webp/.test(p.assets.backImage)?'webp':'png');await putAsset(key,p.assets.backImage);next.assets[name]=key;c.backImageName=name;}}
   if(p.assets.drawing){c.drawingKey='drawing-'+crypto.randomUUID();await putAsset(c.drawingKey,p.assets.drawing);}
   const expansion=$('#card-import-expansion').value.trim();c.expansion=expansion;
   insertCard(next.cards,c,entry.choice==='replace');if(existing&&entry.choice==='replace')replaced++;else added++;
@@ -1139,7 +1150,7 @@ async function addHostedExpansion(id){
   for(const name of new Set(parsed.rows.map(row=>(row[imageColumn] || '').trim()).filter(Boolean)))await collect(name.includes('/')?name:(p.imageDirectory || 'graphics')+'/'+name);
   if(p.workspace){
     const file=await collect(p.workspace);if(file.size>2_000_000)throw Error('Oversized expansion settings.');const workspace=JSON.parse(await file.text());
-    for(const settings of Object.values(workspace.cards || {}))for(const key of ['layoutFile','drawingFile'])if(settings[key])await collect(settings[key]);
+    for(const settings of Object.values(workspace.cards || {}))for(const key of ['layoutFile','backLayoutFile','drawingFile'])if(settings[key])await collect(settings[key]);
   }
   await addExpansionFiles([...entries].map(([path,file])=>({path,file})));
 }

@@ -1,4 +1,5 @@
 import {renderTemplate, readTemplate} from './template.js';
+import {imageBackLayout} from './card-transfer.js';
 let fontPromise;
 export function fontStyles() {
   return fontPromise ??= Promise.all([['Regular','normal','normal'],['Bold','bold','normal'],['Italic','normal','italic']].map(async([file,weight,style])=>{
@@ -55,23 +56,26 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
   const count=selected.reduce((sum,[,card])=>sum+(card.copies ?? 1)*copies,0);
   if(!Number.isInteger(copies)||copies<1||copies>30)throw Error('Choose 1–30 copies per card.');
   if(count>600)throw Error('Print at most 600 card copies at a time.');
+  const hasBacks=Boolean(backTemplate || selected.some(([,c])=>c.backLayout));
+  const backImage=cardBack?.image?await loadCardBack(cardBack):null;
   const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:180px;visibility:hidden';document.body.append(host);
   const svgs=[],backSvgs=[];
   try {
     for(const [index,card] of selected){
       const key=card.drawingActive?card.drawingKey:snapshot.assets[card.imageName];
-      const image=await getAsset(key),backKey=card.backImageName?snapshot.assets[card.backImageName]:key,backImage=backTemplate?await getAsset(backKey):image;
+      const image=await getAsset(key),ownBack=Object.hasOwn(card,'backImageName'),backKey=ownBack?snapshot.assets[card.backImageName]:key;
+      const layout=card.backLayout?readTemplate(card.backLayout):backTemplate;
+      const graphic=layout?await getAsset(backKey):backImage;
       const name=card.values.common_name||card.values.element_name||'Untitled card';
       const missing=(card.drawingActive||card.imageName)&&!image;
       const result=renderTemplate(card.layout?readTemplate(card.layout):template,card.values,card.colors || snapshot.colors,image,card.crop,host);
       if(missing)result.issues.push(card.drawingActive?'The drawing is missing.':`Choose the image file “${card.imageName}”.`);
       if(result.issues.length)throw Error(`Card ${index+1} (“${name}”): ${result.issues.join(' ')}`);
       let backResult;
-      if(backTemplate){backResult=renderTemplate(backTemplate,card.values,card.colors || backTemplate.colors,backImage,card.backImageName?(card.backCrop || {x:.5,y:.5,zoom:1}):card.crop,host);if(card.backImageName&&!backImage)backResult.issues.push(`Choose the back graphic “${card.backImageName}”.`);if(backResult.issues.length)throw Error(`Card ${index+1} (“${name}”) back: ${backResult.issues.join(' ')}`);}
+      if(hasBacks){const chosen=layout || readTemplate(imageBackLayout());backResult=renderTemplate(chosen,card.values,card.backColors || card.colors || chosen.colors,graphic,ownBack?(card.backCrop || {x:.5,y:.5,zoom:1}):card.crop,host);if(card.backImageName&&!graphic)backResult.issues.push(`Choose the back graphic “${card.backImageName}”.`);if(backResult.issues.length)throw Error(`Card ${index+1} (“${name}”) back: ${backResult.issues.join(' ')}`);}
       for(let n=0;n<(card.copies ?? 1)*copies;n++){svgs.push(result.root.cloneNode(true));if(backResult)backSvgs.push(backResult.root.cloneNode(true));}
     }
   } finally { host.remove(); }
-  const backImage=cardBack?.image?await loadCardBack(cardBack):null;
   const sheets=[];
   for(let offset=0;offset<svgs.length;offset+=6){
     const cells=svgs.slice(offset,offset+6).map((svg,i)=>{
@@ -81,11 +85,11 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
     });
     const frontMarks=cells.map((_,i)=>cropMarks(108+(i%3)*198,45+Math.floor(i/3)*270)).join('');
     sheets.push(`<section class="sheet fronts"><svg xmlns="http://www.w3.org/2000/svg" width="11in" height="8.5in" viewBox="0 0 792 612" aria-label="Card print sheet ${sheets.length+1}">${cells.join('')}${frontMarks}</svg></section>`);
-    if(backImage||backTemplate){
-      const backs=(backTemplate?backSvgs:svgs).slice(offset,offset+6).map((back,i)=>{
+    if(backImage||hasBacks){
+      const backs=(hasBacks?backSvgs:svgs).slice(offset,offset+6).map((back,i)=>{
         // Mirror columns around the page center for landscape short-edge duplex.
         const x=792-(108+(i%3)*198)-180,y=45+Math.floor(i/3)*270;
-        if(backTemplate){isolateIds(back,`print-back-${offset+i}-`);back.setAttribute('x',String(x));back.setAttribute('y',String(y));back.setAttribute('width','180');back.setAttribute('height','252');return new XMLSerializer().serializeToString(back)+cropMarks(x,y);}
+        if(hasBacks){isolateIds(back,`print-back-${offset+i}-`);back.setAttribute('x',String(x));back.setAttribute('y',String(y));back.setAttribute('width','180');back.setAttribute('height','252');return new XMLSerializer().serializeToString(back)+cropMarks(x,y);}
         return `<image x="${x}" y="${y}" width="180" height="252" data-card-back="true" preserveAspectRatio="xMidYMid slice"/>`+cropMarks(x,y);
       });
       sheets.push(`<section class="sheet backs"><svg xmlns="http://www.w3.org/2000/svg" width="11in" height="8.5in" viewBox="0 0 792 612" aria-label="Card backs for sheet ${offset/6+1}">${backs.join('')}</svg></section>`);
@@ -95,5 +99,5 @@ export async function printDocument(template, snapshot, getAsset, scope, copies,
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Classroom Cards · Print sheets</title><style>
 ${fonts}
 @page{size:Letter landscape;margin:0}*{box-sizing:border-box}body{margin:0;background:#e8ece8;font-family:Arial,sans-serif;color:#203d31}.toolbar{padding:20px;max-width:900px;margin:auto}.toolbar h1{font-size:24px;margin:0 0 8px}.toolbar p{line-height:1.5}.toolbar button{padding:12px 18px;background:#1d503b;border:0;border-radius:6px;color:white;font-size:16px;cursor:pointer}.sheet{width:11in;height:8.5in;background:white;margin:20px auto;box-shadow:0 2px 12px #0002}.sheet>svg{display:block;width:11in;height:8.5in;overflow:hidden}@media screen{.sheet{width:min(11in,calc(100% - 24px));height:auto;aspect-ratio:22/17}.sheet>svg{width:100%;height:auto}}@media print{body{background:white}.toolbar{display:none}.sheet{margin:0;box-shadow:none;break-after:page;page-break-after:always}.sheet:last-child{break-after:auto;page-break-after:auto}svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style></head><body><div class="toolbar"><h1>Card print sheets</h1><p>${count} card${count===1?'':'s'} on ${sheets.length} Letter landscape page${sheets.length===1?'':'s'}. Each card is 2.5 × 3.5 inches. Front border colors extend ⅛ inch beyond the cut lines. Cut on the square crop marks for the finished card size.</p><p>Choose Letter paper, landscape, 100% / actual size, no margins, and disable headers and footers. Select Save as PDF in the print dialog to keep a PDF. Print one test sheet and check the size with a ruler.</p>${backImage||backTemplate?'<p><strong>Double-sided printing:</strong> pages alternate fronts and backs. Choose duplex / print on both sides and <strong>flip on the short edge</strong>. Blank slots on the last sheet stay blank. Test the first pair of pages before printing the full deck. For manual duplex, print one front/back pair first to check your printer’s feed direction.</p>':''}<button id="print" disabled onclick="window.print()">Preparing fonts…</button><p>Close this tab to return to your editor.</p></div>${sheets.join('')}<script>(()=>{const cardBack=${JSON.stringify(backImage)};for(const image of document.querySelectorAll('[data-card-back]'))image.setAttribute('href',cardBack);Promise.all([document.fonts.ready,...Array.from(document.querySelectorAll('svg image'),node=>{const image=new Image();image.src=node.getAttribute('href');return image.decode();})]).then(()=>{const button=document.getElementById('print');button.disabled=false;button.textContent='Print / Save as PDF';}).catch(()=>{document.getElementById('print').textContent='Images could not load. Reopen print sheets.';});})();</script></body></html>`;
+</style></head><body><div class="toolbar"><h1>Card print sheets</h1><p>${count} card${count===1?'':'s'} on ${sheets.length} Letter landscape page${sheets.length===1?'':'s'}. Each card is 2.5 × 3.5 inches. Front border colors extend ⅛ inch beyond the cut lines. Cut on the square crop marks for the finished card size.</p><p>Choose Letter paper, landscape, 100% / actual size, no margins, and disable headers and footers. Select Save as PDF in the print dialog to keep a PDF. Print one test sheet and check the size with a ruler.</p>${backImage||hasBacks?'<p><strong>Double-sided printing:</strong> pages alternate fronts and backs. Choose duplex / print on both sides and <strong>flip on the short edge</strong>. Blank slots on the last sheet stay blank. Test the first pair of pages before printing the full deck. For manual duplex, print one front/back pair first to check your printer’s feed direction.</p>':''}<button id="print" disabled onclick="window.print()">Preparing fonts…</button><p>Close this tab to return to your editor.</p></div>${sheets.join('')}<script>(()=>{const cardBack=${JSON.stringify(backImage)};for(const image of document.querySelectorAll('[data-card-back]'))image.setAttribute('href',cardBack);Promise.all([document.fonts.ready,...Array.from(document.querySelectorAll('svg image'),node=>{const image=new Image();image.src=node.getAttribute('href');return image.decode();})]).then(()=>{const button=document.getElementById('print');button.disabled=false;button.textContent='Print / Save as PDF';}).catch(()=>{document.getElementById('print').textContent='Images could not load. Reopen print sheets.';});})();</script></body></html>`;
 }
